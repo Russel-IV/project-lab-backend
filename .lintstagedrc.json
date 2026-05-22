@@ -1,0 +1,5 @@
+{
+  "src/**/*.kt": [
+    "./spotless-staged.sh"
+  ]
+}

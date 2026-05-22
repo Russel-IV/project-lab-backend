@@ -1,0 +1,45 @@
+# =========================================================================
+# Docker Ignore Configuration
+# =========================================================================
+# Avoids sending unnecessary files to the Docker daemon during build,
+# speeding up builds and maintaining lightweight caching layers.
+# =========================================================================
+
+# Git files
+.git/
+.gitattributes
+.gitignore
+
+# Maven build outputs & wrappers
+target/
+build/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.classpath
+.project
+.factorypath
+
+# Node.js, pnpm, and Git hook workflows (host-only developer tooling)
+node_modules/
+pnpm-lock.yaml
+package.json
+pnpm-debug.log*
+.husky/
+.lintstagedrc.json
+.commitlintrc.json
+spotless-staged.sh
+
+# Docker files
+docker-compose.yml
+.dockerignore
+
+# Miscellaneous documentation
+HELP.md
+mvnw.cmd
