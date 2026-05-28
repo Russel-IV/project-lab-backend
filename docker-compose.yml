@@ -1,18 +1,44 @@
-# =========================================================================
-# Docker Compose Configuration for Separated Spring Boot Backend
-# =========================================================================
-#
-# To start the service, run:
-#   docker compose up --build
-# =========================================================================
-
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: project-lab-backend
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
+    project-lab-backend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: project-lab-backend
+        ports:
+            - "${SPRING_PORT}:8080"
+        environment:
+            - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_PORT=${POSTGRES_PORT}
+            - POSTGRES_DB=${POSTGRES_DB}
+        depends_on:
+            project-lab-database:
+                condition: service_healthy
+
+    project-lab-database:
+        image: postgres:16
+        container_name: project-lab-database
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_SSL_MODE=${POSTGRES_SSL_MODE}
+        volumes:
+            - ./db:/docker-entrypoint-initdb.d
+            - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+                ]
+            interval: 2s
+            timeout: 10s
+            retries: 10
+            start_period: 10s
+
+volumes:
+    pgdata:
