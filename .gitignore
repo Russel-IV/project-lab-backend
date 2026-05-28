@@ -36,3 +36,6 @@ build/
 node_modules/
 pnpm-debug.log*
 .husky/_
+
+# Secrets
+.env
