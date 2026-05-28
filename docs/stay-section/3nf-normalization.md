@@ -1,0 +1,55 @@
+# No normalization
+**STAY_SYSTEM** (stay_price, stay_location, stay_property_amenities, stay_room_amenities, stay_room_views, stay_payment_type, stay_guest_rating, stay_star_rating, stay_property_type, stay_property_brand, stay_traveler_experience, stay_availability, stay_accessibility, stay_meal_plans_available, stay_bedroom_amount, stay_beach_access, stay_name, stay_host_name, stay_host_languages, stay_host_communication_rating, stay_host_checkin_process_rating, stay_host_cancellation_rate, stay_sleeps, stay_bathrooms, stay_is_refundable, stay_is_favorite, stay_reviews, stay_policies_text, stay_cancellation_deadline, stay_about, stay_important_information, stay_size)
+
+# First Normal Form
+**STAY_SYSTEM** (*stay_id*, stay_price, stay_location, stay_guest_rating, stay_star_rating, stay_property_type, stay_availability, stay_bedroom_amount, stay_beach_access, stay_name, stay_sleeps, stay_bathrooms, stay_is_refundable, stay_policies_text, stay_cancellation_deadline, stay_about, stay_important_information, stay_size, *host_id*, host_name, host_communication_rating, host_checkin_process_rating, host_cancellation_rate, *review_id*, review_text, *review_user_id*, user_name)
+**STAY_PROPERTY_BRAND** (*stay_id*, brand_name)
+**STAY_TRAVELER_EXPERIENCE** (*stay_id*, traveler_experience_type)
+**STAY_PROPERTY_AMENITIES** (*stay_id*, amenity_name)
+**STAY_ROOM_AMENITIES** (*stay_id*, amenity_name)
+**STAY_ROOM_VIEWS** (*stay_id*, view_type)
+**STAY_ACCESSIBILITY** (*stay_id*, accessibility_type)
+**STAY_MEAL_PLAN** (*stay_id*, meal_plan_type)
+**STAY_PAYMENT_TYPE** (*stay_id*, payment_type)
+**HOST_LANGUAGES** (*host_id*, language)
+
+# Second Normal Form
+**STAY** (*id*, price, location, guest_rating, star_rating, property_type, availability, bedroom_amount, beach_access, name, sleeps, bathrooms, is_refundable, policies_text, cancellation_deadline, about, important_information, size, *host_id*)
+**HOST** (*id*, name, communication_rating, checkin_process_rating, cancellation_rate)
+**REVIEW** (*id*, text, *user_id*, user_name, *stay_id*)
+**STAY_PROPERTY_BRAND** (*stay_id*, brand_name)
+**STAY_TRAVELER_EXPERIENCE** (*stay_id*, traveler_experience_type)
+**STAY_PROPERTY_AMENITIES** (*stay_id*, amenity_name)
+**STAY_ROOM_AMENITIES** (*stay_id*, amenity_name)
+**STAY_ROOM_VIEWS** (*stay_id*, view_type)
+**STAY_ACCESSIBILITY** (*stay_id*, accessibility_type)
+**STAY_MEAL_PLAN** (*stay_id*, meal_plan_type)
+**STAY_PAYMENT_TYPE** (*stay_id*, payment_type)
+**HOST_LANGUAGES** (*host_id*, language)
+**USER_FAVORITE** (*user_id*, *stay_id*, created_at)
+
+# Third Normal Form
+**STAY** (*id*, price, location, star_rating, property_type, availability, bedroom_amount, name, sleeps, bathrooms, is_refundable, policies_text, cancellation_deadline, about, important_information, size, *host_id*)
+- _guest_rating can be derived_
+- _beach_access can be derived_
+**AMENITY** (*id*, name, type)
+- _type is an enum "room_amenity" or "property_amenity"_
+**REVIEW** (*id*, text, *user_id*, *stay_id*)
+**USER** (*id*, name)
+**HOST** (*id*, name, communication_rating, checkin_process_rating, cancellation_rate)
+**LANGUAGE** (*id*, language_name)
+**VIEW** (*id*, view_type)
+**ACCESSIBILITY** (*id*, accessibility_type)
+**MEAL_PLAN** (*id*, meal_plan_type)
+**PAYMENT_TYPE** (*id*, payment_type)
+**PROPERTY_BRAND** (*id*, brand_name)
+**TRAVELER_EXPERIENCE** (*id*, traveler_experience_type)
+**USER_FAVORITE** (*user_id*, *stay_id*, created_at)
+**STAY_VIEW** (*stay_id*, *view_id*)
+**HOST_LANGUAGE** (*host_id*, *language_id*)
+**STAY_PROPERTY_BRAND** (*stay_id*, *brand_id*)
+**STAY_TRAVELER_EXPERIENCE** (*stay_id*, *traveler_experience_id*)
+**STAY_PAYMENT_TYPE** (*stay_id*, *payment_type_id*)
+**STAY_MEAL_PLAN** (*stay_id*, *meal_plan_id*)
+**STAY_AMENITY** (*stay_id*, *amenity_id*)
+**STAY_ACCESSIBILITY** (*stay_id*, *accessibility_id*)
