@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS "STAY" (
     "postal_code" TEXT,
     "country_code" TEXT,
     "availability" BOOLEAN NOT NULL DEFAULT TRUE,
-    "star_rating" NUMERIC(2, 1),
+    "star_rating" DECIMAL(10, 1),
     "sleeps" INT NOT NULL,
     "bedroom_amount" INT NOT NULL,
     "bathrooms" NUMERIC(3, 1) NOT NULL, -- e.g., 2.5 bathrooms
