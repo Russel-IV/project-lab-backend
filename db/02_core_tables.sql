@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS "STAY" (
     "postal_code" TEXT,
     "country_code" TEXT,
     "availability" BOOLEAN NOT NULL DEFAULT TRUE,
-    "star_rating" NUMERIC(2, 1), -- Scale up to 5.0
+    "star_rating" NUMERIC(2, 1),
     "sleeps" INT NOT NULL,
     "bedroom_amount" INT NOT NULL,
     "bathrooms" NUMERIC(3, 1) NOT NULL, -- e.g., 2.5 bathrooms
@@ -25,12 +25,12 @@ CREATE TABLE IF NOT EXISTS "STAY" (
     "policies_text" TEXT,
     "important_information" TEXT,
     "host_id" INT NOT NULL,
-    "property_brand_id" INT, -- Explicitly linked lookup table
+    "property_brand_id" INT,
 
     CONSTRAINT "fk_stay_host"
         FOREIGN KEY ("host_id")
         REFERENCES "HOST"("id")
-        ON DELETE RESTRICT, -- Safer production boundary than cascade
+        ON DELETE RESTRICT,
 
     CONSTRAINT "fk_stay_brand"
         FOREIGN KEY ("property_brand_id")
