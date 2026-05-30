@@ -68,7 +68,7 @@ erDiagram
     AMENITY {
         int id PK
         string name
-        string type
+        amenity_type type
     }
 
     STAY_AMENITY {

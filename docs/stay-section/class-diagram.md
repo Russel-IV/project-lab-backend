@@ -57,7 +57,7 @@ classDiagram
     class AMENITY {
         +int id
         +string name
-        +string type
+        +amenity_type type
     }
 
     class ACCESSIBILITY {
