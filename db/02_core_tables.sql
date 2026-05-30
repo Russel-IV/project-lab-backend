@@ -2,7 +2,7 @@
 -- 2. CORE OPERATIONAL TABLES
 -- ==========================================
 
-CREATE TABLE IF NOT EXISTS "STAY" (
+CREATE TABLE IF NOT EXISTS stay (
     "id" SERIAL PRIMARY KEY,
     "price" DECIMAL(10, 2) NOT NULL,
     "name" TEXT NOT NULL,
@@ -29,12 +29,12 @@ CREATE TABLE IF NOT EXISTS "STAY" (
 
     CONSTRAINT "fk_stay_host"
         FOREIGN KEY ("host_id")
-        REFERENCES "HOST"("id")
+        REFERENCES host("id")
         ON DELETE RESTRICT,
 
     CONSTRAINT "fk_stay_brand"
         FOREIGN KEY ("property_brand_id")
-        REFERENCES "PROPERTY_BRAND"("id")
+        REFERENCES property_brand ("id")
         ON DELETE SET NULL,
 
     CONSTRAINT "check_stay_price"
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "STAY" (
         CHECK (days_from_booking_cancellation_deadline >= 0)
 );
 
-CREATE TABLE IF NOT EXISTS "REVIEW" (
+CREATE TABLE IF NOT EXISTS review (
     "id" SERIAL PRIMARY KEY,
     "text" TEXT NOT NULL,
     "user_id" INT NOT NULL,
@@ -67,11 +67,11 @@ CREATE TABLE IF NOT EXISTS "REVIEW" (
 
     CONSTRAINT "fk_review_user"
         FOREIGN KEY ("user_id")
-        REFERENCES "USER"("id")
+        REFERENCES user("id")
         ON DELETE CASCADE,
 
     CONSTRAINT "fk_review_stay"
         FOREIGN KEY ("stay_id")
-        REFERENCES "STAY"("id")
+        REFERENCES stay("id")
         ON DELETE CASCADE
 );
