@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS stay (
     "sleeps" INT NOT NULL,
     "bedroom_amount" INT NOT NULL,
     "bathrooms" NUMERIC(3, 1) NOT NULL, -- e.g., 2.5 bathrooms
-    "size" INT,
+    "size" DECIMAL(10, 1),
     "days_from_booking_cancellation_deadline" INT,
     "policies_text" TEXT,
     "important_information" TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS stay (
         CHECK (sleeps > 0),
 
     CONSTRAINT "check_size"
-        CHECK (size >= 0),
+        CHECK (size >= 0.0),
 
     CONSTRAINT "check_days_from_booking_cancellation_deadline"
         CHECK (days_from_booking_cancellation_deadline >= 0)
