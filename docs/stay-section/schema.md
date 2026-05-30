@@ -18,21 +18,20 @@ erDiagram
         float price
         string name
         text about
-        string property_type
+        property_type property_type
         string street_address
         string extended_address
-        string neighborhood
         string city
         string state_province
         string postal_code
         string country_code
-        boolean availability
-        int star_rating
+        boolean is_available
+        boolean is_refundable
+        float star_rating
         int sleeps
         int bedroom_amount
         int bathrooms
         string size
-        boolean is_refundable
         int days_from_booking_cancellation_deadline
         text policies_text
         text important_information
