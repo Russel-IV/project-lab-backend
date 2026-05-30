@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS stay (
     "country_code" TEXT,
     "is_available" BOOLEAN NOT NULL DEFAULT TRUE,
     "is_refundable" BOOLEAN NOT NULL DEFAULT FALSE,
-    "star_rating" DECIMAL(10, 1),
+    "star_rating" DECIMAL(1, 1),
     "sleeps" INT NOT NULL,
     "bedroom_amount" INT NOT NULL,
-    "bathrooms" NUMERIC(3, 1) NOT NULL, -- e.g., 2.5 bathrooms
+    "bathrooms" DECIMAL(3, 1) NOT NULL, -- e.g., 2.5 bathrooms
     "size" DECIMAL(10, 1),
     "days_from_booking_cancellation_deadline" INT,
     "policies_text" TEXT,
