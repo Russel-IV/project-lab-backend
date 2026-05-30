@@ -33,7 +33,7 @@ classDiagram
         +int sleeps
         +int bedroom_amount
         +int bathrooms
-        +string size
+        +float size
         +int days_from_booking_cancellation_deadline
         +string policies_text
         +string important_information

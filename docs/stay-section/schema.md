@@ -31,7 +31,7 @@ erDiagram
         int sleeps
         int bedroom_amount
         int bathrooms
-        string size
+        float size
         int days_from_booking_cancellation_deadline
         text policies_text
         text important_information
