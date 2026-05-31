@@ -104,7 +104,10 @@ class StayService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentTypeIds must contain only positive ids")
         }
         if (request.travelerExperienceIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "travelerExperienceIds must contain only positive ids")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "travelerExperienceIds must contain only positive ids"
+            )
         }
         val stay = buildStay(0, request)
         return stayRepository.save(stay).toResponse()
@@ -173,7 +176,10 @@ class StayService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentTypeIds must contain only positive ids")
         }
         if (request.travelerExperienceIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "travelerExperienceIds must contain only positive ids")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "travelerExperienceIds must contain only positive ids"
+            )
         }
         if (!stayRepository.existsById(id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
@@ -246,7 +252,7 @@ class StayService(
         )
     }
 
-    private fun <T> fetchAllByIds(
+    private fun <T : Any> fetchAllByIds(
         ids: Set<Int>,
         repository: JpaRepository<T, Int>,
         fieldName: String
