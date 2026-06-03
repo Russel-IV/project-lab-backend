@@ -39,3 +39,6 @@ pnpm-debug.log*
 
 # Secrets
 .env
+
+### AWS secrets (local testing) ###
+.secrets

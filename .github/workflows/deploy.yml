@@ -1,0 +1,85 @@
+name: CI/CD Pipeline to AWS ECS Express
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read # Required to checkout code
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: project-lab
+  ECS_CLUSTER: project-lab-cluster
+  ECS_SERVICE: spring-backend-service
+  # Express Mode Roles
+  EXECUTION_ROLE_ARN: arn:aws:iam::378780514580:role/ECS-tasks
+  INFRASTRUCTURE_ROLE_ARN: arn:aws:iam::378780514580:role/ECS-Express
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java Environment for caching Maven dependencies if needed
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: "24"
+          distribution: "temurin"
+          cache: "maven"
+
+      # 3. Authenticate with AWS via IAM User Secrets
+      - name: Configure AWS Credentials
+        id: aws-creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      # 4. Log into Amazon Elastic Container Registry
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 5. Build the Docker Image and tag it with the unique Git Commit SHA
+      - name: Build, Tag, and Push Image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry || format('{0}.dkr.ecr.{1}.amazonaws.com', steps.aws-creds.outputs.aws-account-id, env.AWS_REGION) }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI not found. Installing..."
+            curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            if command -v sudo &> /dev/null; then
+              sudo ./aws/install --update
+            else
+              ./aws/install --update
+            fi
+            rm -rf awscliv2.zip aws
+          fi
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # 6. Deploy to Amazon ECS Express Mode
+      - name: Deploy Express Service
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          cluster: ${{ env.ECS_CLUSTER }}
+          service-name: ${{ env.ECS_SERVICE }}
+          image: ${{ steps.build-image.outputs.image }}
+          execution-role-arn: ${{ env.EXECUTION_ROLE_ARN }}
+          infrastructure-role-arn: ${{ env.INFRASTRUCTURE_ROLE_ARN }}
+          container-port: 8080
+          cpu: 512
+          memory: 1024
