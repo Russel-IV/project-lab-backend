@@ -5,31 +5,14 @@
 - **Deliverables:** JUnit 5 test classes in `test/` plus this documentation.
 - **Resources:** JUnit 5, Mockito, and the service/repository classes under test.
 
-<<<<<<< HEAD
 # Test Execution
 - Run `mvn -q test` from the repository root.
-=======
-# Test Execution (Maven)
-- Ensure Maven is installed.
-- Configure Maven to use `test/` as a test source directory (example):
-  ```
-  <build>
-    <testSourceDirectory>${project.basedir}/tests</testSourceDirectory>
-  </build>
-  ```
-- Run `./test/run-tests.sh` (or `mvn -q test` from the repository root).
->>>>>>> 992cf47796d65c491ba33e93261893d6789faca8
 
 # Test Case
 - **TC-USER-001 — Create user rejects blank name**
   - **Preconditions:** None.
-<<<<<<< HEAD
-  - **Test steps:** Call `UserSe
-  - rvice.createUser` with a blank `name`.
-=======
   - **Test steps:** Call `UserService.createUser` with a blank `name`.
->>>>>>> 992cf47796d65c491ba33e93261893d6789faca8
-- **TC-USER-002 — Create user returns persisted response**
+  - **TC-USER-002 — Create user returns persisted response**
   - **Preconditions:** Repository save returns a user with an ID.
   - **Test steps:** Call `UserService.createUser` with a valid `name` and assert response fields.
 - **TC-STAY-001 — Create stay rejects negative price**
