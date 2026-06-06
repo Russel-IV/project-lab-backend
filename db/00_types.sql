@@ -1,2 +1,2 @@
-CREATE TYPE property_type AS ENUM ('house', 'hotel');
-CREATE TYPE amenity_type AS ENUM ('room_amenity', 'property_amenity');
+CREATE TYPE property_type AS ENUM ('HOME', 'HOTEL');
+CREATE TYPE amenity_type AS ENUM ('ROOM_AMENITY', 'PROPERTY_AMENITY');

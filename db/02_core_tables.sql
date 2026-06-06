@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS stay (
     price DECIMAL(10, 2) NOT NULL,
     name TEXT NOT NULL,
     about TEXT,
-    property_type property_type,
+    property_type VARCHAR(50),
     street_address TEXT NOT NULL,
     extended_address TEXT,
     city TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS stay (
     country_code TEXT,
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
     is_refundable BOOLEAN NOT NULL DEFAULT FALSE,
-    star_rating DECIMAL(1, 1),
+    star_rating DECIMAL(2, 1),
     sleeps INT NOT NULL,
     bedroom_amount INT NOT NULL,
     bathrooms DECIMAL(3, 1) NOT NULL, -- e.g., 2.5 bathrooms

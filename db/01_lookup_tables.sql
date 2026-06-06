@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS view (
 CREATE TABLE IF NOT EXISTS amenity (
     id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL UNIQUE,
-    type amenity_type NOT NULL
+    type VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS accessibility (
