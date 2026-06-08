@@ -1,0 +1,144 @@
+{
+  "info": {
+    "_postman_id": "78fd2f3a-3450-4d89-94b1-87621c172d76",
+    "name": "Project Lab Backend",
+    "description": "Collection of requests to test the Project Lab Backend endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stay Controller API",
+      "item": [
+        {
+          "name": "Get All Stays",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stays",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stays"]
+            },
+            "description": "Retrieves a list of all stays from the database."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stay by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stays/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stays", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "The ID of the stay to retrieve"
+                }
+              ]
+            },
+            "description": "Retrieves details of a specific stay by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Stay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 120.50,\n  \"name\": \"Cozy Beachfront House\",\n  \"about\": \"Beautiful house right next to the shore.\",\n  \"propertyType\": \"HOME\",\n  \"streetAddress\": \"123 Ocean Drive\",\n  \"extendedAddress\": \"Apt 4B\",\n  \"city\": \"Miami\",\n  \"stateProvince\": \"Florida\",\n  \"postalCode\": \"33139\",\n  \"countryCode\": \"US\",\n  \"isAvailable\": true,\n  \"isRefundable\": true,\n  \"starRating\": 4.5,\n  \"sleeps\": 4,\n  \"bedroomAmount\": 2,\n  \"bathrooms\": 1.5,\n  \"size\": 85.0,\n  \"daysFromBookingCancellationDeadline\": 5,\n  \"policiesText\": \"No pets allowed.\",\n  \"importantInformation\": \"Check-in after 3 PM.\",\n  \"hostId\": 1,\n  \"propertyBrandId\": 1,\n  \"viewIds\": [1],\n  \"amenityIds\": [1, 2, 4],\n  \"accessibilityIds\": [1],\n  \"mealPlanIds\": [1],\n  \"paymentTypeIds\": [1, 2],\n  \"travelerExperienceIds\": [1]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stays",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stays"]
+            },
+            "description": "Creates a new stay with the provided details."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Stay",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 135.00,\n  \"name\": \"Cozy Beachfront House (Updated)\",\n  \"about\": \"Beautiful house right next to the shore, newly renovated.\",\n  \"propertyType\": \"HOME\",\n  \"streetAddress\": \"123 Ocean Drive\",\n  \"extendedAddress\": \"Apt 4B\",\n  \"city\": \"Miami\",\n  \"stateProvince\": \"Florida\",\n  \"postalCode\": \"33139\",\n  \"countryCode\": \"US\",\n  \"isAvailable\": true,\n  \"isRefundable\": true,\n  \"starRating\": 4.8,\n  \"sleeps\": 5,\n  \"bedroomAmount\": 2,\n  \"bathrooms\": 2.0,\n  \"size\": 90.0,\n  \"daysFromBookingCancellationDeadline\": 3,\n  \"policiesText\": \"No pets allowed. No smoking.\",\n  \"importantInformation\": \"Check-in after 3 PM. Host will meet you.\",\n  \"hostId\": 1,\n  \"propertyBrandId\": 1,\n  \"viewIds\": [1, 2],\n  \"amenityIds\": [1, 2, 4, 5],\n  \"accessibilityIds\": [1, 2],\n  \"mealPlanIds\": [1, 2],\n  \"paymentTypeIds\": [1, 2, 3],\n  \"travelerExperienceIds\": [1, 2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stays/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stays", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "The ID of the stay to update"
+                }
+              ]
+            },
+            "description": "Updates an existing stay by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Stay",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stays/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stays", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "The ID of the stay to delete"
+                }
+              ]
+            },
+            "description": "Deletes a stay by its ID."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
