@@ -55,6 +55,8 @@
 - _availability is derived: a room is free for [A, B] when it does not appear in BOOKING_ROOM joined with a PENDING or CONFIRMED BOOKING where check_in_date < B AND check_out_date > A_
 - _for HOME stays this means at most one active booking at a time; for HOTEL stays each room is checked independently_
 **STAY_PICTURE** (*id*, *stay_id*, url, caption, is_primary, display_order)
+- _url is a server-assigned relative path (e.g. /uploads/stays/1/uuid.jpg); pictures are uploaded as image files, not external URLs_
+- _at most one picture per stay may have is_primary = true; enforced at the service layer and via a partial unique index_
 **AMENITY** (*id*, name, type)
 - _type is an enum "room_amenity" or "property_amenity"_
 **REVIEW** (*id*, text, *user_id*, *stay_id*)

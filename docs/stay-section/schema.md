@@ -66,9 +66,9 @@ erDiagram
     STAY_PICTURE {
         int id PK
         int stay_id FK
-        string url
+        string url "server-assigned path to uploaded file"
         string caption
-        boolean is_primary
+        boolean is_primary "unique per stay"
         int display_order
     }
 

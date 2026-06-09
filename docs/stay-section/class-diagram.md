@@ -62,6 +62,8 @@ classDiagram
         +string caption
         +boolean is_primary
         +int display_order
+        %% url is a server-assigned path, e.g. /uploads/stays/1/uuid.jpg
+        %% pictures are uploaded as files; at most one is_primary per stay
     }
 
     class REVIEW {
