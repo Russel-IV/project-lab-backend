@@ -17,11 +17,6 @@ open class Stay(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     open val id: Int = 0,
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    @field:NotNull
-    @field:DecimalMin("0.00")
-    open val price: BigDecimal,
-
     @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     @field:NotBlank
     open val name: String,
@@ -30,31 +25,8 @@ open class Stay(
     open val about: String? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "property_type")
-    open val propertyType: PropertyType? = null,
-
-    @Column(name = "street_address", nullable = false, columnDefinition = "TEXT")
-    @field:NotBlank
-    open val streetAddress: String,
-
-    @Column(name = "extended_address", columnDefinition = "TEXT")
-    open val extendedAddress: String? = null,
-
-    @Column(name = "city", nullable = false, columnDefinition = "TEXT")
-    @field:NotBlank
-    open val city: String,
-
-    @Column(name = "state_province", columnDefinition = "TEXT")
-    open val stateProvince: String? = null,
-
-    @Column(name = "postal_code", columnDefinition = "TEXT")
-    open val postalCode: String? = null,
-
-    @Column(name = "country_code", columnDefinition = "TEXT")
-    open val countryCode: String? = null,
-
-    @Column(name = "is_available", nullable = false)
-    open val isAvailable: Boolean = true,
+    @Column(name = "property_type", nullable = false)
+    open val propertyType: PropertyType,
 
     @Column(name = "is_refundable", nullable = false)
     open val isRefundable: Boolean = false,
@@ -63,23 +35,6 @@ open class Stay(
     @field:DecimalMin("0.0")
     @field:DecimalMax("5.0")
     open val starRating: BigDecimal? = null,
-
-    @Column(name = "sleeps", nullable = false)
-    @field:Min(1)
-    open val sleeps: Int,
-
-    @Column(name = "bedroom_amount", nullable = false)
-    @field:Min(0)
-    open val bedroomAmount: Int,
-
-    @Column(name = "bathrooms", nullable = false, precision = 3, scale = 1)
-    @field:NotNull
-    @field:DecimalMin("0.0")
-    open val bathrooms: BigDecimal,
-
-    @Column(name = "size", precision = 10, scale = 1)
-    @field:DecimalMin("0.0")
-    open val size: BigDecimal? = null,
 
     @Column(name = "days_from_booking_cancellation_deadline")
     @field:Min(0)
@@ -100,6 +55,10 @@ open class Stay(
     @JoinColumn(name = "property_brand_id")
     @OnDelete(action = OnDeleteAction.SET_NULL)
     open val propertyBrand: PropertyBrand? = null,
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], optional = false)
+    @JoinColumn(name = "address_id", nullable = false)
+    open val address: Address,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

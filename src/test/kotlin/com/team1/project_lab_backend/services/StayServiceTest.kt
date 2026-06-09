@@ -1,7 +1,10 @@
 package com.team1.project_lab_backend.services
 
+import com.team1.project_lab_backend.dto.AddressRequest
 import com.team1.project_lab_backend.dto.StayRequest
+import com.team1.project_lab_backend.models.Address
 import com.team1.project_lab_backend.models.Host
+import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.repositories.AccessibilityRepository
 import com.team1.project_lab_backend.repositories.AmenityRepository
@@ -9,6 +12,8 @@ import com.team1.project_lab_backend.repositories.HostRepository
 import com.team1.project_lab_backend.repositories.MealPlanRepository
 import com.team1.project_lab_backend.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.repositories.PropertyBrandRepository
+import com.team1.project_lab_backend.repositories.RoomRepository
+import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.repositories.ViewRepository
@@ -31,6 +36,8 @@ class StayServiceTest {
     private val mealPlanRepository = Mockito.mock(MealPlanRepository::class.java)
     private val paymentTypeRepository = Mockito.mock(PaymentTypeRepository::class.java)
     private val travelerExperienceRepository = Mockito.mock(TravelerExperienceRepository::class.java)
+    private val roomRepository = Mockito.mock(RoomRepository::class.java)
+    private val stayPictureRepository = Mockito.mock(StayPictureRepository::class.java)
 
     private val stayService = StayService(
         stayRepository,
@@ -41,18 +48,23 @@ class StayServiceTest {
         accessibilityRepository,
         mealPlanRepository,
         paymentTypeRepository,
-        travelerExperienceRepository
+        travelerExperienceRepository,
+        roomRepository,
+        stayPictureRepository
     )
+
+    private fun baseAddress(): AddressRequest =
+        AddressRequest(
+            streetAddress = "123 Main",
+            city = "Testville",
+            countryCode = "US"
+        )
 
     private fun baseRequest(): StayRequest =
         StayRequest(
-            price = BigDecimal("120.00"),
             name = "Test Stay",
-            streetAddress = "123 Main",
-            city = "Testville",
-            sleeps = 2,
-            bedroomAmount = 1,
-            bathrooms = BigDecimal("1.0"),
+            propertyType = PropertyType.HOME,
+            address = baseAddress(),
             hostId = 1
         )
 
@@ -63,43 +75,29 @@ class StayServiceTest {
     }
 
     private fun stubSave(request: StayRequest, host: Host, id: Int = 10): Stay {
+        val address = Address(
+            id = 0,
+            streetAddress = request.address.streetAddress,
+            city = request.address.city,
+            countryCode = request.address.countryCode
+        )
         val stay = Stay(
             id = id,
-            price = request.price,
             name = request.name,
             about = request.about,
             propertyType = request.propertyType,
-            streetAddress = request.streetAddress,
-            extendedAddress = request.extendedAddress,
-            city = request.city,
-            stateProvince = request.stateProvince,
-            postalCode = request.postalCode,
-            countryCode = request.countryCode,
-            isAvailable = request.isAvailable,
+            address = address,
             isRefundable = request.isRefundable,
             starRating = request.starRating,
-            sleeps = request.sleeps,
-            bedroomAmount = request.bedroomAmount,
-            bathrooms = request.bathrooms,
-            size = request.size,
             daysFromBookingCancellationDeadline = request.daysFromBookingCancellationDeadline,
             policiesText = request.policiesText,
             importantInformation = request.importantInformation,
             host = host
         )
         Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenReturn(stay)
+        Mockito.`when`(roomRepository.findByStayId(id)).thenReturn(emptyList())
+        Mockito.`when`(stayPictureRepository.findByStayId(id)).thenReturn(emptyList())
         return stay
-    }
-
-    @Test
-    fun createStayRejectsNegativePrice() {
-        val request = baseRequest().copy(price = BigDecimal("-1.00"))
-
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
-        }
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
 
     @Test
@@ -116,29 +114,6 @@ class StayServiceTest {
     }
 
     @Test
-    fun createStayAllowsZeroPrice() {
-        val request = baseRequest().copy(price = BigDecimal.ZERO)
-        val host = stubHost()
-        stubSave(request, host, id = 11)
-
-        val response = stayService.createStay(request)
-
-        assertEquals(11, response.id)
-        assertEquals(BigDecimal.ZERO, response.price)
-    }
-
-    @Test
-    fun createStayRejectsZeroSleeps() {
-        val request = baseRequest().copy(sleeps = 0)
-
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
-        }
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
-    }
-
-    @Test
     fun createStayRejectsBlankName() {
         val request = baseRequest().copy(name = " ")
 
@@ -151,7 +126,7 @@ class StayServiceTest {
 
     @Test
     fun createStayRejectsBlankStreetAddress() {
-        val request = baseRequest().copy(streetAddress = "")
+        val request = baseRequest().copy(address = baseAddress().copy(streetAddress = ""))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
             stayService.createStay(request)
@@ -162,7 +137,7 @@ class StayServiceTest {
 
     @Test
     fun createStayRejectsBlankCity() {
-        val request = baseRequest().copy(city = " ")
+        val request = baseRequest().copy(address = baseAddress().copy(city = " "))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
             stayService.createStay(request)
@@ -172,8 +147,8 @@ class StayServiceTest {
     }
 
     @Test
-    fun createStayRejectsNegativeBathrooms() {
-        val request = baseRequest().copy(bathrooms = BigDecimal("-0.5"))
+    fun createStayRejectsBlankCountryCode() {
+        val request = baseRequest().copy(address = baseAddress().copy(countryCode = ""))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
             stayService.createStay(request)
@@ -230,7 +205,7 @@ class StayServiceTest {
     @Test
     fun updateStayReturnsNotFoundWhenMissing() {
         val request = baseRequest()
-        Mockito.`when`(stayRepository.existsById(55)).thenReturn(false)
+        Mockito.`when`(stayRepository.findById(55)).thenReturn(Optional.empty())
 
         val exception = assertThrows(ResponseStatusException::class.java) {
             stayService.updateStay(55, request)
@@ -242,8 +217,16 @@ class StayServiceTest {
     @Test
     fun updateStayIdempotentForSameData() {
         val request = baseRequest()
-        Mockito.`when`(stayRepository.existsById(20)).thenReturn(true)
         val host = stubHost()
+        val address = Address(id = 5, streetAddress = "123 Main", city = "Testville", countryCode = "US")
+        val existingStay = Stay(
+            id = 20,
+            name = request.name,
+            propertyType = request.propertyType,
+            address = address,
+            host = host
+        )
+        Mockito.`when`(stayRepository.findById(20)).thenReturn(Optional.of(existingStay))
         stubSave(request, host, id = 20)
 
         val first = stayService.updateStay(20, request)
@@ -251,6 +234,5 @@ class StayServiceTest {
 
         assertEquals(first.id, second.id)
         assertEquals(first.name, second.name)
-        assertEquals(first.price, second.price)
     }
 }
