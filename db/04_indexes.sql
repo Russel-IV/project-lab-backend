@@ -3,9 +3,24 @@
 -- ==========================================
 
 CREATE INDEX idx_stay_host_id ON stay(host_id);
+CREATE INDEX idx_stay_address_id ON stay(address_id);
 CREATE INDEX idx_stay_brand_id ON stay(property_brand_id);
 CREATE INDEX idx_review_stay_id ON review(stay_id);
 CREATE INDEX idx_review_user_id ON review(user_id);
+
+-- Room indexes
+CREATE INDEX idx_room_stay_id ON room(stay_id);
+
+-- Booking indexes
+CREATE INDEX idx_booking_user_id ON booking(user_id);
+CREATE INDEX idx_booking_dates ON booking(check_in_date, check_out_date);
+
+-- Booking-room bridge indexes
+CREATE INDEX idx_br_room_id ON booking_room(room_id);
+
+-- Stay picture indexes
+CREATE INDEX idx_stay_picture_stay_id ON stay_picture(stay_id);
+CREATE UNIQUE INDEX idx_stay_picture_primary ON stay_picture(stay_id) WHERE is_primary = TRUE;
 
 -- Junction trailing-edge indexes for fast backward lookups
 CREATE INDEX idx_fk_favorite_stay ON user_favorite(stay_id);

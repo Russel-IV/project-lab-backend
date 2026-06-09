@@ -138,3 +138,20 @@ CREATE TABLE IF NOT EXISTS stay_traveler_experience (
 
     PRIMARY KEY (stay_id, traveler_experience_id)
 );
+
+CREATE TABLE IF NOT EXISTS booking_room (
+    booking_id INT NOT NULL,
+    room_id INT NOT NULL,
+
+    CONSTRAINT fk_br_booking
+        FOREIGN KEY (booking_id)
+        REFERENCES booking(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_br_room
+        FOREIGN KEY (room_id)
+        REFERENCES room(id)
+        ON DELETE RESTRICT,
+
+    PRIMARY KEY (booking_id, room_id)
+);
