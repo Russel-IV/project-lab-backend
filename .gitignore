@@ -42,3 +42,7 @@ pnpm-debug.log*
 
 ### AWS secrets (local testing) ###
 .secrets
+
+# Etc
+
+.claude
