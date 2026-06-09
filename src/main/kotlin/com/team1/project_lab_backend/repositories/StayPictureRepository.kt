@@ -10,4 +10,6 @@ interface StayPictureRepository : JpaRepository<StayPicture, Int> {
     fun findByStayIdIn(stayIds: Collection<Int>): List<StayPicture>
 
     fun findByStayIdAndId(stayId: Int, id: Int): StayPicture?
+
+    fun existsByStayIdAndIsPrimary(stayId: Int, isPrimary: Boolean): Boolean
 }

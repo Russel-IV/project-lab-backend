@@ -30,6 +30,7 @@ Required variables:
 | `POSTGRES_USER` | Database user |
 | `POSTGRES_PASSWORD` | Database password |
 | `POSTGRES_SSL_MODE` | SSL mode (e.g. `disable`) |
+| `UPLOAD_DIR` | Absolute path where uploaded pictures are stored (e.g. `/app/uploads`) |
 
 2. Start the stack:
 
@@ -375,24 +376,36 @@ Returns all pictures for a stay.
 ---
 
 #### `POST /api/v1/stays/{stayId}/pictures`
-Adds a picture to a stay. At most one picture per stay may have `isPrimary: true`.
+Uploads a picture for a stay. At most one picture per stay may have `isPrimary: true`.
 
-**Request**
+Request is `multipart/form-data`:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `file` | image file | yes | JPEG, PNG, WebP, etc. Max 10 MB |
+| `caption` | string | no | Alt text / caption |
+| `isPrimary` | boolean | no | Defaults to `false` |
+| `displayOrder` | integer | no | Defaults to `0` |
+
+**Response 201**
 ```json
 {
-  "url": "https://cdn.example.com/stays/1/living-room.jpg",
+  "id": 1,
+  "stayId": 1,
+  "url": "/uploads/stays/1/3f2a1b4c-....jpg",
   "caption": "Open-plan living area",
   "isPrimary": false,
   "displayOrder": 1
 }
 ```
 
-**Response 201** — same shape as single picture above.
+The `url` field is a server-relative path. Prepend the API host to get the full URL.  
+Uploaded files are served at `GET /uploads/stays/{stayId}/{filename}`.
 
 ---
 
 #### `PUT /api/v1/stays/{stayId}/pictures/{id}`
-Updates a picture. Same request body as POST. **Response 200**
+Updates a picture's metadata and optionally replaces the file. Same `multipart/form-data` format as POST; omit `file` to keep the existing image. **Response 200**
 
 ---
 
