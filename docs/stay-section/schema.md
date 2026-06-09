@@ -13,29 +13,63 @@ erDiagram
         float cancellation_rate
     }
 
-    STAY {
+    ADDRESS {
         int id PK
-        float price
-        string name
-        text about
-        property_type property_type
         string street_address
         string extended_address
         string city
         string state_province
         string postal_code
         string country_code
-        boolean is_available
+    }
+
+    STAY {
+        int id PK
+        string name
+        text about
+        property_type property_type
         boolean is_refundable
         float star_rating
-        int sleeps
-        int bedroom_amount
-        int bathrooms
-        float size
         int days_from_booking_cancellation_deadline
         text policies_text
         text important_information
         int host_id FK
+        int address_id FK
+    }
+
+    ROOM {
+        int id PK
+        int stay_id FK
+        string name
+        float price
+        int sleeps
+        int bedroom_amount
+        int bathrooms
+        float size
+    }
+
+    BOOKING {
+        int id PK
+        int user_id FK
+        date check_in_date
+        date check_out_date
+        booking_status status
+        int guests_count
+        datetime created_at
+    }
+
+    BOOKING_ROOM {
+        int booking_id PK, FK
+        int room_id PK, FK
+    }
+
+    STAY_PICTURE {
+        int id PK
+        int stay_id FK
+        string url
+        string caption
+        boolean is_primary
+        int display_order
     }
 
     REVIEW {
@@ -132,20 +166,26 @@ erDiagram
         datetime created_at
     }
 
-    %% Relationships (Named explicitly to fix rendering issues)
+    %% Relationships
     HOST ||--o{ STAY : "hosts"
+    ADDRESS ||--|| STAY : "located_at"
+    STAY ||--|{ ROOM : "contains"
+    USER ||--o{ BOOKING : "makes"
+    BOOKING ||--|{ BOOKING_ROOM : "includes"
+    ROOM ||--o{ BOOKING_ROOM : "booked_in"
     USER ||--o{ REVIEW : "writes"
     STAY ||--o{ REVIEW : "receives"
-    
+    STAY ||--o{ STAY_PICTURE : "has"
+
     USER ||--o{ USER_FAVORITE : "saves"
     STAY ||--o{ USER_FAVORITE : "favored_by"
 
     HOST ||--o{ HOST_LANGUAGE : "speaks"
     LANGUAGE ||--o{ HOST_LANGUAGE : "spoken_by"
-    
+
     STAY ||--o{ STAY_VIEW : "features"
     VIEW ||--o{ STAY_VIEW : "seen_in"
-    
+
     STAY ||--o{ STAY_AMENITY : "includes"
     AMENITY ||--o{ STAY_AMENITY : "provided_in"
 
