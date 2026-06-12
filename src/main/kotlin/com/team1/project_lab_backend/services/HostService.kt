@@ -5,10 +5,18 @@ import com.team1.project_lab_backend.dto.HostResponse
 import com.team1.project_lab_backend.models.Host
 import com.team1.project_lab_backend.repositories.HostRepository
 import com.team1.project_lab_backend.repositories.LanguageRepository
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireAllPositive
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireInRange
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
+
+private val RATING_MAX = BigDecimal("100.0")
 
 @Service
 class HostService(
@@ -21,112 +29,46 @@ class HostService(
 
     @Transactional(readOnly = true)
     fun getHostById(id: Int): HostResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return hostRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "host not found") }
+        id.requirePositive()
+        return hostRepository.findById(id).orNotFound("host not found").toResponse()
     }
 
     @Transactional
     fun createHost(request: HostRequest): HostResponse {
         val hostId = request.id ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id is required")
-        if (hostId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
+        hostId.requirePositive()
         if (hostRepository.existsById(hostId)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "host already exists")
         }
-        val max = java.math.BigDecimal("100.0")
-        request.communicationRating?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "communicationRating must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "communicationRating must be <= 100.0")
-            }
-        }
-        request.checkinProcessRating?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkinProcessRating must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkinProcessRating must be <= 100.0")
-            }
-        }
-        request.cancellationRate?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cancellationRate must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cancellationRate must be <= 100.0")
-            }
-        }
-        if (request.languageIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageIds must contain only positive ids")
-        }
+        validateHostRequest(request)
         val host = buildHost(hostId, request)
         return hostRepository.save(host).toResponse()
     }
 
     @Transactional
     fun updateHost(id: Int, request: HostRequest): HostResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
+        id.requirePositive()
         if (request.id != null && request.id != id) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id mismatch")
         }
-        if (!hostRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "host not found")
-        }
-        if (request.id != null) {
-            if (request.id <= 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-            }
-        }
-        val max = java.math.BigDecimal("100.0")
-        request.communicationRating?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "communicationRating must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "communicationRating must be <= 100.0")
-            }
-        }
-        request.checkinProcessRating?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkinProcessRating must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkinProcessRating must be <= 100.0")
-            }
-        }
-        request.cancellationRate?.let {
-            if (it.compareTo(java.math.BigDecimal.ZERO) < 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cancellationRate must be >= 0")
-            }
-            if (it.compareTo(max) > 0) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cancellationRate must be <= 100.0")
-            }
-        }
-        if (request.languageIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageIds must contain only positive ids")
-        }
+        hostRepository.requireExistsById(id, "host not found")
+        validateHostRequest(request)
         val host = buildHost(id, request)
         return hostRepository.save(host).toResponse()
     }
 
     @Transactional
     fun deleteHost(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!hostRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "host not found")
-        }
+        id.requirePositive()
+        hostRepository.requireExistsById(id, "host not found")
         hostRepository.deleteById(id)
+    }
+
+    private fun validateHostRequest(request: HostRequest) {
+        request.communicationRating?.requireInRange(BigDecimal.ZERO, RATING_MAX, "communicationRating")
+        request.checkinProcessRating?.requireInRange(BigDecimal.ZERO, RATING_MAX, "checkinProcessRating")
+        request.cancellationRate?.requireInRange(BigDecimal.ZERO, RATING_MAX, "cancellationRate")
+        request.languageIds.requireAllPositive("languageIds")
     }
 
     private fun buildHost(id: Int, request: HostRequest): Host {
@@ -147,7 +89,6 @@ class HostService(
             languages = languages
         )
     }
-
 }
 
 private fun Host.toResponse(): HostResponse =

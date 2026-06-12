@@ -6,6 +6,9 @@ import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,15 +26,9 @@ class ReviewService(
 
     @Transactional
     fun createReview(request: ReviewRequest): ReviewResponse {
-        if (request.text.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text must not be blank")
-        }
-        if (request.userId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be positive")
-        }
-        if (request.stayId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        }
+        request.text.requireNotBlank("text")
+        request.userId.requirePositive("userId")
+        request.stayId.requirePositive("stayId")
         if (!userRepository.existsById(request.userId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId not found")
         }
@@ -44,21 +41,11 @@ class ReviewService(
 
     @Transactional
     fun updateReview(id: Int, request: ReviewRequest): ReviewResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.text.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text must not be blank")
-        }
-        if (request.userId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be positive")
-        }
-        if (request.stayId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        }
-        if (!reviewRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
-        }
+        id.requirePositive()
+        request.text.requireNotBlank("text")
+        request.userId.requirePositive("userId")
+        request.stayId.requirePositive("stayId")
+        reviewRepository.requireExistsById(id, "review not found")
         if (!userRepository.existsById(request.userId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId not found")
         }
@@ -71,15 +58,10 @@ class ReviewService(
 
     @Transactional
     fun deleteReview(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!reviewRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
-        }
+        id.requirePositive()
+        reviewRepository.requireExistsById(id, "review not found")
         reviewRepository.deleteById(id)
     }
-
 }
 
 private fun Review.toResponse(): ReviewResponse =

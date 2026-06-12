@@ -6,6 +6,11 @@ import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.models.Room
 import com.team1.project_lab_backend.repositories.RoomRepository
 import com.team1.project_lab_backend.repositories.StayRepository
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNonNegative
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,33 +26,21 @@ class RoomService(
 ) {
     @Transactional(readOnly = true)
     fun getRoomsForStay(stayId: Int): List<RoomResponse> {
-        if (stayId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        }
-        if (!stayRepository.existsById(stayId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        }
+        stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(stayId, "stay not found")
         return roomRepository.findByStayId(stayId).map { it.toResponse() }
     }
 
     @Transactional(readOnly = true)
     fun getRoomById(id: Int): RoomResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return roomRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "room not found") }
+        id.requirePositive()
+        return roomRepository.findById(id).orNotFound("room not found").toResponse()
     }
 
     @Transactional
     fun createRoom(stayId: Int, request: RoomRequest): RoomResponse {
-        if (stayId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        }
-        if (!stayRepository.existsById(stayId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        }
+        stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(stayId, "stay not found")
         validateRoomRequest(request)
         val room = Room(
             id = 0,
@@ -64,11 +57,8 @@ class RoomService(
 
     @Transactional
     fun updateRoom(id: Int, request: RoomRequest): RoomResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        val existing = roomRepository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "room not found") }
+        id.requirePositive()
+        val existing = roomRepository.findById(id).orNotFound("room not found")
         validateRoomRequest(request)
         val room = Room(
             id = id,
@@ -85,20 +75,14 @@ class RoomService(
 
     @Transactional
     fun deleteRoom(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!roomRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "room not found")
-        }
+        id.requirePositive()
+        roomRepository.requireExistsById(id, "room not found")
         roomRepository.deleteById(id)
     }
 
     @Transactional(readOnly = true)
     fun getAvailableRooms(stayId: Int, checkIn: LocalDate, checkOut: LocalDate): List<RoomResponse> {
-        if (stayId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        }
+        stayId.requirePositive("stayId")
         if (!checkOut.isAfter(checkIn)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOut must be after checkIn")
         }
@@ -107,24 +91,12 @@ class RoomService(
     }
 
     private fun validateRoomRequest(request: RoomRequest) {
-        if (request.name.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
-        }
-        if (request.price.compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "price must be >= 0")
-        }
-        if (request.sleeps <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "sleeps must be > 0")
-        }
-        if (request.bedroomAmount < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "bedroomAmount must be >= 0")
-        }
-        if (request.bathrooms.compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "bathrooms must be >= 0")
-        }
-        if (request.size != null && request.size.compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be >= 0")
-        }
+        request.name.requireNotBlank("name")
+        request.price.requireNonNegative("price")
+        request.sleeps.requirePositive("sleeps")
+        request.bedroomAmount.requireNonNegative("bedroomAmount")
+        request.bathrooms.requireNonNegative("bathrooms")
+        request.size?.requireNonNegative("size")
     }
 }
 

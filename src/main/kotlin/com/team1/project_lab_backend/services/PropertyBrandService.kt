@@ -4,10 +4,12 @@ import com.team1.project_lab_backend.dto.PropertyBrandRequest
 import com.team1.project_lab_backend.dto.PropertyBrandResponse
 import com.team1.project_lab_backend.models.PropertyBrand
 import com.team1.project_lab_backend.repositories.PropertyBrandRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class PropertyBrandService(
@@ -19,46 +21,30 @@ class PropertyBrandService(
 
     @Transactional(readOnly = true)
     fun getPropertyBrandById(id: Int): PropertyBrandResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return propertyBrandRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found") }
+        id.requirePositive()
+        return propertyBrandRepository.findById(id).orNotFound("property brand not found").toResponse()
     }
 
     @Transactional
     fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrandResponse {
-        if (request.brandName.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "brandName must not be blank")
-        }
+        request.brandName.requireNotBlank("brandName")
         val propertyBrand = PropertyBrand(brandName = request.brandName)
         return propertyBrandRepository.save(propertyBrand).toResponse()
     }
 
     @Transactional
     fun updatePropertyBrand(id: Int, request: PropertyBrandRequest): PropertyBrandResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.brandName.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "brandName must not be blank")
-        }
-        if (!propertyBrandRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
-        }
+        id.requirePositive()
+        request.brandName.requireNotBlank("brandName")
+        propertyBrandRepository.requireExistsById(id, "property brand not found")
         val propertyBrand = PropertyBrand(id = id, brandName = request.brandName)
         return propertyBrandRepository.save(propertyBrand).toResponse()
     }
 
     @Transactional
     fun deletePropertyBrand(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!propertyBrandRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
-        }
+        id.requirePositive()
+        propertyBrandRepository.requireExistsById(id, "property brand not found")
         propertyBrandRepository.deleteById(id)
     }
 }

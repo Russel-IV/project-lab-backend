@@ -4,10 +4,12 @@ import com.team1.project_lab_backend.dto.AccessibilityRequest
 import com.team1.project_lab_backend.dto.AccessibilityResponse
 import com.team1.project_lab_backend.models.Accessibility
 import com.team1.project_lab_backend.repositories.AccessibilityRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class AccessibilityService(
@@ -19,46 +21,30 @@ class AccessibilityService(
 
     @Transactional(readOnly = true)
     fun getAccessibilityById(id: Int): AccessibilityResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return accessibilityRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "accessibility not found") }
+        id.requirePositive()
+        return accessibilityRepository.findById(id).orNotFound("accessibility not found").toResponse()
     }
 
     @Transactional
     fun createAccessibility(request: AccessibilityRequest): AccessibilityResponse {
-        if (request.accessibilityType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "accessibilityType must not be blank")
-        }
+        request.accessibilityType.requireNotBlank("accessibilityType")
         val accessibility = Accessibility(accessibilityType = request.accessibilityType)
         return accessibilityRepository.save(accessibility).toResponse()
     }
 
     @Transactional
     fun updateAccessibility(id: Int, request: AccessibilityRequest): AccessibilityResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.accessibilityType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "accessibilityType must not be blank")
-        }
-        if (!accessibilityRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "accessibility not found")
-        }
+        id.requirePositive()
+        request.accessibilityType.requireNotBlank("accessibilityType")
+        accessibilityRepository.requireExistsById(id, "accessibility not found")
         val accessibility = Accessibility(id = id, accessibilityType = request.accessibilityType)
         return accessibilityRepository.save(accessibility).toResponse()
     }
 
     @Transactional
     fun deleteAccessibility(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!accessibilityRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "accessibility not found")
-        }
+        id.requirePositive()
+        accessibilityRepository.requireExistsById(id, "accessibility not found")
         accessibilityRepository.deleteById(id)
     }
 }

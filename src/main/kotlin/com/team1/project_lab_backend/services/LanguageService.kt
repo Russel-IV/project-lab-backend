@@ -4,10 +4,11 @@ import com.team1.project_lab_backend.dto.LanguageRequest
 import com.team1.project_lab_backend.dto.LanguageResponse
 import com.team1.project_lab_backend.models.Language
 import com.team1.project_lab_backend.repositories.LanguageRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class LanguageService(
@@ -19,36 +20,24 @@ class LanguageService(
 
     @Transactional
     fun createLanguage(request: LanguageRequest): LanguageResponse {
-        if (request.languageName.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
-        }
+        request.languageName.requireNotBlank("languageName")
         val language = Language(languageName = request.languageName)
         return languageRepository.save(language).toResponse()
     }
 
     @Transactional
     fun updateLanguage(id: Int, request: LanguageRequest): LanguageResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.languageName.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
-        }
-        if (!languageRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "language not found")
-        }
+        id.requirePositive()
+        request.languageName.requireNotBlank("languageName")
+        languageRepository.requireExistsById(id, "language not found")
         val language = Language(id = id, languageName = request.languageName)
         return languageRepository.save(language).toResponse()
     }
 
     @Transactional
     fun deleteLanguage(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!languageRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "language not found")
-        }
+        id.requirePositive()
+        languageRepository.requireExistsById(id, "language not found")
         languageRepository.deleteById(id)
     }
 }

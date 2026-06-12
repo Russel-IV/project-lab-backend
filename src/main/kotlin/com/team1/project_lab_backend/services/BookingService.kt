@@ -8,6 +8,11 @@ import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.repositories.BookingRepository
 import com.team1.project_lab_backend.repositories.RoomRepository
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.orBadRequest
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireAllPositive
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,28 +33,19 @@ class BookingService(
 
     @Transactional(readOnly = true)
     fun getBookingById(id: Int): BookingResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return bookingRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found") }
+        id.requirePositive()
+        return bookingRepository.findById(id).orNotFound("booking not found").toResponse()
     }
 
     @Transactional
     fun createBooking(request: BookingRequest): BookingResponse {
-        if (request.userId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be positive")
-        }
-        val user = userRepository.findById(request.userId)
-            .orElseThrow { ResponseStatusException(HttpStatus.BAD_REQUEST, "userId not found") }
+        request.userId.requirePositive("userId")
+        val user = userRepository.findById(request.userId).orBadRequest("userId not found")
 
         if (request.roomIds.isEmpty()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds must not be empty")
         }
-        if (request.roomIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds must contain only positive ids")
-        }
+        request.roomIds.requireAllPositive("roomIds")
 
         val today = LocalDate.now()
         if (request.checkInDate.isBefore(today)) {
@@ -61,9 +57,7 @@ class BookingService(
         if (!request.checkOutDate.isAfter(request.checkInDate)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate")
         }
-        if (request.guestsCount <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "guestsCount must be > 0")
-        }
+        request.guestsCount.requirePositive("guestsCount")
 
         val rooms = roomRepository.findAllById(request.roomIds).toList()
         if (rooms.size != request.roomIds.size) {
@@ -110,11 +104,8 @@ class BookingService(
 
     @Transactional
     fun updateBookingStatus(id: Int, request: BookingStatusRequest): BookingResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        val existing = bookingRepository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found") }
+        id.requirePositive()
+        val existing = bookingRepository.findById(id).orNotFound("booking not found")
         val updated = Booking(
             id = existing.id,
             user = existing.user,
@@ -130,12 +121,8 @@ class BookingService(
 
     @Transactional
     fun deleteBooking(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!bookingRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found")
-        }
+        id.requirePositive()
+        bookingRepository.requireExistsById(id, "booking not found")
         bookingRepository.deleteById(id)
     }
 }

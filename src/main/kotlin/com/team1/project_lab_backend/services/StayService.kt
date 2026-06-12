@@ -18,11 +18,20 @@ import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.repositories.ViewRepository
+import com.team1.project_lab_backend.util.orBadRequest
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireAllPositive
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireInRange
+import com.team1.project_lab_backend.util.requireNonNegative
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 
 @Service
 class StayService(
@@ -55,11 +64,8 @@ class StayService(
 
     @Transactional(readOnly = true)
     fun getStayById(id: Int): StayResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        val stay = stayRepository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found") }
+        id.requirePositive()
+        val stay = stayRepository.findById(id).orNotFound("stay not found")
         val rooms = roomRepository.findByStayId(id)
         val pictures = stayPictureRepository.findByStayId(id)
         return stay.toResponse(rooms = rooms, pictures = pictures)
@@ -77,12 +83,9 @@ class StayService(
 
     @Transactional
     fun updateStay(id: Int, request: StayRequest): StayResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
+        id.requirePositive()
         validateStayRequest(request)
-        val existingStay = stayRepository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found") }
+        val existingStay = stayRepository.findById(id).orNotFound("stay not found")
         val existingAddressId = existingStay.address.id
         val stay = buildStay(id, request, existingAddressId = existingAddressId)
         val saved = stayRepository.save(stay)
@@ -93,77 +96,32 @@ class StayService(
 
     @Transactional
     fun deleteStay(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!stayRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        }
+        id.requirePositive()
+        stayRepository.requireExistsById(id, "stay not found")
         stayRepository.deleteById(id)
     }
 
     private fun validateStayRequest(request: StayRequest) {
-        if (request.name.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
-        }
-        if (request.address.streetAddress.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "streetAddress must not be blank")
-        }
-        if (request.address.city.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "city must not be blank")
-        }
-        if (request.address.countryCode.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "countryCode must not be blank")
-        }
-        if (request.hostId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "hostId must be positive")
-        }
-        if (request.starRating != null && request.starRating.compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "starRating must be >= 0")
-        }
-        if (request.starRating != null && request.starRating.compareTo(java.math.BigDecimal("5.0")) > 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "starRating must be <= 5.0")
-        }
-        if (request.daysFromBookingCancellationDeadline != null && request.daysFromBookingCancellationDeadline < 0) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "daysFromBookingCancellationDeadline must be >= 0"
-            )
-        }
-        if (request.propertyBrandId != null && request.propertyBrandId <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "propertyBrandId must be positive")
-        }
-        if (request.viewIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "viewIds must contain only positive ids")
-        }
-        if (request.amenityIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "amenityIds must contain only positive ids")
-        }
-        if (request.accessibilityIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "accessibilityIds must contain only positive ids")
-        }
-        if (request.mealPlanIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "mealPlanIds must contain only positive ids")
-        }
-        if (request.paymentTypeIds.any { it <= 0 }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentTypeIds must contain only positive ids")
-        }
-        if (request.travelerExperienceIds.any { it <= 0 }) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "travelerExperienceIds must contain only positive ids"
-            )
-        }
+        request.name.requireNotBlank("name")
+        request.address.streetAddress.requireNotBlank("streetAddress")
+        request.address.city.requireNotBlank("city")
+        request.address.countryCode.requireNotBlank("countryCode")
+        request.hostId.requirePositive("hostId")
+        request.starRating?.requireInRange(BigDecimal.ZERO, BigDecimal("5.0"), "starRating")
+        request.daysFromBookingCancellationDeadline?.requireNonNegative("daysFromBookingCancellationDeadline")
+        request.propertyBrandId?.requirePositive("propertyBrandId")
+        request.viewIds.requireAllPositive("viewIds")
+        request.amenityIds.requireAllPositive("amenityIds")
+        request.accessibilityIds.requireAllPositive("accessibilityIds")
+        request.mealPlanIds.requireAllPositive("mealPlanIds")
+        request.paymentTypeIds.requireAllPositive("paymentTypeIds")
+        request.travelerExperienceIds.requireAllPositive("travelerExperienceIds")
     }
 
     private fun buildStay(id: Int, request: StayRequest, existingAddressId: Int = 0): Stay {
-        val host = hostRepository.findById(request.hostId).orElseThrow {
-            ResponseStatusException(HttpStatus.BAD_REQUEST, "hostId not found")
-        }
+        val host = hostRepository.findById(request.hostId).orBadRequest("hostId not found")
         val propertyBrand = request.propertyBrandId?.let { brandId ->
-            propertyBrandRepository.findById(brandId).orElseThrow {
-                ResponseStatusException(HttpStatus.BAD_REQUEST, "propertyBrandId not found")
-            }
+            propertyBrandRepository.findById(brandId).orBadRequest("propertyBrandId not found")
         }
         val views = fetchAllByIds(request.viewIds, viewRepository, "viewIds")
         val amenities = fetchAllByIds(request.amenityIds, amenityRepository, "amenityIds")

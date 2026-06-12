@@ -4,10 +4,11 @@ import com.team1.project_lab_backend.dto.UserRequest
 import com.team1.project_lab_backend.dto.UserResponse
 import com.team1.project_lab_backend.models.User
 import com.team1.project_lab_backend.repositories.UserRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class UserService(
@@ -19,36 +20,24 @@ class UserService(
 
     @Transactional
     fun createUser(request: UserRequest): UserResponse {
-        if (request.name.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
-        }
+        request.name.requireNotBlank("name")
         val user = User(name = request.name)
         return userRepository.save(user).toResponse()
     }
 
     @Transactional
     fun updateUser(id: Int, request: UserRequest): UserResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.name.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
-        }
-        if (!userRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
-        }
+        id.requirePositive()
+        request.name.requireNotBlank("name")
+        userRepository.requireExistsById(id, "user not found")
         val user = User(id = id, name = request.name)
         return userRepository.save(user).toResponse()
     }
 
     @Transactional
     fun deleteUser(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!userRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
-        }
+        id.requirePositive()
+        userRepository.requireExistsById(id, "user not found")
         userRepository.deleteById(id)
     }
 }

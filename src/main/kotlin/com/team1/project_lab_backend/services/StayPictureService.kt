@@ -4,6 +4,9 @@ import com.team1.project_lab_backend.dto.StayPictureResponse
 import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNonNegative
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,7 +25,7 @@ class StayPictureService(
 ) {
     @Transactional(readOnly = true)
     fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
-        if (stayId <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
+        stayId.requirePositive("stayId")
         return stayPictureRepository.findByStayId(stayId).map { it.toResponse() }
     }
 
@@ -34,9 +37,9 @@ class StayPictureService(
         isPrimary: Boolean,
         displayOrder: Int
     ): StayPictureResponse {
-        if (stayId <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        if (!stayRepository.existsById(stayId)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        if (displayOrder < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "displayOrder must be >= 0")
+        stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(stayId, "stay not found")
+        displayOrder.requireNonNegative("displayOrder")
         validateImageFile(file)
         if (isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
@@ -58,9 +61,9 @@ class StayPictureService(
         isPrimary: Boolean,
         displayOrder: Int
     ): StayPictureResponse {
-        if (stayId <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        if (id <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        if (displayOrder < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "displayOrder must be >= 0")
+        stayId.requirePositive("stayId")
+        id.requirePositive()
+        displayOrder.requireNonNegative("displayOrder")
         val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
@@ -82,8 +85,8 @@ class StayPictureService(
 
     @Transactional
     fun deletePicture(stayId: Int, id: Int) {
-        if (stayId <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId must be positive")
-        if (id <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
+        stayId.requirePositive("stayId")
+        id.requirePositive()
         val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         stayPictureRepository.deleteById(id)

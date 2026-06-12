@@ -4,10 +4,12 @@ import com.team1.project_lab_backend.dto.PaymentTypeRequest
 import com.team1.project_lab_backend.dto.PaymentTypeResponse
 import com.team1.project_lab_backend.models.PaymentType
 import com.team1.project_lab_backend.repositories.PaymentTypeRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class PaymentTypeService(
@@ -19,46 +21,30 @@ class PaymentTypeService(
 
     @Transactional(readOnly = true)
     fun getPaymentTypeById(id: Int): PaymentTypeResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return paymentTypeRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "payment type not found") }
+        id.requirePositive()
+        return paymentTypeRepository.findById(id).orNotFound("payment type not found").toResponse()
     }
 
     @Transactional
     fun createPaymentType(request: PaymentTypeRequest): PaymentTypeResponse {
-        if (request.paymentType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentType must not be blank")
-        }
+        request.paymentType.requireNotBlank("paymentType")
         val paymentType = PaymentType(paymentType = request.paymentType)
         return paymentTypeRepository.save(paymentType).toResponse()
     }
 
     @Transactional
     fun updatePaymentType(id: Int, request: PaymentTypeRequest): PaymentTypeResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.paymentType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentType must not be blank")
-        }
-        if (!paymentTypeRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment type not found")
-        }
+        id.requirePositive()
+        request.paymentType.requireNotBlank("paymentType")
+        paymentTypeRepository.requireExistsById(id, "payment type not found")
         val paymentType = PaymentType(id = id, paymentType = request.paymentType)
         return paymentTypeRepository.save(paymentType).toResponse()
     }
 
     @Transactional
     fun deletePaymentType(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!paymentTypeRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment type not found")
-        }
+        id.requirePositive()
+        paymentTypeRepository.requireExistsById(id, "payment type not found")
         paymentTypeRepository.deleteById(id)
     }
 }

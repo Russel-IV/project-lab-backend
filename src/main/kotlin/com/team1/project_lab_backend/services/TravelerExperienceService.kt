@@ -4,10 +4,12 @@ import com.team1.project_lab_backend.dto.TravelerExperienceRequest
 import com.team1.project_lab_backend.dto.TravelerExperienceResponse
 import com.team1.project_lab_backend.models.TravelerExperience
 import com.team1.project_lab_backend.repositories.TravelerExperienceRepository
-import org.springframework.http.HttpStatus
+import com.team1.project_lab_backend.util.orNotFound
+import com.team1.project_lab_backend.util.requireExistsById
+import com.team1.project_lab_backend.util.requireNotBlank
+import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class TravelerExperienceService(
@@ -19,46 +21,30 @@ class TravelerExperienceService(
 
     @Transactional(readOnly = true)
     fun getTravelerExperienceById(id: Int): TravelerExperienceResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        return travelerExperienceRepository.findById(id)
-            .map { it.toResponse() }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "traveler experience not found") }
+        id.requirePositive()
+        return travelerExperienceRepository.findById(id).orNotFound("traveler experience not found").toResponse()
     }
 
     @Transactional
     fun createTravelerExperience(request: TravelerExperienceRequest): TravelerExperienceResponse {
-        if (request.travelerExperienceType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "travelerExperienceType must not be blank")
-        }
+        request.travelerExperienceType.requireNotBlank("travelerExperienceType")
         val travelerExperience = TravelerExperience(travelerExperienceType = request.travelerExperienceType)
         return travelerExperienceRepository.save(travelerExperience).toResponse()
     }
 
     @Transactional
     fun updateTravelerExperience(id: Int, request: TravelerExperienceRequest): TravelerExperienceResponse {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (request.travelerExperienceType.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "travelerExperienceType must not be blank")
-        }
-        if (!travelerExperienceRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "traveler experience not found")
-        }
+        id.requirePositive()
+        request.travelerExperienceType.requireNotBlank("travelerExperienceType")
+        travelerExperienceRepository.requireExistsById(id, "traveler experience not found")
         val travelerExperience = TravelerExperience(id = id, travelerExperienceType = request.travelerExperienceType)
         return travelerExperienceRepository.save(travelerExperience).toResponse()
     }
 
     @Transactional
     fun deleteTravelerExperience(id: Int) {
-        if (id <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be positive")
-        }
-        if (!travelerExperienceRepository.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "traveler experience not found")
-        }
+        id.requirePositive()
+        travelerExperienceRepository.requireExistsById(id, "traveler experience not found")
         travelerExperienceRepository.deleteById(id)
     }
 }
