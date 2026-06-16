@@ -1,0 +1,11 @@
+input CreateReviewInput {
+    text: String!
+    userId: Int!
+    stayId: Int!
+}
+
+input UpdateReviewInput {
+    text: String!
+    userId: Int!
+    stayId: Int!
+}

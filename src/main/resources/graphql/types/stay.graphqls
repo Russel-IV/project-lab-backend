@@ -1,0 +1,42 @@
+type Stay {
+    id: Int!
+    name: String!
+    about: String
+    propertyType: PropertyType!
+    isRefundable: Boolean!
+    starRating: BigDecimal
+    daysFromBookingCancellationDeadline: Int
+    policiesText: String
+    importantInformation: String
+    host: Host!
+    propertyBrand: PropertyBrand
+    address: Address!
+    rooms: [Room!]!
+    pictures: [StayPicture!]!
+    amenities: [Amenity!]!
+    views: [View!]!
+    accessibilities: [Accessibility!]!
+    mealPlans: [MealPlan!]!
+    paymentTypes: [PaymentType!]!
+    travelerExperiences: [TravelerExperience!]!
+    startingFromPrice: BigDecimal
+}
+
+type Address {
+    id: Int!
+    streetAddress: String!
+    extendedAddress: String
+    city: String!
+    stateProvince: String
+    postalCode: String
+    countryCode: String!
+}
+
+type StayPicture {
+    id: Int!
+    stayId: Int!
+    url: String!
+    caption: String
+    isPrimary: Boolean!
+    displayOrder: Int!
+}

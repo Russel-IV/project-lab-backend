@@ -1,0 +1,6 @@
+type Review {
+    id: Int!
+    text: String!
+    userId: Int!
+    stayId: Int!
+}

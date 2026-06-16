@@ -1,0 +1,65 @@
+input CreateAmenityInput {
+    name: String!
+    type: AmenityType!
+}
+
+input UpdateAmenityInput {
+    name: String!
+    type: AmenityType!
+}
+
+input CreateLanguageInput {
+    languageName: String!
+}
+
+input UpdateLanguageInput {
+    languageName: String!
+}
+
+input CreateAccessibilityInput {
+    accessibilityType: String!
+}
+
+input UpdateAccessibilityInput {
+    accessibilityType: String!
+}
+
+input CreateViewInput {
+    viewType: String!
+}
+
+input UpdateViewInput {
+    viewType: String!
+}
+
+input CreatePaymentTypeInput {
+    paymentType: String!
+}
+
+input UpdatePaymentTypeInput {
+    paymentType: String!
+}
+
+input CreateMealPlanInput {
+    mealPlanType: String!
+}
+
+input UpdateMealPlanInput {
+    mealPlanType: String!
+}
+
+input CreatePropertyBrandInput {
+    brandName: String!
+}
+
+input UpdatePropertyBrandInput {
+    brandName: String!
+}
+
+input CreateTravelerExperienceInput {
+    travelerExperienceType: String!
+}
+
+input UpdateTravelerExperienceInput {
+    travelerExperienceType: String!
+}

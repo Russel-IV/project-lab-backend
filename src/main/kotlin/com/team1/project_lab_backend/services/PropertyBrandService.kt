@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.PropertyBrandRequest
-import com.team1.project_lab_backend.dto.PropertyBrandResponse
 import com.team1.project_lab_backend.models.PropertyBrand
 import com.team1.project_lab_backend.repositories.PropertyBrandRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class PropertyBrandService(
-    private val propertyBrandRepository: PropertyBrandRepository
+    private val propertyBrandRepository: PropertyBrandRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllPropertyBrands(): List<PropertyBrandResponse> =
-        propertyBrandRepository.findAll().map { it.toResponse() }
+    fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getPropertyBrandById(id: Int): PropertyBrandResponse {
+    fun getPropertyBrandById(id: Int): PropertyBrand {
         id.requirePositive()
-        return propertyBrandRepository.findById(id).orNotFound("property brand not found").toResponse()
+        return propertyBrandRepository.findById(id).orNotFound("property brand not found")
     }
 
     @Transactional
-    fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrandResponse {
+    fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrand {
         request.brandName.requireNotBlank("brandName")
-        val propertyBrand = PropertyBrand(brandName = request.brandName)
-        return propertyBrandRepository.save(propertyBrand).toResponse()
+        return propertyBrandRepository.save(PropertyBrand(brandName = request.brandName))
     }
 
     @Transactional
-    fun updatePropertyBrand(id: Int, request: PropertyBrandRequest): PropertyBrandResponse {
+    fun updatePropertyBrand(id: Int, request: PropertyBrandRequest): PropertyBrand {
         id.requirePositive()
         request.brandName.requireNotBlank("brandName")
         propertyBrandRepository.requireExistsById(id, "property brand not found")
-        val propertyBrand = PropertyBrand(id = id, brandName = request.brandName)
-        return propertyBrandRepository.save(propertyBrand).toResponse()
+        return propertyBrandRepository.save(PropertyBrand(id = id, brandName = request.brandName))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class PropertyBrandService(
         propertyBrandRepository.deleteById(id)
     }
 }
-
-private fun PropertyBrand.toResponse(): PropertyBrandResponse =
-    PropertyBrandResponse(id = id, brandName = brandName)

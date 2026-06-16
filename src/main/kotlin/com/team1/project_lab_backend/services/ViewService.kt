@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.ViewRequest
-import com.team1.project_lab_backend.dto.ViewResponse
 import com.team1.project_lab_backend.models.View
 import com.team1.project_lab_backend.repositories.ViewRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ViewService(
-    private val viewRepository: ViewRepository
+    private val viewRepository: ViewRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllViews(): List<ViewResponse> =
-        viewRepository.findAll().map { it.toResponse() }
+    fun getAllViews(): List<View> = viewRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getViewById(id: Int): ViewResponse {
+    fun getViewById(id: Int): View {
         id.requirePositive()
-        return viewRepository.findById(id).orNotFound("view not found").toResponse()
+        return viewRepository.findById(id).orNotFound("view not found")
     }
 
     @Transactional
-    fun createView(request: ViewRequest): ViewResponse {
+    fun createView(request: ViewRequest): View {
         request.viewType.requireNotBlank("viewType")
-        val view = View(viewType = request.viewType)
-        return viewRepository.save(view).toResponse()
+        return viewRepository.save(View(viewType = request.viewType))
     }
 
     @Transactional
-    fun updateView(id: Int, request: ViewRequest): ViewResponse {
+    fun updateView(id: Int, request: ViewRequest): View {
         id.requirePositive()
         request.viewType.requireNotBlank("viewType")
         viewRepository.requireExistsById(id, "view not found")
-        val view = View(id = id, viewType = request.viewType)
-        return viewRepository.save(view).toResponse()
+        return viewRepository.save(View(id = id, viewType = request.viewType))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class ViewService(
         viewRepository.deleteById(id)
     }
 }
-
-private fun View.toResponse(): ViewResponse =
-    ViewResponse(id = id, viewType = viewType)

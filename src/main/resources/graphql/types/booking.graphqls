@@ -1,0 +1,10 @@
+type Booking {
+    id: Int!
+    user: User!
+    checkInDate: Date!
+    checkOutDate: Date!
+    status: BookingStatus!
+    guestsCount: Int!
+    createdAt: DateTime!
+    rooms: [Room!]!
+}

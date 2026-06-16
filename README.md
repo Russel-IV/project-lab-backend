@@ -1,6 +1,6 @@
 # project-lab-backend
 
-REST API backend for a lodging platform supporting home rentals and hotels. Built with Kotlin, Spring Boot 4, and PostgreSQL.
+GraphQL API backend for a lodging platform supporting home rentals and hotels. Built with Kotlin, Spring Boot 4, and PostgreSQL.
 
 ---
 
@@ -12,13 +12,9 @@ REST API backend for a lodging platform supporting home rentals and hotels. Buil
 
 ---
 
-## Instructions
+## Running with Docker Compose (recommended)
 
-### Running with Docker Compose (recommended)
-
-1. Fill in the required environment values:
-
-Required variables:
+1. Fill in the required environment variables:
 
 | Variable | Description |
 |---|---|
@@ -34,535 +30,718 @@ Required variables:
 
 2. Start the stack:
 
-```
+```bash
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:<SPRING_PORT>`.  
-The database initialises automatically from the SQL files in `db/`.
+---
+
+## API Overview
+
+The API is **GraphQL-first**. All queries and mutations go through a single endpoint:
+
+```
+POST http://localhost:<SPRING_PORT>/graphql
+```
+
+An in-browser IDE (GraphiQL) is available at:
+
+```
+http://localhost:<SPRING_PORT>/graphiql
+```
+
+**One exception**: picture file uploads use a dedicated REST endpoint (see [File Upload](#file-upload)).
 
 ---
 
-## Endpoints
+## Scalars
 
-All endpoints are prefixed with `/api/v1` unless noted otherwise.  
-Dates use the `YYYY-MM-DD` format. Omitted optional fields can be left out of the request body entirely.
+| Scalar | Java type | Wire format |
+|---|---|---|
+| `Date` | `LocalDate` | `"YYYY-MM-DD"` |
+| `DateTime` | `LocalDateTime` | `"YYYY-MM-DDTHH:MM:SS"` |
+| `BigDecimal` | `BigDecimal` | JSON number |
 
 ---
+
+## Enums
+
+```graphql
+enum PropertyType   { HOTEL HOME }
+enum BookingStatus  { PENDING CONFIRMED CANCELLED COMPLETED }
+enum AmenityType    { ROOM_AMENITY PROPERTY_AMENITY }
+```
+
+---
+
+## Types
+
+### User
+```graphql
+type User {
+    id: Int!
+    name: String!
+}
+```
+
+### Host
+A host profile linked to an existing user by the same `id`.
+```graphql
+type Host {
+    id: Int!
+    communicationRating:  BigDecimal   # 0–100
+    checkinProcessRating: BigDecimal   # 0–100
+    cancellationRate:     BigDecimal   # 0–100
+    languages: [Language!]!
+}
+```
+
+### Stay
+```graphql
+type Stay {
+    id:                               Int!
+    name:                             String!
+    about:                            String
+    propertyType:                     PropertyType!
+    isRefundable:                     Boolean!
+    starRating:                       BigDecimal
+    daysFromBookingCancellationDeadline: Int
+    policiesText:                     String
+    importantInformation:             String
+    host:                             Host!
+    propertyBrand:                    PropertyBrand
+    address:                          Address!
+    rooms:                            [Room!]!
+    pictures:                         [StayPicture!]!
+    amenities:                        [Amenity!]!
+    views:                            [View!]!
+    accessibilities:                  [Accessibility!]!
+    mealPlans:                        [MealPlan!]!
+    paymentTypes:                     [PaymentType!]!
+    travelerExperiences:              [TravelerExperience!]!
+    startingFromPrice:                BigDecimal   # lowest room price; null if no rooms
+}
+```
+
+### Address
+```graphql
+type Address {
+    id:              Int!
+    streetAddress:   String!
+    extendedAddress: String
+    city:            String!
+    stateProvince:   String
+    postalCode:      String
+    countryCode:     String!   # ISO 3166-1 alpha-2
+}
+```
+
+### Room
+```graphql
+type Room {
+    id:            Int!
+    stayId:        Int!
+    name:          String!
+    price:         BigDecimal!
+    sleeps:        Int!
+    bedroomAmount: Int!
+    bathrooms:     BigDecimal!
+    size:          BigDecimal    # floor area in m²; optional
+}
+```
+
+### StayPicture
+```graphql
+type StayPicture {
+    id:           Int!
+    stayId:       Int!
+    url:          String!     # server-relative path
+    caption:      String
+    isPrimary:    Boolean!
+    displayOrder: Int!
+}
+```
+
+### Booking
+```graphql
+type Booking {
+    id:           Int!
+    user:         User!
+    checkInDate:  Date!
+    checkOutDate: Date!
+    status:       BookingStatus!
+    guestsCount:  Int!
+    createdAt:    DateTime!
+    rooms:        [Room!]!
+}
+```
+
+### Review
+```graphql
+type Review {
+    id:     Int!
+    text:   String!
+    userId: Int!
+    stayId: Int!
+}
+```
+
+### Lookup types
+
+All lookup types follow the same minimal shape:
+
+```graphql
+type Amenity            { id: Int!  name: String!                   type: AmenityType! }
+type Language           { id: Int!  languageName: String! }
+type Accessibility      { id: Int!  accessibilityType: String! }
+type View               { id: Int!  viewType: String! }
+type PaymentType        { id: Int!  paymentType: String! }
+type MealPlan           { id: Int!  mealPlanType: String! }
+type PropertyBrand      { id: Int!  brandName: String! }
+type TravelerExperience { id: Int!  travelerExperienceType: String! }
+```
+
+---
+
+## Queries
 
 ### Users
 
-#### `GET /api/v1/users`
-Returns all users.
-
-**Response 200**
-```json
-[
-  { "id": 1, "name": "Alice Johnson" }
-]
+```graphql
+users: [User!]!
+user(id: Int!): User
 ```
 
----
-
-#### `POST /api/v1/users`
-Creates a user.
-
-**Request**
-```json
-{ "name": "Alice Johnson" }
+**Example**
+```graphql
+query {
+  users { id name }
+  user(id: 1) { id name }
+}
 ```
-
-**Response 201**
-```json
-{ "id": 1, "name": "Alice Johnson" }
-```
-
----
-
-#### `PUT /api/v1/users/{id}`
-Updates a user.
-
-**Request**
-```json
-{ "name": "Alice Smith" }
-```
-
-**Response 200**
-```json
-{ "id": 1, "name": "Alice Smith" }
-```
-
----
-
-#### `DELETE /api/v1/users/{id}`
-Deletes a user. **Response 204**
 
 ---
 
 ### Hosts
 
-A host is a user with hosting ratings. Use an existing `user.id` as the host `id`.
-
-#### `GET /api/v1/hosts`
-Returns all hosts.
-
-**Response 200**
-```json
-[
-  {
-    "id": 1,
-    "communicationRating": 98.5,
-    "checkinProcessRating": 95.0,
-    "cancellationRate": 2.1,
-    "languageIds": [1, 2]
-  }
-]
+```graphql
+hosts: [Host!]!
+host(id: Int!): Host
 ```
 
----
-
-#### `GET /api/v1/hosts/{id}`
-Returns a host by id. **Response 200** — same shape as above.
-
----
-
-#### `POST /api/v1/hosts`
-Creates a host profile linked to an existing user.
-
-**Request**
-```json
-{
-  "id": 1,
-  "communicationRating": 98.5,
-  "checkinProcessRating": 95.0,
-  "cancellationRate": 2.1,
-  "languageIds": [1, 2]
+**Example**
+```graphql
+query {
+  host(id: 1) {
+    id
+    communicationRating
+    languages { id languageName }
+  }
 }
 ```
-
-**Response 201** — same shape as GET response.
-
----
-
-#### `PUT /api/v1/hosts/{id}`
-Updates a host profile. Same request body as POST. **Response 200**
-
----
-
-#### `DELETE /api/v1/hosts/{id}`
-Deletes a host profile. **Response 204**
 
 ---
 
 ### Stays
 
-A stay is a property — either a `HOME` (single bookable unit) or a `HOTEL` (multiple rooms).
-
-#### `GET /api/v1/stays`
-Returns all stays with their rooms, pictures, and address embedded.
-
-**Response 200**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Beachfront House",
-    "about": "Beautiful house right next to the shore.",
-    "propertyType": "HOME",
-    "isRefundable": true,
-    "starRating": 4.5,
-    "daysFromBookingCancellationDeadline": 5,
-    "policiesText": "No pets allowed.",
-    "importantInformation": "Check-in after 3 PM.",
-    "hostId": 1,
-    "propertyBrandId": 1,
-    "address": {
-      "id": 1,
-      "streetAddress": "123 Ocean Drive",
-      "extendedAddress": "Apt 4B",
-      "city": "Miami",
-      "stateProvince": "Florida",
-      "postalCode": "33139",
-      "countryCode": "US"
-    },
-    "rooms": [
-      {
-        "id": 1,
-        "stayId": 1,
-        "name": "Beachfront Suite",
-        "price": 120.50,
-        "sleeps": 4,
-        "bedroomAmount": 2,
-        "bathrooms": 1.5,
-        "size": 85.0
-      }
-    ],
-    "pictures": [
-      {
-        "id": 1,
-        "stayId": 1,
-        "url": "https://cdn.example.com/stays/1/exterior.jpg",
-        "caption": "Ocean-facing exterior",
-        "isPrimary": true,
-        "displayOrder": 0
-      }
-    ],
-    "startingFromPrice": 120.50,
-    "viewIds": [1],
-    "amenityIds": [1, 2],
-    "accessibilityIds": [1],
-    "mealPlanIds": [1],
-    "paymentTypeIds": [1, 2],
-    "travelerExperienceIds": [1]
-  }
-]
+```graphql
+stays(page: Int = 0, size: Int = 20): [Stay!]!
+stay(id: Int!): Stay
 ```
 
----
+Pagination is offset/limit: `page=0, size=20` returns the first 20 results.
 
-#### `GET /api/v1/stays/{id}`
-Returns a stay by id. **Response 200** — same shape as above.
-
----
-
-#### `POST /api/v1/stays`
-Creates a stay. Rooms and pictures are managed separately after creation.
-
-**Request**
-```json
-{
-  "name": "Cozy Beachfront House",
-  "about": "Beautiful house right next to the shore.",
-  "propertyType": "HOME",
-  "isRefundable": true,
-  "starRating": 4.5,
-  "daysFromBookingCancellationDeadline": 5,
-  "policiesText": "No pets allowed.",
-  "importantInformation": "Check-in after 3 PM.",
-  "hostId": 1,
-  "propertyBrandId": 1,
-  "address": {
-    "streetAddress": "123 Ocean Drive",
-    "extendedAddress": "Apt 4B",
-    "city": "Miami",
-    "stateProvince": "Florida",
-    "postalCode": "33139",
-    "countryCode": "US"
-  },
-  "viewIds": [1],
-  "amenityIds": [1, 2],
-  "accessibilityIds": [1],
-  "mealPlanIds": [1],
-  "paymentTypeIds": [1, 2],
-  "travelerExperienceIds": [1]
+**Example — list with nested data**
+```graphql
+query {
+  stays(page: 0, size: 10) {
+    id
+    name
+    propertyType
+    startingFromPrice
+    address { city countryCode }
+    host { communicationRating }
+    amenities { name type }
+  }
 }
 ```
 
-**Response 201** — same shape as GET response.
-
----
-
-#### `PUT /api/v1/stays/{id}`
-Replaces a stay. Same request body as POST. **Response 200**
-
----
-
-#### `DELETE /api/v1/stays/{id}`
-Deletes a stay and its address, rooms, and pictures. **Response 204**
+**Example — single stay**
+```graphql
+query {
+  stay(id: 3) {
+    id name about isRefundable starRating
+    address { streetAddress city stateProvince countryCode }
+    rooms { id name price sleeps }
+    pictures { url isPrimary }
+    host { id communicationRating languages { languageName } }
+    amenities { name }
+    views { viewType }
+    paymentTypes { paymentType }
+  }
+}
+```
 
 ---
 
 ### Rooms
 
-Rooms are the bookable units within a stay. Every HOME has exactly one room; HOTELs can have many.
-
-#### `GET /api/v1/stays/{stayId}/rooms`
-Returns all rooms for a stay.
-
-**Response 200**
-```json
-[
-  {
-    "id": 2,
-    "stayId": 2,
-    "name": "Standard King",
-    "price": 350.00,
-    "sleeps": 2,
-    "bedroomAmount": 1,
-    "bathrooms": 1.0,
-    "size": 45.5
-  }
-]
+```graphql
+rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!
+room(id: Int!): Room
+availableRooms(stayId: Int!, checkIn: Date!, checkOut: Date!): [Room!]!
 ```
 
----
+`availableRooms` returns rooms with no conflicting active booking (`PENDING` or `CONFIRMED`) for the requested window. An empty list means the stay is fully booked for those dates.
 
-#### `POST /api/v1/stays/{stayId}/rooms`
-Adds a room to a stay.
-
-**Request**
-```json
-{
-  "name": "Standard King",
-  "price": 350.00,
-  "sleeps": 2,
-  "bedroomAmount": 1,
-  "bathrooms": 1.0,
-  "size": 45.5
+**Example**
+```graphql
+query {
+  availableRooms(stayId: 2, checkIn: "2026-08-01", checkOut: "2026-08-07") {
+    id name price sleeps
+  }
 }
 ```
-
-**Response 201** — same shape as single room above.
-
----
-
-#### `GET /api/v1/rooms/{id}`
-Returns a room by id. **Response 200**
-
----
-
-#### `PUT /api/v1/rooms/{id}`
-Updates a room. Same request body as POST. **Response 200**
-
----
-
-#### `DELETE /api/v1/rooms/{id}`
-Deletes a room. **Response 204**
-
----
-
-#### `GET /api/v1/stays/{stayId}/availability?checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD`
-Returns rooms within the stay that have no conflicting active booking for the requested window.
-
-**Response 200**
-```json
-[
-  {
-    "id": 2,
-    "stayId": 2,
-    "name": "Standard King",
-    "price": 350.00,
-    "sleeps": 2,
-    "bedroomAmount": 1,
-    "bathrooms": 1.0,
-    "size": 45.5
-  }
-]
-```
-
-An empty array means the stay is fully booked for those dates.
-
----
-
-### Stay Pictures
-
-#### `GET /api/v1/stays/{stayId}/pictures`
-Returns all pictures for a stay.
-
-**Response 200**
-```json
-[
-  {
-    "id": 1,
-    "stayId": 1,
-    "url": "https://cdn.example.com/stays/1/exterior.jpg",
-    "caption": "Ocean-facing exterior",
-    "isPrimary": true,
-    "displayOrder": 0
-  }
-]
-```
-
----
-
-#### `POST /api/v1/stays/{stayId}/pictures`
-Uploads a picture for a stay. At most one picture per stay may have `isPrimary: true`.
-
-Request is `multipart/form-data`:
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `file` | image file | yes | JPEG, PNG, WebP, etc. Max 10 MB |
-| `caption` | string | no | Alt text / caption |
-| `isPrimary` | boolean | no | Defaults to `false` |
-| `displayOrder` | integer | no | Defaults to `0` |
-
-**Response 201**
-```json
-{
-  "id": 1,
-  "stayId": 1,
-  "url": "/uploads/stays/1/3f2a1b4c-....jpg",
-  "caption": "Open-plan living area",
-  "isPrimary": false,
-  "displayOrder": 1
-}
-```
-
-The `url` field is a server-relative path. Prepend the API host to get the full URL.  
-Uploaded files are served at `GET /uploads/stays/{stayId}/{filename}`.
-
----
-
-#### `PUT /api/v1/stays/{stayId}/pictures/{id}`
-Updates a picture's metadata and optionally replaces the file. Same `multipart/form-data` format as POST; omit `file` to keep the existing image. **Response 200**
-
----
-
-#### `DELETE /api/v1/stays/{stayId}/pictures/{id}`
-Deletes a picture. **Response 204**
 
 ---
 
 ### Bookings
 
-A booking reserves one or more rooms for the same stay over a continuous date range. Check-in must be today or later and no more than 6 months out. All rooms must belong to the same stay.
+```graphql
+bookings(page: Int = 0, size: Int = 20): [Booking!]!
+booking(id: Int!): Booking
+```
 
-#### `GET /api/v1/bookings`
-Returns all bookings.
-
-**Response 200**
-```json
-[
-  {
-    "id": 1,
-    "userId": 2,
-    "checkInDate": "2026-07-15",
-    "checkOutDate": "2026-07-20",
-    "status": "CONFIRMED",
-    "guestsCount": 2,
-    "createdAt": "2026-06-08T10:30:00",
-    "roomIds": [1]
+**Example**
+```graphql
+query {
+  booking(id: 5) {
+    id status checkInDate checkOutDate guestsCount
+    user { id name }
+    rooms { id name stayId }
   }
-]
-```
-
----
-
-#### `GET /api/v1/bookings/{id}`
-Returns a booking by id. **Response 200** — same shape as above.
-
----
-
-#### `POST /api/v1/bookings`
-Creates a booking. Status is set to `PENDING` automatically.
-
-**Request**
-```json
-{
-  "userId": 2,
-  "checkInDate": "2026-07-15",
-  "checkOutDate": "2026-07-20",
-  "guestsCount": 2,
-  "roomIds": [1]
-}
-```
-
-**Response 201** — same shape as GET response.
-
-To book multiple rooms in the same hotel:
-```json
-{
-  "userId": 2,
-  "checkInDate": "2026-09-10",
-  "checkOutDate": "2026-09-14",
-  "guestsCount": 6,
-  "roomIds": [2, 3]
 }
 ```
 
 ---
 
-#### `PATCH /api/v1/bookings/{id}/status`
-Updates the status of a booking. Valid values: `PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`.
+### Reviews
 
-**Request**
-```json
-{ "status": "CONFIRMED" }
+```graphql
+reviews(page: Int = 0, size: Int = 20): [Review!]!
 ```
-
-**Response 200** — full booking object with updated status.
 
 ---
 
-#### `DELETE /api/v1/bookings/{id}`
-Deletes a booking. **Response 204**
+### Stay Pictures
+
+```graphql
+stayPictures(stayId: Int!): [StayPicture!]!
+```
 
 ---
 
-### Lookup Tables
+### Lookup tables
 
-These endpoints manage reference data (amenity types, languages, etc.). All follow the same pattern: `GET` all, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}`.
+```graphql
+amenities: [Amenity!]!
+amenity(id: Int!): Amenity
 
-#### Amenities — `/api/v1/amenities`
-`type` is either `ROOM_AMENITY` or `PROPERTY_AMENITY`.
+languages: [Language!]!
+accessibilities: [Accessibility!]!
+views: [View!]!
+paymentTypes: [PaymentType!]!
+mealPlans: [MealPlan!]!
 
-```json
-// Request
-{ "name": "High-Speed Wi-Fi", "type": "PROPERTY_AMENITY" }
-// Response
-{ "id": 1, "name": "High-Speed Wi-Fi", "type": "PROPERTY_AMENITY" }
+propertyBrands: [PropertyBrand!]!
+propertyBrand(id: Int!): PropertyBrand
+
+travelerExperiences: [TravelerExperience!]!
 ```
 
-#### Accessibility — `/accessibility`
+---
 
-```json
-// Request
-{ "accessibilityType": "Wheelchair Accessible Path" }
-// Response
-{ "id": 1, "accessibilityType": "Wheelchair Accessible Path" }
+## Mutations
+
+### Users
+
+```graphql
+createUser(input: CreateUserInput!): User!
+updateUser(id: Int!, input: UpdateUserInput!): User!
+deleteUser(id: Int!): Boolean!
 ```
 
-#### Languages — `/api/v1/languages`
-
-```json
-// Request
-{ "languageName": "English" }
-// Response
-{ "id": 1, "languageName": "English" }
+**Inputs**
+```graphql
+input CreateUserInput { name: String! }
+input UpdateUserInput { name: String! }
 ```
 
-#### Views — `/api/v1/views`
-
-```json
-// Request
-{ "viewType": "Ocean View" }
-// Response
-{ "id": 1, "viewType": "Ocean View" }
+**Example**
+```graphql
+mutation {
+  createUser(input: { name: "Alice Johnson" }) { id name }
+}
 ```
 
-#### Meal Plans — `/api/v1/meal-plans`
+---
 
-```json
-// Request
-{ "mealPlanType": "Breakfast Included" }
-// Response
-{ "id": 1, "mealPlanType": "Breakfast Included" }
+### Hosts
+
+```graphql
+createHost(input: CreateHostInput!): Host!
+updateHost(id: Int!, input: UpdateHostInput!): Host!
+deleteHost(id: Int!): Boolean!
 ```
 
-#### Payment Types — `/api/v1/payment-types`
+**Inputs**
+```graphql
+input CreateHostInput {
+    id:                   Int!         # must match an existing user id
+    communicationRating:  BigDecimal   # 0–100, optional
+    checkinProcessRating: BigDecimal   # 0–100, optional
+    cancellationRate:     BigDecimal   # 0–100, optional
+    languageIds:          [Int!]! = []
+}
 
-```json
-// Request
-{ "paymentType": "Credit Card" }
-// Response
-{ "id": 1, "paymentType": "Credit Card" }
+input UpdateHostInput {
+    communicationRating:  BigDecimal
+    checkinProcessRating: BigDecimal
+    cancellationRate:     BigDecimal
+    languageIds:          [Int!]! = []
+}
 ```
 
-#### Property Brands — `/api/v1/property-brands`
-
-```json
-// Request
-{ "brandName": "Marriott International" }
-// Response
-{ "id": 1, "brandName": "Marriott International" }
+**Example**
+```graphql
+mutation {
+  createHost(input: {
+    id: 1
+    communicationRating: 95.0
+    languageIds: [1, 2]
+  }) {
+    id communicationRating languages { languageName }
+  }
+}
 ```
 
-#### Traveler Experiences — `/api/v1/traveler-experiences`
+---
 
-```json
-// Request
-{ "travelerExperienceType": "Family Friendly" }
-// Response
-{ "id": 1, "travelerExperienceType": "Family Friendly" }
+### Stays
+
+```graphql
+createStay(input: CreateStayInput!): Stay!
+updateStay(id: Int!, input: UpdateStayInput!): Stay!
+deleteStay(id: Int!): Boolean!
 ```
+
+**Input** (`CreateStayInput` and `UpdateStayInput` are identical)
+```graphql
+input CreateStayInput {
+    name:                             String!
+    about:                            String
+    propertyType:                     PropertyType!
+    address:                          AddressInput!
+    isRefundable:                     Boolean! = false
+    starRating:                       BigDecimal
+    daysFromBookingCancellationDeadline: Int
+    policiesText:                     String
+    importantInformation:             String
+    hostId:                           Int!
+    propertyBrandId:                  Int
+    viewIds:              [Int!]! = []
+    amenityIds:           [Int!]! = []
+    accessibilityIds:     [Int!]! = []
+    mealPlanIds:          [Int!]! = []
+    paymentTypeIds:       [Int!]! = []
+    travelerExperienceIds:[Int!]! = []
+}
+
+input AddressInput {
+    streetAddress:   String!
+    extendedAddress: String
+    city:            String!
+    stateProvince:   String
+    postalCode:      String
+    countryCode:     String!
+}
+```
+
+**Example**
+```graphql
+mutation {
+  createStay(input: {
+    name: "Cozy Beachfront House"
+    propertyType: HOME
+    hostId: 1
+    isRefundable: true
+    address: {
+      streetAddress: "123 Ocean Drive"
+      city: "Miami"
+      countryCode: "US"
+    }
+    amenityIds: [1, 2]
+    viewIds: [3]
+  }) {
+    id name propertyType
+    address { streetAddress city }
+  }
+}
+```
+
+---
+
+### Rooms
+
+```graphql
+createRoom(stayId: Int!, input: CreateRoomInput!): Room!
+updateRoom(id: Int!, input: UpdateRoomInput!): Room!
+deleteRoom(id: Int!): Boolean!
+```
+
+**Input** (`CreateRoomInput` and `UpdateRoomInput` are identical)
+```graphql
+input CreateRoomInput {
+    name:          String!
+    price:         BigDecimal!  # must be >= 0
+    sleeps:        Int!         # must be >= 1
+    bedroomAmount: Int!         # must be >= 0
+    bathrooms:     BigDecimal!  # must be >= 0
+    size:          BigDecimal   # floor area in m², optional; must be >= 0
+}
+```
+
+**Example**
+```graphql
+mutation {
+  createRoom(stayId: 3, input: {
+    name: "King Suite"
+    price: 180.00
+    sleeps: 2
+    bedroomAmount: 1
+    bathrooms: 1.5
+    size: 42.0
+  }) {
+    id name price sleeps
+  }
+}
+```
+
+---
+
+### Bookings
+
+```graphql
+createBooking(input: CreateBookingInput!): Booking!
+updateBookingStatus(id: Int!, status: BookingStatus!): Booking!
+deleteBooking(id: Int!): Boolean!
+```
+
+**Input**
+```graphql
+input CreateBookingInput {
+    userId:      Int!
+    checkInDate: Date!
+    checkOutDate: Date!
+    guestsCount: Int!
+    roomIds:     [Int!]!
+}
+```
+
+**Booking rules**
+- `checkInDate` must not be in the past and must be within 6 months from today.
+- `checkOutDate` must be after `checkInDate`.
+- `roomIds` must not be empty; all rooms must belong to the same stay.
+- None of the requested rooms may have a `PENDING` or `CONFIRMED` booking that overlaps the requested window.
+- `guestsCount` must not exceed the combined `sleeps` capacity of the requested rooms.
+- New bookings are always created with status `PENDING`.
+
+**Example — create**
+```graphql
+mutation {
+  createBooking(input: {
+    userId: 2
+    checkInDate: "2026-09-01"
+    checkOutDate: "2026-09-05"
+    guestsCount: 2
+    roomIds: [7]
+  }) {
+    id status checkInDate checkOutDate
+    rooms { id name }
+    user { name }
+  }
+}
+```
+
+**Example — status update**
+```graphql
+mutation {
+  updateBookingStatus(id: 5, status: CONFIRMED) {
+    id status
+  }
+}
+```
+
+---
+
+### Reviews
+
+```graphql
+createReview(input: CreateReviewInput!): Review!
+updateReview(id: Int!, input: UpdateReviewInput!): Review!
+deleteReview(id: Int!): Boolean!
+```
+
+**Input** (`CreateReviewInput` and `UpdateReviewInput` are identical)
+```graphql
+input CreateReviewInput {
+    text:   String!   # must not be blank
+    userId: Int!
+    stayId: Int!
+}
+```
+
+**Example**
+```graphql
+mutation {
+  createReview(input: {
+    text: "Wonderful stay, highly recommend!"
+    userId: 2
+    stayId: 1
+  }) { id text }
+}
+```
+
+---
+
+### Stay Pictures (metadata only)
+
+Metadata for existing pictures can be updated via GraphQL. File upload uses the REST endpoint below.
+
+```graphql
+updateStayPicture(stayId: Int!, id: Int!, input: UpdateStayPictureInput!): StayPicture!
+deleteStayPicture(stayId: Int!, id: Int!): Boolean!
+```
+
+```graphql
+input UpdateStayPictureInput {
+    caption:      String
+    isPrimary:    Boolean! = false
+    displayOrder: Int! = 0
+}
+```
+
+**Example**
+```graphql
+mutation {
+  updateStayPicture(stayId: 1, id: 4, input: {
+    caption: "Sunset from the terrace"
+    isPrimary: false
+    displayOrder: 2
+  }) { id caption isPrimary displayOrder }
+}
+```
+
+---
+
+### Lookup table mutations
+
+All eight lookup tables follow the same pattern:
+
+```graphql
+create<Type>(input: Create<Type>Input!): <Type>!
+update<Type>(id: Int!, input: Update<Type>Input!): <Type>!
+delete<Type>(id: Int!): Boolean!
+```
+
+| Type | Input field |
+|---|---|
+| `Amenity` | `name: String!`, `type: AmenityType!` |
+| `Language` | `languageName: String!` |
+| `Accessibility` | `accessibilityType: String!` |
+| `View` | `viewType: String!` |
+| `PaymentType` | `paymentType: String!` |
+| `MealPlan` | `mealPlanType: String!` |
+| `PropertyBrand` | `brandName: String!` |
+| `TravelerExperience` | `travelerExperienceType: String!` |
+
+**Example**
+```graphql
+mutation {
+  createAmenity(input: { name: "High-Speed Wi-Fi", type: PROPERTY_AMENITY }) {
+    id name type
+  }
+  createLanguage(input: { languageName: "Spanish" }) { id languageName }
+}
+```
+
+---
+
+## File Upload
+
+Picture files are uploaded via a REST endpoint — the only non-GraphQL endpoint in the API.
+
+### `POST /api/v1/stays/{stayId}/pictures`
+
+Content type: `multipart/form-data`
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `file` | binary | yes | Must be an image (`image/*`). Max 10 MB. |
+| `caption` | string | no | Alt text / caption |
+| `isPrimary` | boolean | no | Defaults to `false`. At most one primary per stay. |
+| `displayOrder` | integer | no | Defaults to `0`. Must be >= 0. |
+
+**Response 201**
+```json
+{
+  "id": 4,
+  "stayId": 1,
+  "url": "/uploads/stays/1/3f2a1b4c-uuid.jpg",
+  "caption": "Ocean-facing exterior",
+  "isPrimary": true,
+  "displayOrder": 0
+}
+```
+
+`url` is a server-relative path. Prepend the API host to construct the full URL.
+
+**curl example**
+```bash
+curl -X POST http://localhost:8080/api/v1/stays/1/pictures \
+  -F "file=@exterior.jpg" \
+  -F "caption=Ocean-facing exterior" \
+  -F "isPrimary=true" \
+  -F "displayOrder=0"
+```
+
+---
+
+## Error Handling
+
+All GraphQL errors are returned in the standard `errors` array with a `extensions.classification` field:
+
+| HTTP concept | `classification` value |
+|---|---|
+| 400 Bad Request | `BAD_REQUEST` |
+| 404 Not Found | `NOT_FOUND` |
+| 403 Forbidden | `FORBIDDEN` |
+| 401 Unauthorized | `UNAUTHORIZED` |
+| 500 Internal | `INTERNAL_ERROR` |
+
+**Example error response**
+```json
+{
+  "errors": [
+    {
+      "message": "stay not found",
+      "locations": [{ "line": 2, "column": 3 }],
+      "path": ["stay"],
+      "extensions": { "classification": "NOT_FOUND" }
+    }
+  ],
+  "data": { "stay": null }
+}
+```
+
+Partial success is possible: if one field in a query fails (e.g. a batch-loaded relationship), only that field is `null` and other fields still resolve normally.

@@ -29,6 +29,12 @@ class StayPictureService(
         return stayPictureRepository.findByStayId(stayId).map { it.toResponse() }
     }
 
+    @Transactional(readOnly = true)
+    fun getPicturesForStayAsEntities(stayId: Int): List<StayPicture> {
+        stayId.requirePositive("stayId")
+        return stayPictureRepository.findByStayId(stayId)
+    }
+
     @Transactional
     fun addPicture(
         stayId: Int,
@@ -81,6 +87,28 @@ class StayPictureService(
             caption = caption, isPrimary = isPrimary, displayOrder = displayOrder
         )
         return stayPictureRepository.save(updated).toResponse()
+    }
+
+    @Transactional
+    fun updatePictureMetadata(stayId: Int, id: Int, caption: String?, isPrimary: Boolean, displayOrder: Int): StayPicture {
+        stayId.requirePositive("stayId")
+        id.requirePositive()
+        displayOrder.requireNonNegative("displayOrder")
+        val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
+        if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
+        }
+        return stayPictureRepository.save(
+            StayPicture(
+                id = id,
+                stayId = stayId,
+                url = existing.url,
+                caption = caption,
+                isPrimary = isPrimary,
+                displayOrder = displayOrder,
+            ),
+        )
     }
 
     @Transactional

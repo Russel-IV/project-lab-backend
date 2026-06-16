@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.AmenityRequest
-import com.team1.project_lab_backend.dto.AmenityResponse
 import com.team1.project_lab_backend.models.Amenity
 import com.team1.project_lab_backend.repositories.AmenityRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class AmenityService(
-    private val amenityRepository: AmenityRepository
+    private val amenityRepository: AmenityRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllAmenities(): List<AmenityResponse> =
-        amenityRepository.findAll().map { it.toResponse() }
+    fun getAllAmenities(): List<Amenity> = amenityRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getAmenityById(id: Int): AmenityResponse {
+    fun getAmenityById(id: Int): Amenity {
         id.requirePositive()
-        return amenityRepository.findById(id).orNotFound("amenity not found").toResponse()
+        return amenityRepository.findById(id).orNotFound("amenity not found")
     }
 
     @Transactional
-    fun createAmenity(request: AmenityRequest): AmenityResponse {
+    fun createAmenity(request: AmenityRequest): Amenity {
         request.name.requireNotBlank("name")
-        val amenity = Amenity(name = request.name, type = request.type)
-        return amenityRepository.save(amenity).toResponse()
+        return amenityRepository.save(Amenity(name = request.name, type = request.type))
     }
 
     @Transactional
-    fun updateAmenity(id: Int, request: AmenityRequest): AmenityResponse {
+    fun updateAmenity(id: Int, request: AmenityRequest): Amenity {
         id.requirePositive()
         request.name.requireNotBlank("name")
         amenityRepository.requireExistsById(id, "amenity not found")
-        val amenity = Amenity(id = id, name = request.name, type = request.type)
-        return amenityRepository.save(amenity).toResponse()
+        return amenityRepository.save(Amenity(id = id, name = request.name, type = request.type))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class AmenityService(
         amenityRepository.deleteById(id)
     }
 }
-
-private fun Amenity.toResponse(): AmenityResponse =
-    AmenityResponse(id = id, name = name, type = type)

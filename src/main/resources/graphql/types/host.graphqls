@@ -1,0 +1,7 @@
+type Host {
+    id: Int!
+    communicationRating: BigDecimal
+    checkinProcessRating: BigDecimal
+    cancellationRate: BigDecimal
+    languages: [Language!]!
+}

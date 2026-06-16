@@ -1,20 +1,14 @@
 package com.team1.project_lab_backend.services
 
-import com.team1.project_lab_backend.dto.AddressResponse
 import com.team1.project_lab_backend.dto.StayRequest
-import com.team1.project_lab_backend.dto.StayResponse
 import com.team1.project_lab_backend.models.Address
-import com.team1.project_lab_backend.models.Room
 import com.team1.project_lab_backend.models.Stay
-import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.repositories.AccessibilityRepository
 import com.team1.project_lab_backend.repositories.AmenityRepository
 import com.team1.project_lab_backend.repositories.HostRepository
 import com.team1.project_lab_backend.repositories.MealPlanRepository
 import com.team1.project_lab_backend.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.repositories.PropertyBrandRepository
-import com.team1.project_lab_backend.repositories.RoomRepository
-import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.repositories.ViewRepository
@@ -26,6 +20,7 @@ import com.team1.project_lab_backend.util.requireInRange
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -44,54 +39,29 @@ class StayService(
     private val mealPlanRepository: MealPlanRepository,
     private val paymentTypeRepository: PaymentTypeRepository,
     private val travelerExperienceRepository: TravelerExperienceRepository,
-    private val roomRepository: RoomRepository,
-    private val stayPictureRepository: StayPictureRepository
 ) {
     @Transactional(readOnly = true)
-    fun getAllStays(): List<StayResponse> {
-        val stays = stayRepository.findAll()
-        if (stays.isEmpty()) return emptyList()
-        val stayIds = stays.map { it.id }
-        val roomsByStayId = roomRepository.findByStayIdIn(stayIds).groupBy { it.stayId }
-        val picturesByStayId = stayPictureRepository.findByStayIdIn(stayIds).groupBy { it.stayId }
-        return stays.map { stay ->
-            stay.toResponse(
-                rooms = roomsByStayId[stay.id] ?: emptyList(),
-                pictures = picturesByStayId[stay.id] ?: emptyList()
-            )
-        }
-    }
+    fun getAllStays(page: Int = 0, size: Int = 20): List<Stay> =
+        stayRepository.findAll(PageRequest.of(page, size)).content
 
     @Transactional(readOnly = true)
-    fun getStayById(id: Int): StayResponse {
+    fun getStayById(id: Int): Stay {
         id.requirePositive()
-        val stay = stayRepository.findById(id).orNotFound("stay not found")
-        val rooms = roomRepository.findByStayId(id)
-        val pictures = stayPictureRepository.findByStayId(id)
-        return stay.toResponse(rooms = rooms, pictures = pictures)
+        return stayRepository.findById(id).orNotFound("stay not found")
     }
 
     @Transactional
-    fun createStay(request: StayRequest): StayResponse {
+    fun createStay(request: StayRequest): Stay {
         validateStayRequest(request)
-        val stay = buildStay(0, request, existingAddressId = 0)
-        val saved = stayRepository.save(stay)
-        val rooms = roomRepository.findByStayId(saved.id)
-        val pictures = stayPictureRepository.findByStayId(saved.id)
-        return saved.toResponse(rooms = rooms, pictures = pictures)
+        return stayRepository.save(buildStay(0, request, existingAddressId = 0))
     }
 
     @Transactional
-    fun updateStay(id: Int, request: StayRequest): StayResponse {
+    fun updateStay(id: Int, request: StayRequest): Stay {
         id.requirePositive()
         validateStayRequest(request)
         val existingStay = stayRepository.findById(id).orNotFound("stay not found")
-        val existingAddressId = existingStay.address.id
-        val stay = buildStay(id, request, existingAddressId = existingAddressId)
-        val saved = stayRepository.save(stay)
-        val rooms = roomRepository.findByStayId(saved.id)
-        val pictures = stayPictureRepository.findByStayId(saved.id)
-        return saved.toResponse(rooms = rooms, pictures = pictures)
+        return stayRepository.save(buildStay(id, request, existingAddressId = existingStay.address.id))
     }
 
     @Transactional
@@ -131,9 +101,8 @@ class StayService(
         val travelerExperiences = fetchAllByIds(
             request.travelerExperienceIds,
             travelerExperienceRepository,
-            "travelerExperienceIds"
+            "travelerExperienceIds",
         )
-
         val address = Address(
             id = existingAddressId,
             streetAddress = request.address.streetAddress,
@@ -141,9 +110,8 @@ class StayService(
             city = request.address.city,
             stateProvince = request.address.stateProvince,
             postalCode = request.address.postalCode,
-            countryCode = request.address.countryCode
+            countryCode = request.address.countryCode,
         )
-
         return Stay(
             id = id,
             name = request.name,
@@ -162,18 +130,16 @@ class StayService(
             accessibilities = accessibilities,
             mealPlans = mealPlans,
             paymentTypes = paymentTypes,
-            travelerExperiences = travelerExperiences
+            travelerExperiences = travelerExperiences,
         )
     }
 
     private fun <T : Any> fetchAllByIds(
         ids: Set<Int>,
         repository: JpaRepository<T, Int>,
-        fieldName: String
+        fieldName: String,
     ): MutableSet<T> {
-        if (ids.isEmpty()) {
-            return mutableSetOf()
-        }
+        if (ids.isEmpty()) return mutableSetOf()
         val entities = repository.findAllById(ids).toList()
         if (entities.size != ids.size) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName contains unknown ids")
@@ -181,59 +147,3 @@ class StayService(
         return entities.toMutableSet()
     }
 }
-
-private fun Stay.toResponse(rooms: List<Room>, pictures: List<StayPicture>): StayResponse =
-    StayResponse(
-        id = id,
-        name = name,
-        about = about,
-        propertyType = propertyType,
-        address = address.toResponse(),
-        isRefundable = isRefundable,
-        starRating = starRating,
-        daysFromBookingCancellationDeadline = daysFromBookingCancellationDeadline,
-        policiesText = policiesText,
-        importantInformation = importantInformation,
-        hostId = host.id,
-        propertyBrandId = propertyBrand?.id,
-        viewIds = views.map { it.id }.toSet(),
-        amenityIds = amenities.map { it.id }.toSet(),
-        accessibilityIds = accessibilities.map { it.id }.toSet(),
-        mealPlanIds = mealPlans.map { it.id }.toSet(),
-        paymentTypeIds = paymentTypes.map { it.id }.toSet(),
-        travelerExperienceIds = travelerExperiences.map { it.id }.toSet(),
-        rooms = rooms.map { room ->
-            com.team1.project_lab_backend.dto.RoomResponse(
-                id = room.id,
-                stayId = room.stayId,
-                name = room.name,
-                price = room.price,
-                sleeps = room.sleeps,
-                bedroomAmount = room.bedroomAmount,
-                bathrooms = room.bathrooms,
-                size = room.size
-            )
-        },
-        pictures = pictures.map { pic ->
-            com.team1.project_lab_backend.dto.StayPictureResponse(
-                id = pic.id,
-                stayId = pic.stayId,
-                url = pic.url,
-                caption = pic.caption,
-                isPrimary = pic.isPrimary,
-                displayOrder = pic.displayOrder
-            )
-        },
-        startingFromPrice = rooms.map { it.price }.minOrNull()
-    )
-
-private fun Address.toResponse(): AddressResponse =
-    AddressResponse(
-        id = id,
-        streetAddress = streetAddress,
-        extendedAddress = extendedAddress,
-        city = city,
-        stateProvince = stateProvince,
-        postalCode = postalCode,
-        countryCode = countryCode
-    )

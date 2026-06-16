@@ -1,0 +1,10 @@
+type Room {
+    id: Int!
+    stayId: Int!
+    name: String!
+    price: BigDecimal!
+    sleeps: Int!
+    bedroomAmount: Int!
+    bathrooms: BigDecimal!
+    size: BigDecimal
+}

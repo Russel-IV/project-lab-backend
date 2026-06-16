@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.MealPlanRequest
-import com.team1.project_lab_backend.dto.MealPlanResponse
 import com.team1.project_lab_backend.models.MealPlan
 import com.team1.project_lab_backend.repositories.MealPlanRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MealPlanService(
-    private val mealPlanRepository: MealPlanRepository
+    private val mealPlanRepository: MealPlanRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllMealPlans(): List<MealPlanResponse> =
-        mealPlanRepository.findAll().map { it.toResponse() }
+    fun getAllMealPlans(): List<MealPlan> = mealPlanRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getMealPlanById(id: Int): MealPlanResponse {
+    fun getMealPlanById(id: Int): MealPlan {
         id.requirePositive()
-        return mealPlanRepository.findById(id).orNotFound("meal plan not found").toResponse()
+        return mealPlanRepository.findById(id).orNotFound("meal plan not found")
     }
 
     @Transactional
-    fun createMealPlan(request: MealPlanRequest): MealPlanResponse {
+    fun createMealPlan(request: MealPlanRequest): MealPlan {
         request.mealPlanType.requireNotBlank("mealPlanType")
-        val mealPlan = MealPlan(mealPlanType = request.mealPlanType)
-        return mealPlanRepository.save(mealPlan).toResponse()
+        return mealPlanRepository.save(MealPlan(mealPlanType = request.mealPlanType))
     }
 
     @Transactional
-    fun updateMealPlan(id: Int, request: MealPlanRequest): MealPlanResponse {
+    fun updateMealPlan(id: Int, request: MealPlanRequest): MealPlan {
         id.requirePositive()
         request.mealPlanType.requireNotBlank("mealPlanType")
         mealPlanRepository.requireExistsById(id, "meal plan not found")
-        val mealPlan = MealPlan(id = id, mealPlanType = request.mealPlanType)
-        return mealPlanRepository.save(mealPlan).toResponse()
+        return mealPlanRepository.save(MealPlan(id = id, mealPlanType = request.mealPlanType))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class MealPlanService(
         mealPlanRepository.deleteById(id)
     }
 }
-
-private fun MealPlan.toResponse(): MealPlanResponse =
-    MealPlanResponse(id = id, mealPlanType = mealPlanType)

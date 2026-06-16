@@ -45,4 +45,68 @@ class ReviewServiceTest {
         assertEquals(5, response.id)
         assertEquals("Great stay", response.text)
     }
+
+    @Test
+    fun createReviewRejectsBlankText() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            reviewService.createReview(ReviewRequest(text = "  ", userId = 1, stayId = 1))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun createReviewRejectsMissingStay() {
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(99)).thenReturn(false)
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            reviewService.createReview(ReviewRequest(text = "Nice", userId = 1, stayId = 99))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun updateReviewReturnsNotFoundWhenMissing() {
+        Mockito.`when`(reviewRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(1)).thenReturn(true)
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            reviewService.updateReview(99, ReviewRequest(text = "Updated", userId = 1, stayId = 1))
+        }
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun updateReviewReturnsUpdatedReview() {
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
+        Mockito.`when`(reviewRepository.existsById(5)).thenReturn(true)
+        val saved = Review(id = 5, text = "Updated text", userId = 1, stayId = 2)
+        Mockito.`when`(reviewRepository.save(Mockito.any(Review::class.java))).thenReturn(saved)
+
+        val result = reviewService.updateReview(5, ReviewRequest(text = "Updated text", userId = 1, stayId = 2))
+
+        assertEquals(5, result.id)
+        assertEquals("Updated text", result.text)
+    }
+
+    @Test
+    fun deleteReviewReturnsNotFoundWhenMissing() {
+        Mockito.`when`(reviewRepository.existsById(99)).thenReturn(false)
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            reviewService.deleteReview(99)
+        }
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun deleteReviewInvokesRepository() {
+        Mockito.`when`(reviewRepository.existsById(5)).thenReturn(true)
+
+        reviewService.deleteReview(5)
+
+        Mockito.verify(reviewRepository).deleteById(5)
+    }
 }

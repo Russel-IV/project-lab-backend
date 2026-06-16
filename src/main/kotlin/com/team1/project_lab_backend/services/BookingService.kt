@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.BookingRequest
-import com.team1.project_lab_backend.dto.BookingResponse
 import com.team1.project_lab_backend.dto.BookingStatusRequest
 import com.team1.project_lab_backend.models.Booking
 import com.team1.project_lab_backend.models.BookingStatus
@@ -25,20 +24,19 @@ private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIR
 class BookingService(
     private val bookingRepository: BookingRepository,
     private val userRepository: UserRepository,
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllBookings(): List<BookingResponse> =
-        bookingRepository.findAll().map { it.toResponse() }
+    fun getAllBookings(): List<Booking> = bookingRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getBookingById(id: Int): BookingResponse {
+    fun getBookingById(id: Int): Booking {
         id.requirePositive()
-        return bookingRepository.findById(id).orNotFound("booking not found").toResponse()
+        return bookingRepository.findById(id).orNotFound("booking not found")
     }
 
     @Transactional
-    fun createBooking(request: BookingRequest): BookingResponse {
+    fun createBooking(request: BookingRequest): Booking {
         request.userId.requirePositive("userId")
         val user = userRepository.findById(request.userId).orBadRequest("userId not found")
 
@@ -63,60 +61,58 @@ class BookingService(
         if (rooms.size != request.roomIds.size) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds contains unknown ids")
         }
-
-        val distinctStayIds = rooms.map { it.stayId }.toSet()
-        if (distinctStayIds.size > 1) {
+        if (rooms.map { it.stayId }.toSet().size > 1) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "all rooms must belong to the same stay")
         }
 
-        val conflictingRooms = roomRepository.findConflictingRooms(
+        val conflicting = roomRepository.findConflictingRooms(
             request.roomIds,
             request.checkInDate,
             request.checkOutDate,
-            ACTIVE_STATUSES
+            ACTIVE_STATUSES,
         )
-        if (conflictingRooms.isNotEmpty()) {
+        if (conflicting.isNotEmpty()) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "one or more rooms are not available for the requested dates"
+                "one or more rooms are not available for the requested dates",
+            )
+        }
+        if (request.guestsCount > rooms.sumOf { it.sleeps }) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "guestsCount exceeds total capacity of requested rooms",
             )
         }
 
-        val totalCapacity = rooms.sumOf { it.sleeps }
-        if (request.guestsCount > totalCapacity) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "guestsCount exceeds total capacity of requested rooms"
-            )
-        }
-
-        val booking = Booking(
-            id = 0,
-            user = user,
-            checkInDate = request.checkInDate,
-            checkOutDate = request.checkOutDate,
-            status = BookingStatus.PENDING,
-            guestsCount = request.guestsCount,
-            rooms = rooms.toMutableSet()
+        return bookingRepository.save(
+            Booking(
+                id = 0,
+                user = user,
+                checkInDate = request.checkInDate,
+                checkOutDate = request.checkOutDate,
+                status = BookingStatus.PENDING,
+                guestsCount = request.guestsCount,
+                rooms = rooms.toMutableSet(),
+            ),
         )
-        return bookingRepository.save(booking).toResponse()
     }
 
     @Transactional
-    fun updateBookingStatus(id: Int, request: BookingStatusRequest): BookingResponse {
+    fun updateBookingStatus(id: Int, request: BookingStatusRequest): Booking {
         id.requirePositive()
         val existing = bookingRepository.findById(id).orNotFound("booking not found")
-        val updated = Booking(
-            id = existing.id,
-            user = existing.user,
-            checkInDate = existing.checkInDate,
-            checkOutDate = existing.checkOutDate,
-            status = request.status,
-            guestsCount = existing.guestsCount,
-            createdAt = existing.createdAt,
-            rooms = existing.rooms
+        return bookingRepository.save(
+            Booking(
+                id = existing.id,
+                user = existing.user,
+                checkInDate = existing.checkInDate,
+                checkOutDate = existing.checkOutDate,
+                status = request.status,
+                guestsCount = existing.guestsCount,
+                createdAt = existing.createdAt,
+                rooms = existing.rooms,
+            ),
         )
-        return bookingRepository.save(updated).toResponse()
     }
 
     @Transactional
@@ -126,15 +122,3 @@ class BookingService(
         bookingRepository.deleteById(id)
     }
 }
-
-private fun Booking.toResponse(): BookingResponse =
-    BookingResponse(
-        id = id,
-        userId = user.id,
-        checkInDate = checkInDate,
-        checkOutDate = checkOutDate,
-        status = status,
-        guestsCount = guestsCount,
-        createdAt = createdAt,
-        roomIds = rooms.map { it.id }.toSet()
-    )

@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.PaymentTypeRequest
-import com.team1.project_lab_backend.dto.PaymentTypeResponse
 import com.team1.project_lab_backend.models.PaymentType
 import com.team1.project_lab_backend.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class PaymentTypeService(
-    private val paymentTypeRepository: PaymentTypeRepository
+    private val paymentTypeRepository: PaymentTypeRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllPaymentTypes(): List<PaymentTypeResponse> =
-        paymentTypeRepository.findAll().map { it.toResponse() }
+    fun getAllPaymentTypes(): List<PaymentType> = paymentTypeRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getPaymentTypeById(id: Int): PaymentTypeResponse {
+    fun getPaymentTypeById(id: Int): PaymentType {
         id.requirePositive()
-        return paymentTypeRepository.findById(id).orNotFound("payment type not found").toResponse()
+        return paymentTypeRepository.findById(id).orNotFound("payment type not found")
     }
 
     @Transactional
-    fun createPaymentType(request: PaymentTypeRequest): PaymentTypeResponse {
+    fun createPaymentType(request: PaymentTypeRequest): PaymentType {
         request.paymentType.requireNotBlank("paymentType")
-        val paymentType = PaymentType(paymentType = request.paymentType)
-        return paymentTypeRepository.save(paymentType).toResponse()
+        return paymentTypeRepository.save(PaymentType(paymentType = request.paymentType))
     }
 
     @Transactional
-    fun updatePaymentType(id: Int, request: PaymentTypeRequest): PaymentTypeResponse {
+    fun updatePaymentType(id: Int, request: PaymentTypeRequest): PaymentType {
         id.requirePositive()
         request.paymentType.requireNotBlank("paymentType")
         paymentTypeRepository.requireExistsById(id, "payment type not found")
-        val paymentType = PaymentType(id = id, paymentType = request.paymentType)
-        return paymentTypeRepository.save(paymentType).toResponse()
+        return paymentTypeRepository.save(PaymentType(id = id, paymentType = request.paymentType))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class PaymentTypeService(
         paymentTypeRepository.deleteById(id)
     }
 }
-
-private fun PaymentType.toResponse(): PaymentTypeResponse =
-    PaymentTypeResponse(id = id, paymentType = paymentType)

@@ -12,8 +12,6 @@ import com.team1.project_lab_backend.repositories.HostRepository
 import com.team1.project_lab_backend.repositories.MealPlanRepository
 import com.team1.project_lab_backend.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.repositories.PropertyBrandRepository
-import com.team1.project_lab_backend.repositories.RoomRepository
-import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.repositories.ViewRepository
@@ -36,9 +34,6 @@ class StayServiceTest {
     private val mealPlanRepository = Mockito.mock(MealPlanRepository::class.java)
     private val paymentTypeRepository = Mockito.mock(PaymentTypeRepository::class.java)
     private val travelerExperienceRepository = Mockito.mock(TravelerExperienceRepository::class.java)
-    private val roomRepository = Mockito.mock(RoomRepository::class.java)
-    private val stayPictureRepository = Mockito.mock(StayPictureRepository::class.java)
-
     private val stayService = StayService(
         stayRepository,
         hostRepository,
@@ -49,8 +44,6 @@ class StayServiceTest {
         mealPlanRepository,
         paymentTypeRepository,
         travelerExperienceRepository,
-        roomRepository,
-        stayPictureRepository
     )
 
     private fun baseAddress(): AddressRequest =
@@ -95,8 +88,6 @@ class StayServiceTest {
             host = host
         )
         Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenReturn(stay)
-        Mockito.`when`(roomRepository.findByStayId(id)).thenReturn(emptyList())
-        Mockito.`when`(stayPictureRepository.findByStayId(id)).thenReturn(emptyList())
         return stay
     }
 
@@ -110,7 +101,7 @@ class StayServiceTest {
 
         assertEquals(10, response.id)
         assertEquals("Test Stay", response.name)
-        assertEquals(1, response.hostId)
+        assertEquals(1, response.host.id)
     }
 
     @Test

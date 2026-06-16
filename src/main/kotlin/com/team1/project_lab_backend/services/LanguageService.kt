@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.LanguageRequest
-import com.team1.project_lab_backend.dto.LanguageResponse
 import com.team1.project_lab_backend.models.Language
 import com.team1.project_lab_backend.repositories.LanguageRepository
 import com.team1.project_lab_backend.util.requireExistsById
@@ -12,26 +11,23 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class LanguageService(
-    private val languageRepository: LanguageRepository
+    private val languageRepository: LanguageRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllLanguages(): List<LanguageResponse> =
-        languageRepository.findAll().map { it.toResponse() }
+    fun getAllLanguages(): List<Language> = languageRepository.findAll()
 
     @Transactional
-    fun createLanguage(request: LanguageRequest): LanguageResponse {
+    fun createLanguage(request: LanguageRequest): Language {
         request.languageName.requireNotBlank("languageName")
-        val language = Language(languageName = request.languageName)
-        return languageRepository.save(language).toResponse()
+        return languageRepository.save(Language(languageName = request.languageName))
     }
 
     @Transactional
-    fun updateLanguage(id: Int, request: LanguageRequest): LanguageResponse {
+    fun updateLanguage(id: Int, request: LanguageRequest): Language {
         id.requirePositive()
         request.languageName.requireNotBlank("languageName")
         languageRepository.requireExistsById(id, "language not found")
-        val language = Language(id = id, languageName = request.languageName)
-        return languageRepository.save(language).toResponse()
+        return languageRepository.save(Language(id = id, languageName = request.languageName))
     }
 
     @Transactional
@@ -41,6 +37,3 @@ class LanguageService(
         languageRepository.deleteById(id)
     }
 }
-
-private fun Language.toResponse(): LanguageResponse =
-    LanguageResponse(id = id, languageName = languageName)

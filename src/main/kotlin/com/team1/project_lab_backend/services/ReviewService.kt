@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.ReviewRequest
-import com.team1.project_lab_backend.dto.ReviewResponse
 import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
@@ -18,14 +17,13 @@ import org.springframework.web.server.ResponseStatusException
 class ReviewService(
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
-    private val stayRepository: StayRepository
+    private val stayRepository: StayRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllReviews(): List<ReviewResponse> =
-        reviewRepository.findAll().map { it.toResponse() }
+    fun getAllReviews(): List<Review> = reviewRepository.findAll()
 
     @Transactional
-    fun createReview(request: ReviewRequest): ReviewResponse {
+    fun createReview(request: ReviewRequest): Review {
         request.text.requireNotBlank("text")
         request.userId.requirePositive("userId")
         request.stayId.requirePositive("stayId")
@@ -35,12 +33,11 @@ class ReviewService(
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
-        val review = Review(text = request.text, userId = request.userId, stayId = request.stayId)
-        return reviewRepository.save(review).toResponse()
+        return reviewRepository.save(Review(text = request.text, userId = request.userId, stayId = request.stayId))
     }
 
     @Transactional
-    fun updateReview(id: Int, request: ReviewRequest): ReviewResponse {
+    fun updateReview(id: Int, request: ReviewRequest): Review {
         id.requirePositive()
         request.text.requireNotBlank("text")
         request.userId.requirePositive("userId")
@@ -52,8 +49,9 @@ class ReviewService(
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
-        val review = Review(id = id, text = request.text, userId = request.userId, stayId = request.stayId)
-        return reviewRepository.save(review).toResponse()
+        return reviewRepository.save(
+            Review(id = id, text = request.text, userId = request.userId, stayId = request.stayId),
+        )
     }
 
     @Transactional
@@ -63,6 +61,3 @@ class ReviewService(
         reviewRepository.deleteById(id)
     }
 }
-
-private fun Review.toResponse(): ReviewResponse =
-    ReviewResponse(id = requireNotNull(id), text = text, userId = userId, stayId = stayId)

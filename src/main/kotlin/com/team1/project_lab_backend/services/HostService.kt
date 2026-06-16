@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.HostRequest
-import com.team1.project_lab_backend.dto.HostResponse
 import com.team1.project_lab_backend.models.Host
 import com.team1.project_lab_backend.repositories.HostRepository
 import com.team1.project_lab_backend.repositories.LanguageRepository
@@ -21,40 +20,37 @@ private val RATING_MAX = BigDecimal("100.0")
 @Service
 class HostService(
     private val hostRepository: HostRepository,
-    private val languageRepository: LanguageRepository
+    private val languageRepository: LanguageRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllHosts(): List<HostResponse> =
-        hostRepository.findAll().map { it.toResponse() }
+    fun getAllHosts(): List<Host> = hostRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getHostById(id: Int): HostResponse {
+    fun getHostById(id: Int): Host {
         id.requirePositive()
-        return hostRepository.findById(id).orNotFound("host not found").toResponse()
+        return hostRepository.findById(id).orNotFound("host not found")
     }
 
     @Transactional
-    fun createHost(request: HostRequest): HostResponse {
+    fun createHost(request: HostRequest): Host {
         val hostId = request.id ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id is required")
         hostId.requirePositive()
         if (hostRepository.existsById(hostId)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "host already exists")
         }
         validateHostRequest(request)
-        val host = buildHost(hostId, request)
-        return hostRepository.save(host).toResponse()
+        return hostRepository.save(buildHost(hostId, request))
     }
 
     @Transactional
-    fun updateHost(id: Int, request: HostRequest): HostResponse {
+    fun updateHost(id: Int, request: HostRequest): Host {
         id.requirePositive()
         if (request.id != null && request.id != id) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id mismatch")
         }
         hostRepository.requireExistsById(id, "host not found")
         validateHostRequest(request)
-        val host = buildHost(id, request)
-        return hostRepository.save(host).toResponse()
+        return hostRepository.save(buildHost(id, request))
     }
 
     @Transactional
@@ -86,16 +82,7 @@ class HostService(
             communicationRating = request.communicationRating,
             checkinProcessRating = request.checkinProcessRating,
             cancellationRate = request.cancellationRate,
-            languages = languages
+            languages = languages,
         )
     }
 }
-
-private fun Host.toResponse(): HostResponse =
-    HostResponse(
-        id = id,
-        communicationRating = communicationRating,
-        checkinProcessRating = checkinProcessRating,
-        cancellationRate = cancellationRate,
-        languageIds = languages.map { it.id }.toSet()
-    )

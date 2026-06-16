@@ -1,0 +1,54 @@
+input AddressInput {
+    streetAddress: String!
+    extendedAddress: String
+    city: String!
+    stateProvince: String
+    postalCode: String
+    countryCode: String!
+}
+
+input CreateStayInput {
+    name: String!
+    about: String
+    propertyType: PropertyType!
+    address: AddressInput!
+    isRefundable: Boolean! = false
+    starRating: BigDecimal
+    daysFromBookingCancellationDeadline: Int
+    policiesText: String
+    importantInformation: String
+    hostId: Int!
+    propertyBrandId: Int
+    viewIds: [Int!]! = []
+    amenityIds: [Int!]! = []
+    accessibilityIds: [Int!]! = []
+    mealPlanIds: [Int!]! = []
+    paymentTypeIds: [Int!]! = []
+    travelerExperienceIds: [Int!]! = []
+}
+
+input UpdateStayInput {
+    name: String!
+    about: String
+    propertyType: PropertyType!
+    address: AddressInput!
+    isRefundable: Boolean! = false
+    starRating: BigDecimal
+    daysFromBookingCancellationDeadline: Int
+    policiesText: String
+    importantInformation: String
+    hostId: Int!
+    propertyBrandId: Int
+    viewIds: [Int!]! = []
+    amenityIds: [Int!]! = []
+    accessibilityIds: [Int!]! = []
+    mealPlanIds: [Int!]! = []
+    paymentTypeIds: [Int!]! = []
+    travelerExperienceIds: [Int!]! = []
+}
+
+input UpdateStayPictureInput {
+    caption: String
+    isPrimary: Boolean! = false
+    displayOrder: Int! = 0
+}

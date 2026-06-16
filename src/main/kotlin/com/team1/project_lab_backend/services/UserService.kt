@@ -1,9 +1,9 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.UserRequest
-import com.team1.project_lab_backend.dto.UserResponse
 import com.team1.project_lab_backend.models.User
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
@@ -12,26 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllUsers(): List<UserResponse> =
-        userRepository.findAll().map { it.toResponse() }
+    fun getAllUsers(): List<User> = userRepository.findAll()
 
-    @Transactional
-    fun createUser(request: UserRequest): UserResponse {
-        request.name.requireNotBlank("name")
-        val user = User(name = request.name)
-        return userRepository.save(user).toResponse()
+    @Transactional(readOnly = true)
+    fun getUserById(id: Int): User {
+        id.requirePositive()
+        return userRepository.findById(id).orNotFound("user not found")
     }
 
     @Transactional
-    fun updateUser(id: Int, request: UserRequest): UserResponse {
+    fun createUser(request: UserRequest): User {
+        request.name.requireNotBlank("name")
+        return userRepository.save(User(name = request.name))
+    }
+
+    @Transactional
+    fun updateUser(id: Int, request: UserRequest): User {
         id.requirePositive()
         request.name.requireNotBlank("name")
         userRepository.requireExistsById(id, "user not found")
-        val user = User(id = id, name = request.name)
-        return userRepository.save(user).toResponse()
+        return userRepository.save(User(id = id, name = request.name))
     }
 
     @Transactional
@@ -41,6 +44,3 @@ class UserService(
         userRepository.deleteById(id)
     }
 }
-
-private fun User.toResponse(): UserResponse =
-    UserResponse(id = id, name = name)

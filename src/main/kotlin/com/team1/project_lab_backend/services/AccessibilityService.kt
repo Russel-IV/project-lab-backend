@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.AccessibilityRequest
-import com.team1.project_lab_backend.dto.AccessibilityResponse
 import com.team1.project_lab_backend.models.Accessibility
 import com.team1.project_lab_backend.repositories.AccessibilityRepository
 import com.team1.project_lab_backend.util.orNotFound
@@ -13,32 +12,29 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class AccessibilityService(
-    private val accessibilityRepository: AccessibilityRepository
+    private val accessibilityRepository: AccessibilityRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllAccessibility(): List<AccessibilityResponse> =
-        accessibilityRepository.findAll().map { it.toResponse() }
+    fun getAllAccessibility(): List<Accessibility> = accessibilityRepository.findAll()
 
     @Transactional(readOnly = true)
-    fun getAccessibilityById(id: Int): AccessibilityResponse {
+    fun getAccessibilityById(id: Int): Accessibility {
         id.requirePositive()
-        return accessibilityRepository.findById(id).orNotFound("accessibility not found").toResponse()
+        return accessibilityRepository.findById(id).orNotFound("accessibility not found")
     }
 
     @Transactional
-    fun createAccessibility(request: AccessibilityRequest): AccessibilityResponse {
+    fun createAccessibility(request: AccessibilityRequest): Accessibility {
         request.accessibilityType.requireNotBlank("accessibilityType")
-        val accessibility = Accessibility(accessibilityType = request.accessibilityType)
-        return accessibilityRepository.save(accessibility).toResponse()
+        return accessibilityRepository.save(Accessibility(accessibilityType = request.accessibilityType))
     }
 
     @Transactional
-    fun updateAccessibility(id: Int, request: AccessibilityRequest): AccessibilityResponse {
+    fun updateAccessibility(id: Int, request: AccessibilityRequest): Accessibility {
         id.requirePositive()
         request.accessibilityType.requireNotBlank("accessibilityType")
         accessibilityRepository.requireExistsById(id, "accessibility not found")
-        val accessibility = Accessibility(id = id, accessibilityType = request.accessibilityType)
-        return accessibilityRepository.save(accessibility).toResponse()
+        return accessibilityRepository.save(Accessibility(id = id, accessibilityType = request.accessibilityType))
     }
 
     @Transactional
@@ -48,6 +44,3 @@ class AccessibilityService(
         accessibilityRepository.deleteById(id)
     }
 }
-
-private fun Accessibility.toResponse(): AccessibilityResponse =
-    AccessibilityResponse(id = id, accessibilityType = accessibilityType)

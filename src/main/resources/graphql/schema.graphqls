@@ -1,0 +1,108 @@
+scalar Date
+scalar DateTime
+scalar BigDecimal
+
+enum PropertyType { HOTEL HOME }
+enum BookingStatus { PENDING CONFIRMED CANCELLED COMPLETED }
+enum AmenityType { ROOM_AMENITY PROPERTY_AMENITY }
+
+type Query {
+    users: [User!]!
+    user(id: Int!): User
+
+    hosts: [Host!]!
+    host(id: Int!): Host
+
+    stays(page: Int = 0, size: Int = 20): [Stay!]!
+    stay(id: Int!): Stay
+
+    rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!
+    room(id: Int!): Room
+    availableRooms(stayId: Int!, checkIn: Date!, checkOut: Date!): [Room!]!
+
+    bookings(page: Int = 0, size: Int = 20): [Booking!]!
+    booking(id: Int!): Booking
+
+    reviews(page: Int = 0, size: Int = 20): [Review!]!
+
+    amenities: [Amenity!]!
+    amenity(id: Int!): Amenity
+
+    languages: [Language!]!
+
+    accessibilities: [Accessibility!]!
+
+    views: [View!]!
+
+    paymentTypes: [PaymentType!]!
+
+    mealPlans: [MealPlan!]!
+
+    propertyBrands: [PropertyBrand!]!
+    propertyBrand(id: Int!): PropertyBrand
+
+    travelerExperiences: [TravelerExperience!]!
+
+    stayPictures(stayId: Int!): [StayPicture!]!
+}
+
+type Mutation {
+    createUser(input: CreateUserInput!): User!
+    updateUser(id: Int!, input: UpdateUserInput!): User!
+    deleteUser(id: Int!): Boolean!
+
+    createHost(input: CreateHostInput!): Host!
+    updateHost(id: Int!, input: UpdateHostInput!): Host!
+    deleteHost(id: Int!): Boolean!
+
+    createStay(input: CreateStayInput!): Stay!
+    updateStay(id: Int!, input: UpdateStayInput!): Stay!
+    deleteStay(id: Int!): Boolean!
+
+    createRoom(stayId: Int!, input: CreateRoomInput!): Room!
+    updateRoom(id: Int!, input: UpdateRoomInput!): Room!
+    deleteRoom(id: Int!): Boolean!
+
+    createBooking(input: CreateBookingInput!): Booking!
+    updateBookingStatus(id: Int!, status: BookingStatus!): Booking!
+    deleteBooking(id: Int!): Boolean!
+
+    createReview(input: CreateReviewInput!): Review!
+    updateReview(id: Int!, input: UpdateReviewInput!): Review!
+    deleteReview(id: Int!): Boolean!
+
+    updateStayPicture(stayId: Int!, id: Int!, input: UpdateStayPictureInput!): StayPicture!
+    deleteStayPicture(stayId: Int!, id: Int!): Boolean!
+
+    createAmenity(input: CreateAmenityInput!): Amenity!
+    updateAmenity(id: Int!, input: UpdateAmenityInput!): Amenity!
+    deleteAmenity(id: Int!): Boolean!
+
+    createLanguage(input: CreateLanguageInput!): Language!
+    updateLanguage(id: Int!, input: UpdateLanguageInput!): Language!
+    deleteLanguage(id: Int!): Boolean!
+
+    createAccessibility(input: CreateAccessibilityInput!): Accessibility!
+    updateAccessibility(id: Int!, input: UpdateAccessibilityInput!): Accessibility!
+    deleteAccessibility(id: Int!): Boolean!
+
+    createView(input: CreateViewInput!): View!
+    updateView(id: Int!, input: UpdateViewInput!): View!
+    deleteView(id: Int!): Boolean!
+
+    createPaymentType(input: CreatePaymentTypeInput!): PaymentType!
+    updatePaymentType(id: Int!, input: UpdatePaymentTypeInput!): PaymentType!
+    deletePaymentType(id: Int!): Boolean!
+
+    createMealPlan(input: CreateMealPlanInput!): MealPlan!
+    updateMealPlan(id: Int!, input: UpdateMealPlanInput!): MealPlan!
+    deleteMealPlan(id: Int!): Boolean!
+
+    createPropertyBrand(input: CreatePropertyBrandInput!): PropertyBrand!
+    updatePropertyBrand(id: Int!, input: UpdatePropertyBrandInput!): PropertyBrand!
+    deletePropertyBrand(id: Int!): Boolean!
+
+    createTravelerExperience(input: CreateTravelerExperienceInput!): TravelerExperience!
+    updateTravelerExperience(id: Int!, input: UpdateTravelerExperienceInput!): TravelerExperience!
+    deleteTravelerExperience(id: Int!): Boolean!
+}

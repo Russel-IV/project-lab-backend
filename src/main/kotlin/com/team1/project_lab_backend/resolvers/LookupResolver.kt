@@ -1,0 +1,231 @@
+package com.team1.project_lab_backend.resolvers
+
+import com.team1.project_lab_backend.dto.AccessibilityRequest
+import com.team1.project_lab_backend.dto.AmenityRequest
+import com.team1.project_lab_backend.dto.LanguageRequest
+import com.team1.project_lab_backend.dto.MealPlanRequest
+import com.team1.project_lab_backend.dto.PaymentTypeRequest
+import com.team1.project_lab_backend.dto.PropertyBrandRequest
+import com.team1.project_lab_backend.dto.TravelerExperienceRequest
+import com.team1.project_lab_backend.dto.ViewRequest
+import com.team1.project_lab_backend.models.Accessibility
+import com.team1.project_lab_backend.models.Amenity
+import com.team1.project_lab_backend.models.AmenityType
+import com.team1.project_lab_backend.models.Language
+import com.team1.project_lab_backend.models.MealPlan
+import com.team1.project_lab_backend.models.PaymentType
+import com.team1.project_lab_backend.models.PropertyBrand
+import com.team1.project_lab_backend.models.TravelerExperience
+import com.team1.project_lab_backend.models.View
+import com.team1.project_lab_backend.services.AccessibilityService
+import com.team1.project_lab_backend.services.AmenityService
+import com.team1.project_lab_backend.services.LanguageService
+import com.team1.project_lab_backend.services.MealPlanService
+import com.team1.project_lab_backend.services.PaymentTypeService
+import com.team1.project_lab_backend.services.PropertyBrandService
+import com.team1.project_lab_backend.services.TravelerExperienceService
+import com.team1.project_lab_backend.services.ViewService
+import org.springframework.graphql.data.method.annotation.Argument
+import org.springframework.graphql.data.method.annotation.MutationMapping
+import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.stereotype.Controller
+
+@Controller
+class LookupResolver(
+    private val amenityService: AmenityService,
+    private val languageService: LanguageService,
+    private val accessibilityService: AccessibilityService,
+    private val viewService: ViewService,
+    private val paymentTypeService: PaymentTypeService,
+    private val mealPlanService: MealPlanService,
+    private val propertyBrandService: PropertyBrandService,
+    private val travelerExperienceService: TravelerExperienceService,
+) {
+
+    // ---- Amenity ----
+
+    @QueryMapping
+    fun amenities(): List<Amenity> = amenityService.getAllAmenities()
+
+    @QueryMapping
+    fun amenity(@Argument id: Int): Amenity? = amenityService.getAmenityById(id)
+
+    @MutationMapping
+    fun createAmenity(@Argument input: CreateAmenityInput): Amenity =
+        amenityService.createAmenity(AmenityRequest(name = input.name, type = input.type))
+
+    @MutationMapping
+    fun updateAmenity(@Argument id: Int, @Argument input: UpdateAmenityInput): Amenity =
+        amenityService.updateAmenity(id, AmenityRequest(name = input.name, type = input.type))
+
+    @MutationMapping
+    fun deleteAmenity(@Argument id: Int): Boolean {
+        amenityService.deleteAmenity(id)
+        return true
+    }
+
+    // ---- Language ----
+
+    @QueryMapping
+    fun languages(): List<Language> = languageService.getAllLanguages()
+
+    @MutationMapping
+    fun createLanguage(@Argument input: CreateLanguageInput): Language =
+        languageService.createLanguage(LanguageRequest(languageName = input.languageName))
+
+    @MutationMapping
+    fun updateLanguage(@Argument id: Int, @Argument input: UpdateLanguageInput): Language =
+        languageService.updateLanguage(id, LanguageRequest(languageName = input.languageName))
+
+    @MutationMapping
+    fun deleteLanguage(@Argument id: Int): Boolean {
+        languageService.deleteLanguage(id)
+        return true
+    }
+
+    // ---- Accessibility ----
+
+    @QueryMapping
+    fun accessibilities(): List<Accessibility> = accessibilityService.getAllAccessibility()
+
+    @MutationMapping
+    fun createAccessibility(@Argument input: CreateAccessibilityInput): Accessibility =
+        accessibilityService.createAccessibility(AccessibilityRequest(accessibilityType = input.accessibilityType))
+
+    @MutationMapping
+    fun updateAccessibility(@Argument id: Int, @Argument input: UpdateAccessibilityInput): Accessibility =
+        accessibilityService.updateAccessibility(id, AccessibilityRequest(accessibilityType = input.accessibilityType))
+
+    @MutationMapping
+    fun deleteAccessibility(@Argument id: Int): Boolean {
+        accessibilityService.deleteAccessibility(id)
+        return true
+    }
+
+    // ---- View ----
+
+    @QueryMapping
+    fun views(): List<View> = viewService.getAllViews()
+
+    @MutationMapping
+    fun createView(@Argument input: CreateViewInput): View =
+        viewService.createView(ViewRequest(viewType = input.viewType))
+
+    @MutationMapping
+    fun updateView(@Argument id: Int, @Argument input: UpdateViewInput): View =
+        viewService.updateView(id, ViewRequest(viewType = input.viewType))
+
+    @MutationMapping
+    fun deleteView(@Argument id: Int): Boolean {
+        viewService.deleteView(id)
+        return true
+    }
+
+    // ---- PaymentType ----
+
+    @QueryMapping
+    fun paymentTypes(): List<PaymentType> = paymentTypeService.getAllPaymentTypes()
+
+    @MutationMapping
+    fun createPaymentType(@Argument input: CreatePaymentTypeInput): PaymentType =
+        paymentTypeService.createPaymentType(PaymentTypeRequest(paymentType = input.paymentType))
+
+    @MutationMapping
+    fun updatePaymentType(@Argument id: Int, @Argument input: UpdatePaymentTypeInput): PaymentType =
+        paymentTypeService.updatePaymentType(id, PaymentTypeRequest(paymentType = input.paymentType))
+
+    @MutationMapping
+    fun deletePaymentType(@Argument id: Int): Boolean {
+        paymentTypeService.deletePaymentType(id)
+        return true
+    }
+
+    // ---- MealPlan ----
+
+    @QueryMapping
+    fun mealPlans(): List<MealPlan> = mealPlanService.getAllMealPlans()
+
+    @MutationMapping
+    fun createMealPlan(@Argument input: CreateMealPlanInput): MealPlan =
+        mealPlanService.createMealPlan(MealPlanRequest(mealPlanType = input.mealPlanType))
+
+    @MutationMapping
+    fun updateMealPlan(@Argument id: Int, @Argument input: UpdateMealPlanInput): MealPlan =
+        mealPlanService.updateMealPlan(id, MealPlanRequest(mealPlanType = input.mealPlanType))
+
+    @MutationMapping
+    fun deleteMealPlan(@Argument id: Int): Boolean {
+        mealPlanService.deleteMealPlan(id)
+        return true
+    }
+
+    // ---- PropertyBrand ----
+
+    @QueryMapping
+    fun propertyBrands(): List<PropertyBrand> = propertyBrandService.getAllPropertyBrands()
+
+    @QueryMapping
+    fun propertyBrand(@Argument id: Int): PropertyBrand? = propertyBrandService.getPropertyBrandById(id)
+
+    @MutationMapping
+    fun createPropertyBrand(@Argument input: CreatePropertyBrandInput): PropertyBrand =
+        propertyBrandService.createPropertyBrand(PropertyBrandRequest(brandName = input.brandName))
+
+    @MutationMapping
+    fun updatePropertyBrand(@Argument id: Int, @Argument input: UpdatePropertyBrandInput): PropertyBrand =
+        propertyBrandService.updatePropertyBrand(id, PropertyBrandRequest(brandName = input.brandName))
+
+    @MutationMapping
+    fun deletePropertyBrand(@Argument id: Int): Boolean {
+        propertyBrandService.deletePropertyBrand(id)
+        return true
+    }
+
+    // ---- TravelerExperience ----
+
+    @QueryMapping
+    fun travelerExperiences(): List<TravelerExperience> = travelerExperienceService.getAllTravelerExperiences()
+
+    @MutationMapping
+    fun createTravelerExperience(@Argument input: CreateTravelerExperienceInput): TravelerExperience =
+        travelerExperienceService.createTravelerExperience(
+            TravelerExperienceRequest(travelerExperienceType = input.travelerExperienceType),
+        )
+
+    @MutationMapping
+    fun updateTravelerExperience(@Argument id: Int, @Argument input: UpdateTravelerExperienceInput): TravelerExperience =
+        travelerExperienceService.updateTravelerExperience(
+            id,
+            TravelerExperienceRequest(travelerExperienceType = input.travelerExperienceType),
+        )
+
+    @MutationMapping
+    fun deleteTravelerExperience(@Argument id: Int): Boolean {
+        travelerExperienceService.deleteTravelerExperience(id)
+        return true
+    }
+}
+
+data class CreateAmenityInput(val name: String, val type: AmenityType)
+data class UpdateAmenityInput(val name: String, val type: AmenityType)
+
+data class CreateLanguageInput(val languageName: String)
+data class UpdateLanguageInput(val languageName: String)
+
+data class CreateAccessibilityInput(val accessibilityType: String)
+data class UpdateAccessibilityInput(val accessibilityType: String)
+
+data class CreateViewInput(val viewType: String)
+data class UpdateViewInput(val viewType: String)
+
+data class CreatePaymentTypeInput(val paymentType: String)
+data class UpdatePaymentTypeInput(val paymentType: String)
+
+data class CreateMealPlanInput(val mealPlanType: String)
+data class UpdateMealPlanInput(val mealPlanType: String)
+
+data class CreatePropertyBrandInput(val brandName: String)
+data class UpdatePropertyBrandInput(val brandName: String)
+
+data class CreateTravelerExperienceInput(val travelerExperienceType: String)
+data class UpdateTravelerExperienceInput(val travelerExperienceType: String)

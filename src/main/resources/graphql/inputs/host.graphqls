@@ -1,0 +1,14 @@
+input CreateHostInput {
+    id: Int!
+    communicationRating: BigDecimal
+    checkinProcessRating: BigDecimal
+    cancellationRate: BigDecimal
+    languageIds: [Int!]! = []
+}
+
+input UpdateHostInput {
+    communicationRating: BigDecimal
+    checkinProcessRating: BigDecimal
+    cancellationRate: BigDecimal
+    languageIds: [Int!]! = []
+}

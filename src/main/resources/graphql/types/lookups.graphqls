@@ -1,0 +1,40 @@
+type Amenity {
+    id: Int!
+    name: String!
+    type: AmenityType!
+}
+
+type Language {
+    id: Int!
+    languageName: String!
+}
+
+type Accessibility {
+    id: Int!
+    accessibilityType: String!
+}
+
+type View {
+    id: Int!
+    viewType: String!
+}
+
+type PaymentType {
+    id: Int!
+    paymentType: String!
+}
+
+type MealPlan {
+    id: Int!
+    mealPlanType: String!
+}
+
+type PropertyBrand {
+    id: Int!
+    brandName: String!
+}
+
+type TravelerExperience {
+    id: Int!
+    travelerExperienceType: String!
+}

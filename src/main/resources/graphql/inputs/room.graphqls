@@ -1,0 +1,17 @@
+input CreateRoomInput {
+    name: String!
+    price: BigDecimal!
+    sleeps: Int!
+    bedroomAmount: Int!
+    bathrooms: BigDecimal!
+    size: BigDecimal
+}
+
+input UpdateRoomInput {
+    name: String!
+    price: BigDecimal!
+    sleeps: Int!
+    bedroomAmount: Int!
+    bathrooms: BigDecimal!
+    size: BigDecimal
+}
