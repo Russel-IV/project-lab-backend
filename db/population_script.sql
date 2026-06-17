@@ -123,12 +123,12 @@ SELECT setval(pg_get_serial_sequence('room', 'id'), COALESCE(MAX(id), 1)) FROM r
 -- ==========================================
 
 INSERT INTO stay_picture (id, stay_id, url, caption, is_primary, display_order) VALUES
-(1, 1, 'https://cdn.example.com/stays/1/beach-exterior.jpg',  'Ocean-facing exterior',      true,  0),
-(2, 1, 'https://cdn.example.com/stays/1/living-room.jpg',     'Open-plan living area',      false, 1),
-(3, 2, 'https://cdn.example.com/stays/2/lobby.jpg',           'Hotel lobby',                true,  0),
-(4, 2, 'https://cdn.example.com/stays/2/standard-king.jpg',   'Standard King room',         false, 1),
-(5, 2, 'https://cdn.example.com/stays/2/deluxe-suite.jpg',    'Deluxe Suite living area',   false, 2),
-(6, 3, 'https://cdn.example.com/stays/3/cabin-exterior.jpg',  'Cabin surrounded by pines',  true,  0)
+(1, 1, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/beach-exterior.png',  'Ocean-facing exterior',      true,  0),
+(2, 1, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/living-room.png',     'Open-plan living area',      false, 1),
+(3, 2, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/lobby.png',           'Hotel lobby',                true,  0),
+(4, 2, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/standard-king.png',   'Standard King room',         false, 1),
+(5, 2, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/deluxe-suite.png',    'Deluxe Suite living area',   false, 2),
+(6, 3, 'https://softserve-labpro-team1-store.s3.us-east-2.amazonaws.com/images/cabin-exterior.png',  'Cabin surrounded by pines',  true,  0)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('stay_picture', 'id'), COALESCE(MAX(id), 1)) FROM stay_picture;
