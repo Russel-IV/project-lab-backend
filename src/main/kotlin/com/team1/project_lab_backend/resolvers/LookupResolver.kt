@@ -48,7 +48,7 @@ class LookupResolver(
     fun amenities(): List<Amenity> = amenityService.getAllAmenities()
 
     @QueryMapping
-    fun amenity(@Argument id: Int): Amenity? = amenityService.getAmenityById(id)
+    fun amenity(@Argument id: Int): Amenity = amenityService.getAmenityById(id)
 
     @MutationMapping
     fun createAmenity(@Argument input: CreateAmenityInput): Amenity =
@@ -165,7 +165,7 @@ class LookupResolver(
     fun propertyBrands(): List<PropertyBrand> = propertyBrandService.getAllPropertyBrands()
 
     @QueryMapping
-    fun propertyBrand(@Argument id: Int): PropertyBrand? = propertyBrandService.getPropertyBrandById(id)
+    fun propertyBrand(@Argument id: Int): PropertyBrand = propertyBrandService.getPropertyBrandById(id)
 
     @MutationMapping
     fun createPropertyBrand(@Argument input: CreatePropertyBrandInput): PropertyBrand =
@@ -193,7 +193,10 @@ class LookupResolver(
         )
 
     @MutationMapping
-    fun updateTravelerExperience(@Argument id: Int, @Argument input: UpdateTravelerExperienceInput): TravelerExperience =
+    fun updateTravelerExperience(
+        @Argument id: Int,
+        @Argument input: UpdateTravelerExperienceInput
+    ): TravelerExperience =
         travelerExperienceService.updateTravelerExperience(
             id,
             TravelerExperienceRequest(travelerExperienceType = input.travelerExperienceType),

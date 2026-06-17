@@ -15,7 +15,7 @@ class UserResolver(private val userService: UserService) {
     fun users(): List<User> = userService.getAllUsers()
 
     @QueryMapping
-    fun user(@Argument id: Int): User? = userService.getUserById(id)
+    fun user(@Argument id: Int): User = userService.getUserById(id)
 
     @MutationMapping
     fun createUser(@Argument input: CreateUserInput): User =

@@ -14,5 +14,11 @@ open class User(
     @Column(name = "name", nullable = false, length = 255)
     @field:NotBlank
     @field:Size(max = 255)
-    open val name: String
+    open val name: String,
+
+    @Column(name = "email", unique = true, length = 320)
+    open val email: String? = null,
+
+    @Column(name = "password_hash")
+    open val passwordHash: String? = null,
 )

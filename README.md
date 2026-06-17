@@ -27,6 +27,7 @@ GraphQL API backend for a lodging platform supporting home rentals and hotels. B
 | `POSTGRES_PASSWORD` | Database password |
 | `POSTGRES_SSL_MODE` | SSL mode (e.g. `disable`) |
 | `UPLOAD_DIR` | Absolute path where uploaded pictures are stored (e.g. `/app/uploads`) |
+| `JWT_SECRET` | Secret key used to sign JWTs — use a random string of at least 64 characters in production |
 
 2. Start the stack:
 
@@ -76,11 +77,21 @@ enum AmenityType    { ROOM_AMENITY PROPERTY_AMENITY }
 
 ## Types
 
+### AuthPayload
+Returned by `login` and `signup`.
+```graphql
+type AuthPayload {
+    token: String!   # JWT — include as Authorization: Bearer <token>
+    user:  User!
+}
+```
+
 ### User
 ```graphql
 type User {
-    id: Int!
-    name: String!
+    id:    Int!
+    name:  String!
+    email: String   # null for users created before auth was added
 }
 ```
 
@@ -361,6 +372,46 @@ travelerExperiences: [TravelerExperience!]!
 
 ---
 
+## Authentication
+
+Protected mutations require a JWT in the `Authorization` header:
+
+```
+Authorization: Bearer <token>
+```
+
+Obtain a token with `login` or `signup`:
+
+```graphql
+mutation {
+  signup(name: "Alice", email: "alice@example.com", password: "s3cr3t") {
+    token
+    user { id name email }
+  }
+}
+```
+
+```graphql
+mutation {
+  login(email: "alice@example.com", password: "s3cr3t") {
+    token
+    user { id name }
+  }
+}
+```
+
+Tokens are valid for 24 hours. An expired or missing token on a protected mutation returns:
+
+```json
+{
+  "errors": [{ "message": "authentication required", "extensions": { "classification": "UNAUTHORIZED" } }]
+}
+```
+
+**Currently protected mutations:** `createBooking`, `updateBookingStatus`, `deleteBooking`.
+
+---
+
 ## Mutations
 
 ### Users
@@ -537,14 +588,15 @@ updateBookingStatus(id: Int!, status: BookingStatus!): Booking!
 deleteBooking(id: Int!): Boolean!
 ```
 
+> **Requires authentication** — include `Authorization: Bearer <token>`. The booking is created for the authenticated user; no `userId` is needed in the input.
+
 **Input**
 ```graphql
 input CreateBookingInput {
-    userId:      Int!
-    checkInDate: Date!
+    checkInDate:  Date!
     checkOutDate: Date!
-    guestsCount: Int!
-    roomIds:     [Int!]!
+    guestsCount:  Int!
+    roomIds:      [Int!]!
 }
 ```
 
@@ -560,7 +612,6 @@ input CreateBookingInput {
 ```graphql
 mutation {
   createBooking(input: {
-    userId: 2
     checkInDate: "2026-09-01"
     checkOutDate: "2026-09-05"
     guestsCount: 2
@@ -724,6 +775,7 @@ All GraphQL errors are returned in the standard `errors` array with a `extension
 | HTTP concept | `classification` value |
 |---|---|
 | 400 Bad Request | `BAD_REQUEST` |
+| 409 Conflict (e.g. duplicate email) | `BAD_REQUEST` |
 | 404 Not Found | `NOT_FOUND` |
 | 403 Forbidden | `FORBIDDEN` |
 | 401 Unauthorized | `UNAUTHORIZED` |

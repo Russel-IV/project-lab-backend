@@ -16,7 +16,7 @@ class HostResolver(private val hostService: HostService) {
     fun hosts(): List<Host> = hostService.getAllHosts()
 
     @QueryMapping
-    fun host(@Argument id: Int): Host? = hostService.getHostById(id)
+    fun host(@Argument id: Int): Host = hostService.getHostById(id)
 
     @MutationMapping
     fun createHost(@Argument input: CreateHostInput): Host =

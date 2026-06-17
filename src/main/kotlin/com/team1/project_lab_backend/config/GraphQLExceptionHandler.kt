@@ -26,6 +26,7 @@ class GraphQLExceptionHandler : DataFetcherExceptionResolverAdapter() {
     private fun HttpStatusCode.toErrorType(): ErrorType = when {
         this == HttpStatus.NOT_FOUND -> ErrorType.NOT_FOUND
         this == HttpStatus.BAD_REQUEST -> ErrorType.BAD_REQUEST
+        this == HttpStatus.CONFLICT -> ErrorType.BAD_REQUEST
         this == HttpStatus.FORBIDDEN -> ErrorType.FORBIDDEN
         this == HttpStatus.UNAUTHORIZED -> ErrorType.UNAUTHORIZED
         else -> ErrorType.INTERNAL_ERROR

@@ -1,5 +1,4 @@
 input CreateBookingInput {
-    userId: Int!
     checkInDate: Date!
     checkOutDate: Date!
     guestsCount: Int!

@@ -5,6 +5,7 @@ import com.team1.project_lab_backend.dto.BookingStatusRequest
 import com.team1.project_lab_backend.models.Booking
 import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.services.BookingService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -23,33 +24,37 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @QueryMapping
-    fun booking(@Argument id: Int): Booking? = bookingService.getBookingById(id)
+    fun booking(@Argument id: Int): Booking = bookingService.getBookingById(id)
 
     @MutationMapping
-    fun createBooking(@Argument input: CreateBookingInput): Booking =
-        bookingService.createBooking(
+    fun createBooking(@Argument input: CreateBookingInput): Booking {
+        val currentUser = requireAuthenticated()
+        return bookingService.createBooking(
             BookingRequest(
-                userId = input.userId,
+                userId = currentUser.id,
                 checkInDate = input.checkInDate,
                 checkOutDate = input.checkOutDate,
                 guestsCount = input.guestsCount,
                 roomIds = input.roomIds,
             ),
         )
+    }
 
     @MutationMapping
-    fun updateBookingStatus(@Argument id: Int, @Argument status: BookingStatus): Booking =
-        bookingService.updateBookingStatus(id, BookingStatusRequest(status = status))
+    fun updateBookingStatus(@Argument id: Int, @Argument status: BookingStatus): Booking {
+        requireAuthenticated()
+        return bookingService.updateBookingStatus(id, BookingStatusRequest(status = status))
+    }
 
     @MutationMapping
     fun deleteBooking(@Argument id: Int): Boolean {
+        requireAuthenticated()
         bookingService.deleteBooking(id)
         return true
     }
 }
 
 data class CreateBookingInput(
-    val userId: Int,
     val checkInDate: LocalDate,
     val checkOutDate: LocalDate,
     val guestsCount: Int,
