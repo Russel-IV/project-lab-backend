@@ -16,9 +16,9 @@ class RoomResolver(private val roomService: RoomService) {
     @QueryMapping
     fun rooms(
         @Argument stayId: Int,
-        @Argument page: Int,
-        @Argument size: Int,
-    ): List<Room> = roomService.getRoomsForStay(stayId, page, size)
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<Room> = roomService.getRoomsForStay(stayId, page ?: 0, size ?: 20)
 
     @QueryMapping
     fun room(@Argument id: Int): Room? = roomService.getRoomById(id)

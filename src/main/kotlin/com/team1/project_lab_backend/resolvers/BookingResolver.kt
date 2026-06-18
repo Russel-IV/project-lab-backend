@@ -17,10 +17,12 @@ class BookingResolver(private val bookingService: BookingService) {
 
     @QueryMapping
     fun bookings(
-        @Argument page: Int,
-        @Argument size: Int,
+        @Argument page: Int?,
+        @Argument size: Int?,
     ): List<Booking> = bookingService.getAllBookings().let { all ->
-        all.drop(page * size).take(size)
+        val p = page ?: 0
+        val s = size ?: 20
+        all.drop(p * s).take(s)
     }
 
     @QueryMapping

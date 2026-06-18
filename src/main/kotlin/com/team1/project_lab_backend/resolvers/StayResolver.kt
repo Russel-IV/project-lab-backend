@@ -16,9 +16,9 @@ class StayResolver(private val stayService: StayService) {
 
     @QueryMapping
     fun stays(
-        @Argument page: Int,
-        @Argument size: Int,
-    ): List<Stay> = stayService.getAllStays(page, size)
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<Stay> = stayService.getAllStays(page ?: 0, size ?: 20)
 
     @QueryMapping
     fun stay(@Argument id: Int): Stay? = stayService.getStayById(id)

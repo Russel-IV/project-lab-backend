@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 @Entity
-@Table(name = "user")
+@Table(name = "\"user\"")
 open class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -7,7 +7,7 @@ import jakarta.persistence.*
 data class Review(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
+    val id: Int = 0,
 
     @Column(nullable = false, columnDefinition = "TEXT")
     val text: String,
