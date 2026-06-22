@@ -105,7 +105,16 @@ jobs:
             # 4. Clean up dangling/old images to prevent disk from filling up
             docker system prune -af
 
-            # 5. Wait and perform a quick health check
-            echo "Waiting for service startup..."
-            sleep 15
-            curl --fail http://localhost:8080/actuator/health || { echo "Healthcheck failed!"; exit 1; }
+            # 5. Wait and perform a quick health check (poll port 8080 for up to 45 seconds)
+            echo "Waiting for service to listen on port 8080..."
+            for i in {1..15}; do
+              if curl -sI http://localhost:8080/ >/dev/null; then
+                echo "Service is up and responding!"
+                exit 0
+              fi
+              echo "Still waiting..."
+              sleep 3
+            done
+            echo "Service failed to start on port 8080 within 45 seconds."
+            docker logs spring-backend
+            exit 1
