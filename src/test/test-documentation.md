@@ -67,12 +67,6 @@
 # Requirements Traceability Matrix (RTM)
 | Requirement | Test Case(s) | Status |
 | --- | --- | --- |
-<<<<<<< HEAD
 | R-USER-VAL — User input validation and persistence | TC-USER-001, TC-USER-002 | Ran |
 | R-STAY-VAL — Stay input validation and persistence | TC-STAY-001, TC-STAY-002, TC-STAY-003, TC-STAY-004, TC-STAY-005, TC-STAY-006, TC-STAY-007, TC-STAY-008, TC-STAY-009, TC-STAY-010, TC-STAY-011, TC-STAY-012, TC-STAY-013, TC-STAY-014 | Ran |
 | R-REVIEW-VAL — Review input validation and persistence | TC-REVIEW-001, TC-REVIEW-002 | Ran |
-=======
-| R-USER-VAL — User input validation and persistence | TC-USER-001, TC-USER-002 | Not Run |
-| R-STAY-VAL — Stay input validation and persistence | TC-STAY-001, TC-STAY-002, TC-STAY-003, TC-STAY-004, TC-STAY-005, TC-STAY-006, TC-STAY-007, TC-STAY-008, TC-STAY-009, TC-STAY-010, TC-STAY-011, TC-STAY-012, TC-STAY-013, TC-STAY-014 | Not Run |
-| R-REVIEW-VAL — Review input validation and persistence | TC-REVIEW-001, TC-REVIEW-002 | Not Run |
->>>>>>> 992cf47796d65c491ba33e93261893d6789faca8

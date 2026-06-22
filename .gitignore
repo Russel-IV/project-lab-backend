@@ -42,6 +42,7 @@ pnpm-debug.log*
 
 ### AWS secrets (local testing) ###
 .secrets
+project-lab-backend-key.pem
 
 # Etc
 
