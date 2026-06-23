@@ -1,42 +1,74 @@
+"A property listing available for booking."
 type Stay {
     id: Int!
+    "Display name of the property."
     name: String!
+    "Description of the property."
     about: String
+    "Category of property."
     propertyType: PropertyType!
+    "Whether the booking is eligible for a full refund on cancellation."
     isRefundable: Boolean!
+    "Official star rating of the property (e.g. 4.5). Null for unrated properties."
     starRating: BigDecimal
+    "Number of days before check-in within which a booking can be cancelled."
     daysFromBookingCancellationDeadline: Int
+    "House rules and cancellation policies in plain text."
     policiesText: String
+    "Key information guests should know before arrival."
     importantInformation: String
+    "The host who manages this property."
     host: Host!
+    "Brand or chain the property belongs to. Null for independent properties."
     propertyBrand: PropertyBrand
+    "Physical address of the property."
     address: Address!
+    "All rooms available at this stay."
     rooms: [Room!]!
+    "Photos of the property."
     pictures: [StayPicture!]!
+    "Amenities offered at this property."
     amenities: [Amenity!]!
+    "Types of views available at this property."
     views: [View!]!
+    "Accessibility features available."
     accessibilities: [Accessibility!]!
+    "Meal plans included or available."
     mealPlans: [MealPlan!]!
+    "Payment methods accepted."
     paymentTypes: [PaymentType!]!
+    "Traveler experience categories this property suits."
     travelerExperiences: [TravelerExperience!]!
+    "Lowest nightly price across all rooms. Null if no rooms are defined."
     startingFromPrice: BigDecimal
 }
 
+"Physical address of a stay."
 type Address {
     id: Int!
+    "Primary street line (e.g. '123 Main St')."
     streetAddress: String!
+    "Apartment, floor, or unit number."
     extendedAddress: String
     city: String!
+    "State or province. May be null for countries that don't use this division."
     stateProvince: String
     postalCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB')."
     countryCode: String!
 }
 
+"A photo associated with a stay."
 type StayPicture {
     id: Int!
+    "ID of the stay this picture belongs to."
     stayId: Int!
+    "Public URL of the image."
     url: String!
+    "Optional descriptive caption."
     caption: String
+    "Whether this is the main cover photo shown in listings."
     isPrimary: Boolean!
+    "Sort order for display. Lower values appear first."
     displayOrder: Int!
 }

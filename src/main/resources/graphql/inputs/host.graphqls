@@ -1,14 +1,25 @@
+"Input for creating a host profile. The `id` must match an existing user."
 input CreateHostInput {
+    "ID of the user who will become a host."
     id: Int!
+    "Initial communication rating (0.0–5.0)."
     communicationRating: BigDecimal
+    "Initial check-in process rating (0.0–5.0)."
     checkinProcessRating: BigDecimal
+    "Initial cancellation rate as a decimal (e.g. 0.05 = 5%)."
     cancellationRate: BigDecimal
+    "IDs of languages spoken by the host."
     languageIds: [Int!]! = []
 }
 
+"Input for updating an existing host's profile."
 input UpdateHostInput {
+    "Updated communication rating (0.0–5.0)."
     communicationRating: BigDecimal
+    "Updated check-in process rating (0.0–5.0)."
     checkinProcessRating: BigDecimal
+    "Updated cancellation rate as a decimal."
     cancellationRate: BigDecimal
+    "Updated list of language IDs spoken by the host."
     languageIds: [Int!]! = []
 }

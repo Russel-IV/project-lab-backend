@@ -2,110 +2,184 @@ scalar Date
 scalar DateTime
 scalar BigDecimal
 
+"The type of property (hotel chain or private home)."
 enum PropertyType { HOTEL HOME }
+
+"Lifecycle state of a booking."
 enum BookingStatus { PENDING CONFIRMED CANCELLED COMPLETED }
+
+"Whether an amenity belongs to a specific room or to the property as a whole."
 enum AmenityType { ROOM_AMENITY PROPERTY_AMENITY }
 
 type Query {
+    "Returns all registered users."
     users: [User!]!
+    "Returns a single user by ID."
     user(id: Int!): User
 
+    "Returns all hosts."
     hosts: [Host!]!
+    "Returns a single host by ID."
     host(id: Int!): Host
 
+    "Returns a paginated list of stays."
     stays(page: Int = 0, size: Int = 20): [Stay!]!
+    "Returns a single stay by ID."
     stay(id: Int!): Stay
 
+    "Returns a paginated list of rooms for a given stay."
     rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!
+    "Returns a single room by ID."
     room(id: Int!): Room
+    "Returns rooms at a stay that are available for the given date range."
     availableRooms(stayId: Int!, checkIn: Date!, checkOut: Date!): [Room!]!
 
+    "Returns a paginated list of all bookings."
     bookings(page: Int = 0, size: Int = 20): [Booking!]!
+    "Returns a single booking by ID."
     booking(id: Int!): Booking
 
+    "Returns a paginated list of all reviews."
     reviews(page: Int = 0, size: Int = 20): [Review!]!
 
+    "Returns all available amenities."
     amenities: [Amenity!]!
+    "Returns a single amenity by ID."
     amenity(id: Int!): Amenity
 
+    "Returns all supported languages."
     languages: [Language!]!
 
+    "Returns all accessibility features."
     accessibilities: [Accessibility!]!
 
+    "Returns all view types."
     views: [View!]!
 
+    "Returns all accepted payment types."
     paymentTypes: [PaymentType!]!
 
+    "Returns all meal plan options."
     mealPlans: [MealPlan!]!
 
+    "Returns all property brands."
     propertyBrands: [PropertyBrand!]!
+    "Returns a single property brand by ID."
     propertyBrand(id: Int!): PropertyBrand
 
+    "Returns all traveler experience categories."
     travelerExperiences: [TravelerExperience!]!
 
+    "Returns all pictures for a given stay."
     stayPictures(stayId: Int!): [StayPicture!]!
 }
 
 type Mutation {
+    "Authenticates an existing user and returns a JWT token."
     login(email: String!, password: String!): AuthPayload!
+    "Registers a new user and returns a JWT token. No authentication required."
     signup(name: String!, email: String!, password: String!): AuthPayload!
 
+    "Creates a new user profile. No authentication required."
     createUser(input: CreateUserInput!): User!
+    "Updates an existing user's profile. Requires authentication."
     updateUser(id: Int!, input: UpdateUserInput!): User!
+    "Deletes a user by ID. Requires authentication."
     deleteUser(id: Int!): Boolean!
 
+    "Creates a host profile linked to an existing user. Requires authentication."
     createHost(input: CreateHostInput!): Host!
+    "Updates an existing host's profile. Requires authentication."
     updateHost(id: Int!, input: UpdateHostInput!): Host!
+    "Deletes a host by ID. Requires authentication."
     deleteHost(id: Int!): Boolean!
 
+    "Creates a new stay listing. Requires authentication."
     createStay(input: CreateStayInput!): Stay!
+    "Updates an existing stay listing. Requires authentication."
     updateStay(id: Int!, input: UpdateStayInput!): Stay!
+    "Deletes a stay and all its associated data. Requires authentication."
     deleteStay(id: Int!): Boolean!
 
+    "Adds a room to a stay. Requires authentication."
     createRoom(stayId: Int!, input: CreateRoomInput!): Room!
+    "Updates a room's details. Requires authentication."
     updateRoom(id: Int!, input: UpdateRoomInput!): Room!
+    "Deletes a room by ID. Requires authentication."
     deleteRoom(id: Int!): Boolean!
 
+    "Creates a booking for the authenticated user."
     createBooking(input: CreateBookingInput!): Booking!
+    "Updates the status of an existing booking. Requires authentication."
     updateBookingStatus(id: Int!, status: BookingStatus!): Booking!
+    "Cancels and deletes a booking. Requires authentication."
     deleteBooking(id: Int!): Boolean!
 
+    "Submits a review for a stay. Requires authentication."
     createReview(input: CreateReviewInput!): Review!
+    "Updates the text of an existing review. Requires authentication."
     updateReview(id: Int!, input: UpdateReviewInput!): Review!
+    "Deletes a review by ID. Requires authentication."
     deleteReview(id: Int!): Boolean!
 
+    "Updates metadata (caption, display order, primary flag) for a stay picture. Requires authentication."
     updateStayPicture(stayId: Int!, id: Int!, input: UpdateStayPictureInput!): StayPicture!
+    "Deletes a picture from a stay. Requires authentication."
     deleteStayPicture(stayId: Int!, id: Int!): Boolean!
 
+    "Creates a new amenity entry. Requires authentication."
     createAmenity(input: CreateAmenityInput!): Amenity!
+    "Updates an amenity entry. Requires authentication."
     updateAmenity(id: Int!, input: UpdateAmenityInput!): Amenity!
+    "Deletes an amenity by ID. Requires authentication."
     deleteAmenity(id: Int!): Boolean!
 
+    "Creates a new language entry. Requires authentication."
     createLanguage(input: CreateLanguageInput!): Language!
+    "Updates a language entry. Requires authentication."
     updateLanguage(id: Int!, input: UpdateLanguageInput!): Language!
+    "Deletes a language by ID. Requires authentication."
     deleteLanguage(id: Int!): Boolean!
 
+    "Creates a new accessibility feature. Requires authentication."
     createAccessibility(input: CreateAccessibilityInput!): Accessibility!
+    "Updates an accessibility feature. Requires authentication."
     updateAccessibility(id: Int!, input: UpdateAccessibilityInput!): Accessibility!
+    "Deletes an accessibility feature by ID. Requires authentication."
     deleteAccessibility(id: Int!): Boolean!
 
+    "Creates a new view type. Requires authentication."
     createView(input: CreateViewInput!): View!
+    "Updates a view type. Requires authentication."
     updateView(id: Int!, input: UpdateViewInput!): View!
+    "Deletes a view type by ID. Requires authentication."
     deleteView(id: Int!): Boolean!
 
+    "Creates a new payment type. Requires authentication."
     createPaymentType(input: CreatePaymentTypeInput!): PaymentType!
+    "Updates a payment type. Requires authentication."
     updatePaymentType(id: Int!, input: UpdatePaymentTypeInput!): PaymentType!
+    "Deletes a payment type by ID. Requires authentication."
     deletePaymentType(id: Int!): Boolean!
 
+    "Creates a new meal plan option. Requires authentication."
     createMealPlan(input: CreateMealPlanInput!): MealPlan!
+    "Updates a meal plan option. Requires authentication."
     updateMealPlan(id: Int!, input: UpdateMealPlanInput!): MealPlan!
+    "Deletes a meal plan by ID. Requires authentication."
     deleteMealPlan(id: Int!): Boolean!
 
+    "Creates a new property brand. Requires authentication."
     createPropertyBrand(input: CreatePropertyBrandInput!): PropertyBrand!
+    "Updates a property brand. Requires authentication."
     updatePropertyBrand(id: Int!, input: UpdatePropertyBrandInput!): PropertyBrand!
+    "Deletes a property brand by ID. Requires authentication."
     deletePropertyBrand(id: Int!): Boolean!
 
+    "Creates a new traveler experience category. Requires authentication."
     createTravelerExperience(input: CreateTravelerExperienceInput!): TravelerExperience!
+    "Updates a traveler experience category. Requires authentication."
     updateTravelerExperience(id: Int!, input: UpdateTravelerExperienceInput!): TravelerExperience!
+    "Deletes a traveler experience category by ID. Requires authentication."
     deleteTravelerExperience(id: Int!): Boolean!
 }

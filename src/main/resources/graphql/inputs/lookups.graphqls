@@ -1,65 +1,99 @@
+"Input for creating an amenity."
 input CreateAmenityInput {
+    "Name of the amenity (e.g. 'Wi-Fi', 'Pool')."
     name: String!
+    "Whether this amenity belongs to a room or the property."
     type: AmenityType!
 }
 
+"Input for updating an amenity."
 input UpdateAmenityInput {
+    "Updated amenity name."
     name: String!
+    "Updated amenity scope."
     type: AmenityType!
 }
 
+"Input for creating a language entry."
 input CreateLanguageInput {
+    "Full language name (e.g. 'English', 'Spanish')."
     languageName: String!
 }
 
+"Input for updating a language entry."
 input UpdateLanguageInput {
+    "Updated language name."
     languageName: String!
 }
 
+"Input for creating an accessibility feature."
 input CreateAccessibilityInput {
+    "Description of the feature (e.g. 'Wheelchair accessible')."
     accessibilityType: String!
 }
 
+"Input for updating an accessibility feature."
 input UpdateAccessibilityInput {
+    "Updated feature description."
     accessibilityType: String!
 }
 
+"Input for creating a view type."
 input CreateViewInput {
+    "Description of the view (e.g. 'Ocean view', 'City view')."
     viewType: String!
 }
 
+"Input for updating a view type."
 input UpdateViewInput {
+    "Updated view description."
     viewType: String!
 }
 
+"Input for creating a payment type."
 input CreatePaymentTypeInput {
+    "Name of the payment method (e.g. 'Credit card', 'Cash')."
     paymentType: String!
 }
 
+"Input for updating a payment type."
 input UpdatePaymentTypeInput {
+    "Updated payment method name."
     paymentType: String!
 }
 
+"Input for creating a meal plan option."
 input CreateMealPlanInput {
+    "Name of the meal plan (e.g. 'Breakfast included', 'All-inclusive')."
     mealPlanType: String!
 }
 
+"Input for updating a meal plan option."
 input UpdateMealPlanInput {
+    "Updated meal plan name."
     mealPlanType: String!
 }
 
+"Input for creating a property brand."
 input CreatePropertyBrandInput {
+    "Brand name (e.g. 'Marriott', 'Hilton')."
     brandName: String!
 }
 
+"Input for updating a property brand."
 input UpdatePropertyBrandInput {
+    "Updated brand name."
     brandName: String!
 }
 
+"Input for creating a traveler experience category."
 input CreateTravelerExperienceInput {
+    "Label for the experience type (e.g. 'Family-friendly', 'Business')."
     travelerExperienceType: String!
 }
 
+"Input for updating a traveler experience category."
 input UpdateTravelerExperienceInput {
+    "Updated experience label."
     travelerExperienceType: String!
 }

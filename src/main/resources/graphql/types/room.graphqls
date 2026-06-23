@@ -1,10 +1,18 @@
+"A bookable room within a stay."
 type Room {
     id: Int!
+    "ID of the stay this room belongs to."
     stayId: Int!
+    "Display name of the room (e.g. 'Deluxe King', 'Studio Suite')."
     name: String!
+    "Nightly price in the property's local currency."
     price: BigDecimal!
+    "Maximum number of guests this room accommodates."
     sleeps: Int!
+    "Number of bedrooms."
     bedroomAmount: Int!
+    "Number of bathrooms (allows half-baths, e.g. 1.5)."
     bathrooms: BigDecimal!
+    "Room size in square metres. Null if not specified."
     size: BigDecimal
 }

@@ -1,6 +1,11 @@
+"Input for creating a new booking. The booking is associated with the authenticated user."
 input CreateBookingInput {
+    "Desired check-in date."
     checkInDate: Date!
+    "Desired check-out date. Must be after `checkInDate`."
     checkOutDate: Date!
+    "Number of guests."
     guestsCount: Int!
+    "IDs of the rooms to include in the booking."
     roomIds: [Int!]!
 }

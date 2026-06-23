@@ -1,0 +1,16 @@
+spectaql:
+  targetDir: ./docs/api
+  displayAllServers: true
+
+
+info:
+  title: Project Lab API
+  description: GraphQL API reference
+  version: 1.0.0
+  contact:
+    name: Team 1
+  x-hidePoweredBy: true
+
+servers:
+  - url: http://localhost:8080/graphql
+    description: Local dev

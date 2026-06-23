@@ -1,40 +1,57 @@
+"A facility or feature offered at a room or property."
 type Amenity {
     id: Int!
+    "Name of the amenity (e.g. 'Wi-Fi', 'Pool', 'Air conditioning')."
     name: String!
+    "Whether this amenity belongs to a specific room or the property as a whole."
     type: AmenityType!
 }
 
+"A language spoken by a host."
 type Language {
     id: Int!
+    "Full language name (e.g. 'English', 'Spanish')."
     languageName: String!
 }
 
+"An accessibility feature available at a property."
 type Accessibility {
     id: Int!
+    "Description of the feature (e.g. 'Wheelchair accessible', 'Roll-in shower')."
     accessibilityType: String!
 }
 
+"A type of scenic view available at a property."
 type View {
     id: Int!
+    "Description of the view (e.g. 'Ocean view', 'City view', 'Garden view')."
     viewType: String!
 }
 
+"A payment method accepted at a property."
 type PaymentType {
     id: Int!
+    "Name of the payment method (e.g. 'Credit card', 'Cash', 'Bank transfer')."
     paymentType: String!
 }
 
+"A meal arrangement offered at a property."
 type MealPlan {
     id: Int!
+    "Name of the plan (e.g. 'Breakfast included', 'All-inclusive', 'Self-catering')."
     mealPlanType: String!
 }
 
+"A hotel chain or property brand."
 type PropertyBrand {
     id: Int!
+    "Name of the brand (e.g. 'Marriott', 'Hilton')."
     brandName: String!
 }
 
+"A category describing the type of traveler a stay is suited for."
 type TravelerExperience {
     id: Int!
+    "Label for the experience type (e.g. 'Family-friendly', 'Business', 'Romantic')."
     travelerExperienceType: String!
 }

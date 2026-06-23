@@ -1,7 +1,13 @@
+"A host profile linked to a user. Hosts own and manage stay listings."
 type Host {
+    "Matches the ID of the associated user."
     id: Int!
+    "Average rating for communication quality (0.0–5.0)."
     communicationRating: BigDecimal
+    "Average rating for the check-in process (0.0–5.0)."
     checkinProcessRating: BigDecimal
+    "Historical cancellation rate as a decimal (e.g. 0.05 = 5%)."
     cancellationRate: BigDecimal
+    "Languages spoken by the host."
     languages: [Language!]!
 }

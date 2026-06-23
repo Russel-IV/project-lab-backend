@@ -1,17 +1,31 @@
+"Input for adding a room to a stay."
 input CreateRoomInput {
+    "Display name of the room (e.g. 'Deluxe King', 'Studio Suite')."
     name: String!
+    "Nightly price in the property's local currency."
     price: BigDecimal!
+    "Maximum number of guests this room accommodates."
     sleeps: Int!
+    "Number of bedrooms."
     bedroomAmount: Int!
+    "Number of bathrooms (allows half-baths, e.g. 1.5)."
     bathrooms: BigDecimal!
+    "Room size in square metres."
     size: BigDecimal
 }
 
+"Input for updating a room's details."
 input UpdateRoomInput {
+    "Updated display name."
     name: String!
+    "Updated nightly price."
     price: BigDecimal!
+    "Updated maximum guest capacity."
     sleeps: Int!
+    "Updated number of bedrooms."
     bedroomAmount: Int!
+    "Updated number of bathrooms."
     bathrooms: BigDecimal!
+    "Updated room size in square metres."
     size: BigDecimal
 }

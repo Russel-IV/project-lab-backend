@@ -1,5 +1,8 @@
+"A registered user of the platform."
 type User {
     id: Int!
+    "Display name of the user."
     name: String!
+    "Email address. Only visible to the authenticated user."
     email: String
 }

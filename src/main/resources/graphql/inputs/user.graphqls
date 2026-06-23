@@ -1,7 +1,11 @@
+"Input for registering a new user."
 input CreateUserInput {
+    "Display name for the new user."
     name: String!
 }
 
+"Input for updating a user's profile."
 input UpdateUserInput {
+    "New display name."
     name: String!
 }

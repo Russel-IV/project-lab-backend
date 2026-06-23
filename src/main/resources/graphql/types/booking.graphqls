@@ -1,10 +1,18 @@
+"A reservation made by a user for one or more rooms at a stay."
 type Booking {
     id: Int!
+    "The user who made the booking."
     user: User!
+    "Date the guest checks in."
     checkInDate: Date!
+    "Date the guest checks out."
     checkOutDate: Date!
+    "Current lifecycle status of the booking."
     status: BookingStatus!
+    "Number of guests included in the booking."
     guestsCount: Int!
+    "Timestamp when the booking was created."
     createdAt: DateTime!
+    "Rooms included in this booking."
     rooms: [Room!]!
 }

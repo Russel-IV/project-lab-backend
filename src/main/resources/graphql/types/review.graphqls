@@ -1,6 +1,10 @@
+"A guest review for a stay."
 type Review {
     id: Int!
+    "The written review content."
     text: String!
+    "ID of the user who wrote the review."
     userId: Int!
+    "ID of the stay being reviewed."
     stayId: Int!
 }

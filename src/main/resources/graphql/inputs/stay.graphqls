@@ -1,54 +1,99 @@
+"Physical address input used when creating or updating a stay."
 input AddressInput {
+    "Primary street line (e.g. '123 Main St')."
     streetAddress: String!
+    "Apartment, floor, or unit number."
     extendedAddress: String
     city: String!
+    "State or province."
     stateProvince: String
     postalCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB')."
     countryCode: String!
 }
 
+"Input for creating a new stay listing."
 input CreateStayInput {
+    "Display name of the property."
     name: String!
+    "Description of the property."
     about: String
+    "Category of property."
     propertyType: PropertyType!
+    "Physical address of the property."
     address: AddressInput!
+    "Whether the booking is eligible for a full refund on cancellation."
     isRefundable: Boolean! = false
+    "Official star rating (e.g. 4.5)."
     starRating: BigDecimal
+    "Days before check-in within which the booking can be cancelled."
     daysFromBookingCancellationDeadline: Int
+    "House rules and cancellation policies."
     policiesText: String
+    "Key information guests should know before arrival."
     importantInformation: String
+    "ID of the host managing this property."
     hostId: Int!
+    "ID of the brand or chain this property belongs to."
     propertyBrandId: Int
+    "IDs of view types available at this property."
     viewIds: [Int!]! = []
+    "IDs of amenities offered at this property."
     amenityIds: [Int!]! = []
+    "IDs of accessibility features available."
     accessibilityIds: [Int!]! = []
+    "IDs of meal plans offered."
     mealPlanIds: [Int!]! = []
+    "IDs of accepted payment types."
     paymentTypeIds: [Int!]! = []
+    "IDs of traveler experience categories."
     travelerExperienceIds: [Int!]! = []
 }
 
+"Input for updating an existing stay listing. Replaces all provided fields."
 input UpdateStayInput {
+    "Updated display name."
     name: String!
+    "Updated description."
     about: String
+    "Updated property category."
     propertyType: PropertyType!
+    "Updated address."
     address: AddressInput!
+    "Updated refund eligibility."
     isRefundable: Boolean! = false
+    "Updated star rating."
     starRating: BigDecimal
+    "Updated cancellation deadline in days."
     daysFromBookingCancellationDeadline: Int
+    "Updated policies text."
     policiesText: String
+    "Updated important information."
     importantInformation: String
+    "Updated host ID."
     hostId: Int!
+    "Updated property brand ID."
     propertyBrandId: Int
+    "Updated list of view type IDs."
     viewIds: [Int!]! = []
+    "Updated list of amenity IDs."
     amenityIds: [Int!]! = []
+    "Updated list of accessibility feature IDs."
     accessibilityIds: [Int!]! = []
+    "Updated list of meal plan IDs."
     mealPlanIds: [Int!]! = []
+    "Updated list of accepted payment type IDs."
     paymentTypeIds: [Int!]! = []
+    "Updated list of traveler experience IDs."
     travelerExperienceIds: [Int!]! = []
 }
 
+"Input for updating a stay picture's metadata. Does not replace the image file."
 input UpdateStayPictureInput {
+    "Optional descriptive caption."
     caption: String
+    "Set to true to make this the cover photo for the listing."
     isPrimary: Boolean! = false
+    "Sort order for display. Lower values appear first."
     displayOrder: Int! = 0
 }

@@ -37,6 +37,46 @@ docker compose up --build
 
 ---
 
+## API Reference Docs
+
+A static HTML reference site is generated from the GraphQL schema using [SpectaQL](https://github.com/anvilco/spectaql). The pre-built output lives in `docs/api/` and is always committed alongside schema changes.
+
+### Viewing the docs
+
+**Option 1 — VS Code Live Server (recommended)**
+
+1. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension in VS Code.
+2. Right-click `docs/api/index.html` in the Explorer panel and choose **Open with Live Server**.
+3. The docs open in your browser at `http://127.0.0.1:5500/docs/api/index.html`.
+
+Live Server hot-reloads whenever you regenerate — useful while editing the schema.
+
+**Option 2 — open directly (WSL2 / Windows)**
+
+```bash
+explorer.exe docs/api/index.html
+```
+
+**Option 3 — any HTTP server**
+
+```bash
+npx serve docs/api
+```
+
+### Regenerating after schema changes
+
+Whenever you edit a `.graphqls` file, regenerate the docs before committing:
+
+```bash
+pnpm run docs
+```
+
+This reads all schema files under `src/main/resources/graphql/` and overwrites `docs/api/`. No running server is required.
+
+> Node.js and pnpm are required. Run `pnpm install` first if you haven't already.
+
+---
+
 ## API Overview
 
 The API is **GraphQL-first**. All queries and mutations go through a single endpoint:
@@ -408,7 +448,7 @@ Tokens are valid for 24 hours. An expired or missing token on a protected mutati
 }
 ```
 
-**Currently protected mutations:** `createBooking`, `updateBookingStatus`, `deleteBooking`.
+All mutations are protected except `login`, `signup`, and `createUser`.
 
 ---
 
