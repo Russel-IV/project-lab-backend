@@ -4,12 +4,17 @@ import com.team1.project_lab_backend.models.Address
 import com.team1.project_lab_backend.models.Host
 import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Stay
+import com.team1.project_lab_backend.models.User
 import com.team1.project_lab_backend.services.StayService
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.springframework.http.HttpStatus
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.server.ResponseStatusException
 
 @Suppress("UNCHECKED_CAST")
@@ -20,6 +25,17 @@ class StayResolverTest {
 
     private val stayService = Mockito.mock(StayService::class.java)
     private val resolver = StayResolver(stayService)
+    private val authenticatedUser = User(id = 1, name = "Alice")
+
+    @AfterEach
+    fun clearSecurityContext() {
+        SecurityContextHolder.clearContext()
+    }
+
+    private fun authenticateAs(user: User) {
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(user, null, emptyList())
+    }
 
     private fun sampleStay(id: Int = 1) = Stay(
         id = id,
@@ -79,6 +95,7 @@ class StayResolverTest {
 
     @Test
     fun createStayDelegatesToService() {
+        authenticateAs(authenticatedUser)
         val stay = sampleStay(10)
         Mockito.`when`(stayService.createStay(anyArg())).thenReturn(stay)
 
@@ -95,7 +112,20 @@ class StayResolverTest {
     }
 
     @Test
+    fun createStayRequiresAuthentication() {
+        val input = CreateStayInput(
+            name = "Cozy Cabin",
+            propertyType = PropertyType.HOME,
+            address = StayAddressInput(streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+            hostId = 42,
+        )
+        val ex = assertThrows(ResponseStatusException::class.java) { resolver.createStay(input) }
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+    }
+
+    @Test
     fun updateStayDelegatesToService() {
+        authenticateAs(authenticatedUser)
         val stay = sampleStay(5)
         Mockito.`when`(stayService.updateStay(eqArg(5), anyArg())).thenReturn(stay)
 
@@ -112,12 +142,31 @@ class StayResolverTest {
     }
 
     @Test
+    fun updateStayRequiresAuthentication() {
+        val input = UpdateStayInput(
+            name = "Cozy Cabin",
+            propertyType = PropertyType.HOME,
+            address = StayAddressInput(streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+            hostId = 42,
+        )
+        val ex = assertThrows(ResponseStatusException::class.java) { resolver.updateStay(5, input) }
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+    }
+
+    @Test
     fun deleteStayReturnsTrueOnSuccess() {
+        authenticateAs(authenticatedUser)
         Mockito.doNothing().`when`(stayService).deleteStay(1)
 
         val result = resolver.deleteStay(1)
 
         assertEquals(true, result)
         Mockito.verify(stayService).deleteStay(1)
+    }
+
+    @Test
+    fun deleteStayRequiresAuthentication() {
+        val ex = assertThrows(ResponseStatusException::class.java) { resolver.deleteStay(1) }
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
     }
 }
