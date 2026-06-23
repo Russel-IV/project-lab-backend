@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.resolvers
 import com.team1.project_lab_backend.dto.UserRequest
 import com.team1.project_lab_backend.models.User
 import com.team1.project_lab_backend.services.UserService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -22,11 +23,14 @@ class UserResolver(private val userService: UserService) {
         userService.createUser(UserRequest(name = input.name))
 
     @MutationMapping
-    fun updateUser(@Argument id: Int, @Argument input: UpdateUserInput): User =
-        userService.updateUser(id, UserRequest(name = input.name))
+    fun updateUser(@Argument id: Int, @Argument input: UpdateUserInput): User {
+        requireAuthenticated()
+        return userService.updateUser(id, UserRequest(name = input.name))
+    }
 
     @MutationMapping
     fun deleteUser(@Argument id: Int): Boolean {
+        requireAuthenticated()
         userService.deleteUser(id)
         return true
     }

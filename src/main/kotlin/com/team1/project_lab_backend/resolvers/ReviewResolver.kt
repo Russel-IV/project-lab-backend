@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.resolvers
 import com.team1.project_lab_backend.dto.ReviewRequest
 import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.services.ReviewService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -22,15 +23,20 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 
     @MutationMapping
-    fun createReview(@Argument input: CreateReviewInput): Review =
-        reviewService.createReview(ReviewRequest(text = input.text, userId = input.userId, stayId = input.stayId))
+    fun createReview(@Argument input: CreateReviewInput): Review {
+        requireAuthenticated()
+        return reviewService.createReview(ReviewRequest(text = input.text, userId = input.userId, stayId = input.stayId))
+    }
 
     @MutationMapping
-    fun updateReview(@Argument id: Int, @Argument input: UpdateReviewInput): Review =
-        reviewService.updateReview(id, ReviewRequest(text = input.text, userId = input.userId, stayId = input.stayId))
+    fun updateReview(@Argument id: Int, @Argument input: UpdateReviewInput): Review {
+        requireAuthenticated()
+        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = input.userId, stayId = input.stayId))
+    }
 
     @MutationMapping
     fun deleteReview(@Argument id: Int): Boolean {
+        requireAuthenticated()
         reviewService.deleteReview(id)
         return true
     }

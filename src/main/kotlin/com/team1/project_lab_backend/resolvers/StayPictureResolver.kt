@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.resolvers
 
 import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.services.StayPictureService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -19,16 +20,20 @@ class StayPictureResolver(private val stayPictureService: StayPictureService) {
         @Argument stayId: Int,
         @Argument id: Int,
         @Argument input: UpdateStayPictureInput,
-    ): StayPicture = stayPictureService.updatePictureMetadata(
-        stayId = stayId,
-        id = id,
-        caption = input.caption,
-        isPrimary = input.isPrimary,
-        displayOrder = input.displayOrder,
-    )
+    ): StayPicture {
+        requireAuthenticated()
+        return stayPictureService.updatePictureMetadata(
+            stayId = stayId,
+            id = id,
+            caption = input.caption,
+            isPrimary = input.isPrimary,
+            displayOrder = input.displayOrder,
+        )
+    }
 
     @MutationMapping
     fun deleteStayPicture(@Argument stayId: Int, @Argument id: Int): Boolean {
+        requireAuthenticated()
         stayPictureService.deletePicture(stayId, id)
         return true
     }

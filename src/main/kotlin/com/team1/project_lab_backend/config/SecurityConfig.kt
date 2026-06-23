@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,7 +18,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(JwtProperties::class)
-class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
+class SecurityConfig(
+    private val jwtAuthFilter: JwtAuthFilter,
+    @Value("\${app.cors.allowed-origins}") private val corsAllowedOrigins: String,
+) {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -29,7 +33,7 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
                 auth.anyRequest().permitAll()
             }
             .headers { headers ->
-                headers.frameOptions { frameOptions -> frameOptions.disable() }
+                headers.frameOptions { it.sameOrigin() }
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
@@ -41,10 +45,9 @@ class SecurityConfig(private val jwtAuthFilter: JwtAuthFilter) {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("*")
+        configuration.allowedOrigins = corsAllowedOrigins.split(",").map { it.trim() }
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         configuration.allowedHeaders = listOf("*")
-        configuration.exposedHeaders = listOf("*")
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source

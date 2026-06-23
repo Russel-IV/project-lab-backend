@@ -5,6 +5,7 @@ import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.services.StayService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -24,15 +25,20 @@ class StayResolver(private val stayService: StayService) {
     fun stay(@Argument id: Int): Stay? = stayService.getStayById(id)
 
     @MutationMapping
-    fun createStay(@Argument input: CreateStayInput): Stay =
-        stayService.createStay(input.toRequest())
+    fun createStay(@Argument input: CreateStayInput): Stay {
+        requireAuthenticated()
+        return stayService.createStay(input.toRequest())
+    }
 
     @MutationMapping
-    fun updateStay(@Argument id: Int, @Argument input: UpdateStayInput): Stay =
-        stayService.updateStay(id, input.toRequest())
+    fun updateStay(@Argument id: Int, @Argument input: UpdateStayInput): Stay {
+        requireAuthenticated()
+        return stayService.updateStay(id, input.toRequest())
+    }
 
     @MutationMapping
     fun deleteStay(@Argument id: Int): Boolean {
+        requireAuthenticated()
         stayService.deleteStay(id)
         return true
     }

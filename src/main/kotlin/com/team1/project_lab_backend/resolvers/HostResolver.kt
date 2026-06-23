@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.resolvers
 import com.team1.project_lab_backend.dto.HostRequest
 import com.team1.project_lab_backend.models.Host
 import com.team1.project_lab_backend.services.HostService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -19,15 +20,20 @@ class HostResolver(private val hostService: HostService) {
     fun host(@Argument id: Int): Host = hostService.getHostById(id)
 
     @MutationMapping
-    fun createHost(@Argument input: CreateHostInput): Host =
-        hostService.createHost(input.toRequest())
+    fun createHost(@Argument input: CreateHostInput): Host {
+        requireAuthenticated()
+        return hostService.createHost(input.toRequest())
+    }
 
     @MutationMapping
-    fun updateHost(@Argument id: Int, @Argument input: UpdateHostInput): Host =
-        hostService.updateHost(id, input.toRequest(id))
+    fun updateHost(@Argument id: Int, @Argument input: UpdateHostInput): Host {
+        requireAuthenticated()
+        return hostService.updateHost(id, input.toRequest(id))
+    }
 
     @MutationMapping
     fun deleteHost(@Argument id: Int): Boolean {
+        requireAuthenticated()
         hostService.deleteHost(id)
         return true
     }

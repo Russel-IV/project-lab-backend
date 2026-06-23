@@ -25,6 +25,7 @@ import com.team1.project_lab_backend.services.PaymentTypeService
 import com.team1.project_lab_backend.services.PropertyBrandService
 import com.team1.project_lab_backend.services.TravelerExperienceService
 import com.team1.project_lab_backend.services.ViewService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -51,15 +52,20 @@ class LookupResolver(
     fun amenity(@Argument id: Int): Amenity = amenityService.getAmenityById(id)
 
     @MutationMapping
-    fun createAmenity(@Argument input: CreateAmenityInput): Amenity =
-        amenityService.createAmenity(AmenityRequest(name = input.name, type = input.type))
+    fun createAmenity(@Argument input: CreateAmenityInput): Amenity {
+        requireAuthenticated()
+        return amenityService.createAmenity(AmenityRequest(name = input.name, type = input.type))
+    }
 
     @MutationMapping
-    fun updateAmenity(@Argument id: Int, @Argument input: UpdateAmenityInput): Amenity =
-        amenityService.updateAmenity(id, AmenityRequest(name = input.name, type = input.type))
+    fun updateAmenity(@Argument id: Int, @Argument input: UpdateAmenityInput): Amenity {
+        requireAuthenticated()
+        return amenityService.updateAmenity(id, AmenityRequest(name = input.name, type = input.type))
+    }
 
     @MutationMapping
     fun deleteAmenity(@Argument id: Int): Boolean {
+        requireAuthenticated()
         amenityService.deleteAmenity(id)
         return true
     }
@@ -70,15 +76,20 @@ class LookupResolver(
     fun languages(): List<Language> = languageService.getAllLanguages()
 
     @MutationMapping
-    fun createLanguage(@Argument input: CreateLanguageInput): Language =
-        languageService.createLanguage(LanguageRequest(languageName = input.languageName))
+    fun createLanguage(@Argument input: CreateLanguageInput): Language {
+        requireAuthenticated()
+        return languageService.createLanguage(LanguageRequest(languageName = input.languageName))
+    }
 
     @MutationMapping
-    fun updateLanguage(@Argument id: Int, @Argument input: UpdateLanguageInput): Language =
-        languageService.updateLanguage(id, LanguageRequest(languageName = input.languageName))
+    fun updateLanguage(@Argument id: Int, @Argument input: UpdateLanguageInput): Language {
+        requireAuthenticated()
+        return languageService.updateLanguage(id, LanguageRequest(languageName = input.languageName))
+    }
 
     @MutationMapping
     fun deleteLanguage(@Argument id: Int): Boolean {
+        requireAuthenticated()
         languageService.deleteLanguage(id)
         return true
     }
@@ -89,15 +100,20 @@ class LookupResolver(
     fun accessibilities(): List<Accessibility> = accessibilityService.getAllAccessibility()
 
     @MutationMapping
-    fun createAccessibility(@Argument input: CreateAccessibilityInput): Accessibility =
-        accessibilityService.createAccessibility(AccessibilityRequest(accessibilityType = input.accessibilityType))
+    fun createAccessibility(@Argument input: CreateAccessibilityInput): Accessibility {
+        requireAuthenticated()
+        return accessibilityService.createAccessibility(AccessibilityRequest(accessibilityType = input.accessibilityType))
+    }
 
     @MutationMapping
-    fun updateAccessibility(@Argument id: Int, @Argument input: UpdateAccessibilityInput): Accessibility =
-        accessibilityService.updateAccessibility(id, AccessibilityRequest(accessibilityType = input.accessibilityType))
+    fun updateAccessibility(@Argument id: Int, @Argument input: UpdateAccessibilityInput): Accessibility {
+        requireAuthenticated()
+        return accessibilityService.updateAccessibility(id, AccessibilityRequest(accessibilityType = input.accessibilityType))
+    }
 
     @MutationMapping
     fun deleteAccessibility(@Argument id: Int): Boolean {
+        requireAuthenticated()
         accessibilityService.deleteAccessibility(id)
         return true
     }
@@ -108,15 +124,20 @@ class LookupResolver(
     fun views(): List<View> = viewService.getAllViews()
 
     @MutationMapping
-    fun createView(@Argument input: CreateViewInput): View =
-        viewService.createView(ViewRequest(viewType = input.viewType))
+    fun createView(@Argument input: CreateViewInput): View {
+        requireAuthenticated()
+        return viewService.createView(ViewRequest(viewType = input.viewType))
+    }
 
     @MutationMapping
-    fun updateView(@Argument id: Int, @Argument input: UpdateViewInput): View =
-        viewService.updateView(id, ViewRequest(viewType = input.viewType))
+    fun updateView(@Argument id: Int, @Argument input: UpdateViewInput): View {
+        requireAuthenticated()
+        return viewService.updateView(id, ViewRequest(viewType = input.viewType))
+    }
 
     @MutationMapping
     fun deleteView(@Argument id: Int): Boolean {
+        requireAuthenticated()
         viewService.deleteView(id)
         return true
     }
@@ -127,15 +148,20 @@ class LookupResolver(
     fun paymentTypes(): List<PaymentType> = paymentTypeService.getAllPaymentTypes()
 
     @MutationMapping
-    fun createPaymentType(@Argument input: CreatePaymentTypeInput): PaymentType =
-        paymentTypeService.createPaymentType(PaymentTypeRequest(paymentType = input.paymentType))
+    fun createPaymentType(@Argument input: CreatePaymentTypeInput): PaymentType {
+        requireAuthenticated()
+        return paymentTypeService.createPaymentType(PaymentTypeRequest(paymentType = input.paymentType))
+    }
 
     @MutationMapping
-    fun updatePaymentType(@Argument id: Int, @Argument input: UpdatePaymentTypeInput): PaymentType =
-        paymentTypeService.updatePaymentType(id, PaymentTypeRequest(paymentType = input.paymentType))
+    fun updatePaymentType(@Argument id: Int, @Argument input: UpdatePaymentTypeInput): PaymentType {
+        requireAuthenticated()
+        return paymentTypeService.updatePaymentType(id, PaymentTypeRequest(paymentType = input.paymentType))
+    }
 
     @MutationMapping
     fun deletePaymentType(@Argument id: Int): Boolean {
+        requireAuthenticated()
         paymentTypeService.deletePaymentType(id)
         return true
     }
@@ -146,15 +172,20 @@ class LookupResolver(
     fun mealPlans(): List<MealPlan> = mealPlanService.getAllMealPlans()
 
     @MutationMapping
-    fun createMealPlan(@Argument input: CreateMealPlanInput): MealPlan =
-        mealPlanService.createMealPlan(MealPlanRequest(mealPlanType = input.mealPlanType))
+    fun createMealPlan(@Argument input: CreateMealPlanInput): MealPlan {
+        requireAuthenticated()
+        return mealPlanService.createMealPlan(MealPlanRequest(mealPlanType = input.mealPlanType))
+    }
 
     @MutationMapping
-    fun updateMealPlan(@Argument id: Int, @Argument input: UpdateMealPlanInput): MealPlan =
-        mealPlanService.updateMealPlan(id, MealPlanRequest(mealPlanType = input.mealPlanType))
+    fun updateMealPlan(@Argument id: Int, @Argument input: UpdateMealPlanInput): MealPlan {
+        requireAuthenticated()
+        return mealPlanService.updateMealPlan(id, MealPlanRequest(mealPlanType = input.mealPlanType))
+    }
 
     @MutationMapping
     fun deleteMealPlan(@Argument id: Int): Boolean {
+        requireAuthenticated()
         mealPlanService.deleteMealPlan(id)
         return true
     }
@@ -168,15 +199,20 @@ class LookupResolver(
     fun propertyBrand(@Argument id: Int): PropertyBrand = propertyBrandService.getPropertyBrandById(id)
 
     @MutationMapping
-    fun createPropertyBrand(@Argument input: CreatePropertyBrandInput): PropertyBrand =
-        propertyBrandService.createPropertyBrand(PropertyBrandRequest(brandName = input.brandName))
+    fun createPropertyBrand(@Argument input: CreatePropertyBrandInput): PropertyBrand {
+        requireAuthenticated()
+        return propertyBrandService.createPropertyBrand(PropertyBrandRequest(brandName = input.brandName))
+    }
 
     @MutationMapping
-    fun updatePropertyBrand(@Argument id: Int, @Argument input: UpdatePropertyBrandInput): PropertyBrand =
-        propertyBrandService.updatePropertyBrand(id, PropertyBrandRequest(brandName = input.brandName))
+    fun updatePropertyBrand(@Argument id: Int, @Argument input: UpdatePropertyBrandInput): PropertyBrand {
+        requireAuthenticated()
+        return propertyBrandService.updatePropertyBrand(id, PropertyBrandRequest(brandName = input.brandName))
+    }
 
     @MutationMapping
     fun deletePropertyBrand(@Argument id: Int): Boolean {
+        requireAuthenticated()
         propertyBrandService.deletePropertyBrand(id)
         return true
     }
@@ -187,23 +223,28 @@ class LookupResolver(
     fun travelerExperiences(): List<TravelerExperience> = travelerExperienceService.getAllTravelerExperiences()
 
     @MutationMapping
-    fun createTravelerExperience(@Argument input: CreateTravelerExperienceInput): TravelerExperience =
-        travelerExperienceService.createTravelerExperience(
+    fun createTravelerExperience(@Argument input: CreateTravelerExperienceInput): TravelerExperience {
+        requireAuthenticated()
+        return travelerExperienceService.createTravelerExperience(
             TravelerExperienceRequest(travelerExperienceType = input.travelerExperienceType),
         )
+    }
 
     @MutationMapping
     fun updateTravelerExperience(
         @Argument id: Int,
-        @Argument input: UpdateTravelerExperienceInput
-    ): TravelerExperience =
-        travelerExperienceService.updateTravelerExperience(
+        @Argument input: UpdateTravelerExperienceInput,
+    ): TravelerExperience {
+        requireAuthenticated()
+        return travelerExperienceService.updateTravelerExperience(
             id,
             TravelerExperienceRequest(travelerExperienceType = input.travelerExperienceType),
         )
+    }
 
     @MutationMapping
     fun deleteTravelerExperience(@Argument id: Int): Boolean {
+        requireAuthenticated()
         travelerExperienceService.deleteTravelerExperience(id)
         return true
     }
