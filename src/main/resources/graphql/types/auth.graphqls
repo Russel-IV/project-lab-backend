@@ -1,7 +1,0 @@
-"Returned after a successful login or signup."
-type AuthPayload {
-    "Signed JWT token. Include in subsequent requests as `Authorization: Bearer <token>`."
-    token: String!
-    "The authenticated user's profile."
-    user: User!
-}

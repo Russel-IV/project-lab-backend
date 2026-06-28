@@ -75,11 +75,6 @@ type Query {
 }
 
 type Mutation {
-    "Authenticates an existing user and returns a JWT token."
-    login(email: String!, password: String!): AuthPayload!
-    "Registers a new user and returns a JWT token. No authentication required."
-    signup(name: String!, email: String!, password: String!): AuthPayload!
-
     "Creates a new user profile. No authentication required."
     createUser(input: CreateUserInput!): User!
     "Updates an existing user's profile. Requires authentication."

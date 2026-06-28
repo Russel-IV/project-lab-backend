@@ -91,7 +91,7 @@ An in-browser IDE (GraphiQL) is available at:
 http://localhost:<SPRING_PORT>/graphiql
 ```
 
-**One exception**: picture file uploads use a dedicated REST endpoint (see [File Upload](#file-upload)).
+**Two exceptions** use dedicated REST endpoints: authentication (see [Authentication](#authentication)) and picture file uploads (see [File Upload](#file-upload)).
 
 ---
 
@@ -116,15 +116,6 @@ enum AmenityType    { ROOM_AMENITY PROPERTY_AMENITY }
 ---
 
 ## Types
-
-### AuthPayload
-Returned by `login` and `signup`.
-```graphql
-type AuthPayload {
-    token: String!   # JWT — include as Authorization: Bearer <token>
-    user:  User!
-}
-```
 
 ### User
 ```graphql
@@ -414,33 +405,61 @@ travelerExperiences: [TravelerExperience!]!
 
 ## Authentication
 
-Protected mutations require a JWT in the `Authorization` header:
+Authentication uses two dedicated REST endpoints. All other API operations go through GraphQL.
+
+### `POST /api/v1/auth/signup`
+
+Creates a new account and returns a JWT.
+
+**Request body** (`application/json`)
+```json
+{ "name": "Alice", "email": "alice@example.com", "password": "s3cr3t" }
+```
+
+**Response 201**
+```json
+{
+  "token": "<jwt>",
+  "user": { "id": 1, "name": "Alice", "email": "alice@example.com" }
+}
+```
+
+**Error responses**
+- `409 Conflict` — email already in use
+
+---
+
+### `POST /api/v1/auth/login`
+
+Authenticates an existing user and returns a JWT.
+
+**Request body** (`application/json`)
+```json
+{ "email": "alice@example.com", "password": "s3cr3t" }
+```
+
+**Response 200**
+```json
+{
+  "token": "<jwt>",
+  "user": { "id": 1, "name": "Alice", "email": "alice@example.com" }
+}
+```
+
+**Error responses**
+- `401 Unauthorized` — invalid credentials
+
+---
+
+### Using the token
+
+Include the JWT in the `Authorization` header on all subsequent GraphQL requests:
 
 ```
 Authorization: Bearer <token>
 ```
 
-Obtain a token with `login` or `signup`:
-
-```graphql
-mutation {
-  signup(name: "Alice", email: "alice@example.com", password: "s3cr3t") {
-    token
-    user { id name email }
-  }
-}
-```
-
-```graphql
-mutation {
-  login(email: "alice@example.com", password: "s3cr3t") {
-    token
-    user { id name }
-  }
-}
-```
-
-Tokens are valid for 24 hours. An expired or missing token on a protected mutation returns:
+Tokens are valid for 24 hours. An expired or missing token on a protected GraphQL mutation returns:
 
 ```json
 {
@@ -448,7 +467,7 @@ Tokens are valid for 24 hours. An expired or missing token on a protected mutati
 }
 ```
 
-All mutations are protected except `login`, `signup`, and `createUser`.
+All mutations are protected except `createUser`.
 
 ---
 
@@ -770,7 +789,7 @@ mutation {
 
 ## File Upload
 
-Picture files are uploaded via a REST endpoint — the only non-GraphQL endpoint in the API.
+Picture files are uploaded via a REST endpoint.
 
 ### `POST /api/v1/stays/{stayId}/pictures`
 
