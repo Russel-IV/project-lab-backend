@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.models
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -19,6 +20,7 @@ open class User(
     @Column(name = "email", unique = true, length = 320)
     open val email: String? = null,
 
+    @JsonIgnore
     @Column(name = "password_hash")
     open val passwordHash: String? = null,
 )

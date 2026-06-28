@@ -7,6 +7,8 @@ import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.graphql.data.method.annotation.SchemaMapping
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Controller
 
 @Controller
@@ -17,6 +19,12 @@ class UserResolver(private val userService: UserService) {
 
     @QueryMapping
     fun user(@Argument id: Int): User = userService.getUserById(id)
+
+    @SchemaMapping(typeName = "User", field = "email")
+    fun email(user: User): String? {
+        val currentUser = SecurityContextHolder.getContext().authentication?.principal as? User
+        return if (currentUser?.id == user.id) user.email else null
+    }
 
     @MutationMapping
     fun createUser(@Argument input: CreateUserInput): User =
