@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 import java.time.LocalDate
 
 private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
@@ -86,6 +87,9 @@ class BookingService(
             )
         }
 
+        val nights = (request.checkOutDate.toEpochDay() - request.checkInDate.toEpochDay()).toBigDecimal()
+        val totalPrice = rooms.fold(BigDecimal.ZERO) { acc, room -> acc + room.price } * nights
+
         return bookingRepository.save(
             Booking(
                 id = 0,
@@ -94,6 +98,7 @@ class BookingService(
                 checkOutDate = request.checkOutDate,
                 status = BookingStatus.PENDING,
                 guestsCount = request.guestsCount,
+                totalPrice = totalPrice,
                 rooms = rooms.toMutableSet(),
             ),
         )
@@ -112,6 +117,7 @@ class BookingService(
                 status = request.status,
                 guestsCount = existing.guestsCount,
                 createdAt = existing.createdAt,
+                totalPrice = existing.totalPrice,
                 rooms = existing.rooms,
             ),
         )

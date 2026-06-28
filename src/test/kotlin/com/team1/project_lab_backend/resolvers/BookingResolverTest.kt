@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -47,6 +48,7 @@ class BookingResolverTest {
         status = BookingStatus.PENDING,
         guestsCount = 2,
         createdAt = LocalDateTime.now(),
+        totalPrice = BigDecimal("200.00"),
     )
 
     // ---- queries ----
@@ -122,6 +124,7 @@ class BookingResolverTest {
             checkInDate = tomorrow, checkOutDate = dayAfter,
             status = BookingStatus.CONFIRMED, guestsCount = 2,
             createdAt = LocalDateTime.now(),
+            totalPrice = BigDecimal("200.00"),
         )
         Mockito.`when`(bookingService.updateBookingStatus(eqArg(1), anyArg())).thenReturn(confirmed)
 

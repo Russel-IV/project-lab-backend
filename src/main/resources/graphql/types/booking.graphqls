@@ -11,6 +11,8 @@ type Booking {
     status: BookingStatus!
     "Number of guests included in the booking."
     guestsCount: Int!
+    "Total price captured at booking time (room prices × nights). Immune to future price changes."
+    totalPrice: BigDecimal!
     "Timestamp when the booking was created."
     createdAt: DateTime!
     "Rooms included in this booking."

@@ -12,6 +12,7 @@ import com.team1.project_lab_backend.repositories.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -66,7 +67,8 @@ class BookingServiceTest {
         ).thenReturn(emptyList())
         val saved = Booking(
             id = 99, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
-            status = BookingStatus.PENDING, guestsCount = 1, rooms = rooms.toMutableSet()
+            status = BookingStatus.PENDING, guestsCount = 1,
+            totalPrice = BigDecimal("100.00"), rooms = rooms.toMutableSet()
         )
         Mockito.`when`(bookingRepository.save(Mockito.any(Booking::class.java))).thenReturn(saved)
         return saved
@@ -83,6 +85,17 @@ class BookingServiceTest {
         assertEquals(99, result.id)
         assertEquals(BookingStatus.PENDING, result.status)
         assertEquals(tomorrow, result.checkInDate)
+    }
+
+    @Test
+    fun createBookingCapturesTotalPrice() {
+        stubHappyPath() // 1 room at $100, tomorrow → dayAfterTomorrow = 1 night
+        val captor = ArgumentCaptor.forClass(Booking::class.java)
+
+        bookingService.createBooking(baseRequest())
+
+        Mockito.verify(bookingRepository).save(captor.capture())
+        assertEquals(BigDecimal("100.00"), captor.value.totalPrice)
     }
 
     @Test
@@ -198,7 +211,7 @@ class BookingServiceTest {
         val existing = Booking(
             id = 5, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
             status = BookingStatus.PENDING, guestsCount = 1,
-            createdAt = LocalDateTime.now(), rooms = mutableSetOf()
+            createdAt = LocalDateTime.now(), totalPrice = BigDecimal("200.00"), rooms = mutableSetOf()
         )
         Mockito.`when`(bookingRepository.findById(5)).thenReturn(Optional.of(existing))
         val updated = existing.copy(status = BookingStatus.CONFIRMED)
@@ -236,7 +249,8 @@ class BookingServiceTest {
         val u = user()
         val booking = Booking(
             id = 5, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
-            status = BookingStatus.PENDING, guestsCount = 1, rooms = mutableSetOf()
+            status = BookingStatus.PENDING, guestsCount = 1,
+            totalPrice = BigDecimal("100.00"), rooms = mutableSetOf()
         )
         Mockito.`when`(bookingRepository.findById(5)).thenReturn(Optional.of(booking))
 
@@ -249,5 +263,5 @@ class BookingServiceTest {
 // Booking is a data class — copy is available
 private fun Booking.copy(status: BookingStatus) = Booking(
     id = id, user = user, checkInDate = checkInDate, checkOutDate = checkOutDate,
-    status = status, guestsCount = guestsCount, createdAt = createdAt, rooms = rooms
+    status = status, guestsCount = guestsCount, createdAt = createdAt, totalPrice = totalPrice, rooms = rooms
 )

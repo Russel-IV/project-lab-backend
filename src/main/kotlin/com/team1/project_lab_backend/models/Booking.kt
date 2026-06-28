@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.models
 import jakarta.persistence.*
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -37,6 +38,9 @@ open class Booking(
 
     @Column(name = "created_at", nullable = false)
     open val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+    open val totalPrice: BigDecimal = BigDecimal.ZERO,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
