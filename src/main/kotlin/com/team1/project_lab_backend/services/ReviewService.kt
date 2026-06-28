@@ -5,6 +5,7 @@ import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
@@ -42,17 +43,13 @@ class ReviewService(
     fun updateReview(id: Int, request: ReviewRequest): Review {
         id.requirePositive()
         request.text.requireNotBlank("text")
-        request.userId.requirePositive("userId")
         request.stayId.requirePositive("stayId")
-        reviewRepository.requireExistsById(id, "review not found")
-        if (!userRepository.existsById(request.userId)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId not found")
-        }
+        val existing = reviewRepository.findById(id).orNotFound("review not found")
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
         return reviewRepository.save(
-            Review(id = id, text = request.text, userId = request.userId, stayId = request.stayId),
+            Review(id = id, text = request.text, userId = existing.userId, stayId = request.stayId),
         )
     }
 

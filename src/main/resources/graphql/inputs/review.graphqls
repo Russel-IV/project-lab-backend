@@ -2,8 +2,6 @@
 input CreateReviewInput {
     "The written review content."
     text: String!
-    "ID of the user submitting the review."
-    userId: Int!
     "ID of the stay being reviewed."
     stayId: Int!
 }
@@ -12,8 +10,6 @@ input CreateReviewInput {
 input UpdateReviewInput {
     "Updated review text."
     text: String!
-    "ID of the user who owns the review."
-    userId: Int!
     "ID of the stay being reviewed."
     stayId: Int!
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
+import java.util.Optional
 
 class ReviewServiceTest {
     private val reviewRepository = Mockito.mock(ReviewRepository::class.java)
@@ -67,28 +68,28 @@ class ReviewServiceTest {
 
     @Test
     fun updateReviewReturnsNotFoundWhenMissing() {
-        Mockito.`when`(reviewRepository.existsById(99)).thenReturn(false)
-        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(reviewRepository.findById(99)).thenReturn(Optional.empty())
         Mockito.`when`(stayRepository.existsById(1)).thenReturn(true)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.updateReview(99, ReviewRequest(text = "Updated", userId = 1, stayId = 1))
+            reviewService.updateReview(99, ReviewRequest(text = "Updated", userId = 0, stayId = 1))
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun updateReviewReturnsUpdatedReview() {
-        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        val existing = Review(id = 5, text = "Original", userId = 1, stayId = 2)
+        Mockito.`when`(reviewRepository.findById(5)).thenReturn(Optional.of(existing))
         Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
-        Mockito.`when`(reviewRepository.existsById(5)).thenReturn(true)
         val saved = Review(id = 5, text = "Updated text", userId = 1, stayId = 2)
         Mockito.`when`(reviewRepository.save(Mockito.any(Review::class.java))).thenReturn(saved)
 
-        val result = reviewService.updateReview(5, ReviewRequest(text = "Updated text", userId = 1, stayId = 2))
+        val result = reviewService.updateReview(5, ReviewRequest(text = "Updated text", userId = 0, stayId = 2))
 
         assertEquals(5, result.id)
         assertEquals("Updated text", result.text)
+        assertEquals(1, result.userId)
     }
 
     @Test
