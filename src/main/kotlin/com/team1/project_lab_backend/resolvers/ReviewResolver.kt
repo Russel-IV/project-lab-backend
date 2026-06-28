@@ -26,14 +26,14 @@ class ReviewResolver(private val reviewService: ReviewService) {
 
     @MutationMapping
     fun updateReview(@Argument id: Int, @Argument input: UpdateReviewInput): Review {
-        requireAuthenticated()
-        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = 0, stayId = input.stayId))
+        val currentUser = requireAuthenticated()
+        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = 0, stayId = input.stayId), currentUser.id)
     }
 
     @MutationMapping
     fun deleteReview(@Argument id: Int): Boolean {
-        requireAuthenticated()
-        reviewService.deleteReview(id)
+        val currentUser = requireAuthenticated()
+        reviewService.deleteReview(id, currentUser.id)
         return true
     }
 }

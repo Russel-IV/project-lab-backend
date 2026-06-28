@@ -223,19 +223,24 @@ class BookingServiceTest {
 
     @Test
     fun deleteBookingReturnsNotFoundWhenMissing() {
-        Mockito.`when`(bookingRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(bookingRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            bookingService.deleteBooking(99)
+            bookingService.deleteBooking(99, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deleteBookingInvokesRepository() {
-        Mockito.`when`(bookingRepository.existsById(5)).thenReturn(true)
+        val u = user()
+        val booking = Booking(
+            id = 5, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
+            status = BookingStatus.PENDING, guestsCount = 1, rooms = mutableSetOf()
+        )
+        Mockito.`when`(bookingRepository.findById(5)).thenReturn(Optional.of(booking))
 
-        bookingService.deleteBooking(5)
+        bookingService.deleteBooking(5, 1)
 
         Mockito.verify(bookingRepository).deleteById(5)
     }

@@ -72,7 +72,7 @@ class ReviewServiceTest {
         Mockito.`when`(stayRepository.existsById(1)).thenReturn(true)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.updateReview(99, ReviewRequest(text = "Updated", userId = 0, stayId = 1))
+            reviewService.updateReview(99, ReviewRequest(text = "Updated", userId = 0, stayId = 1), 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
@@ -85,7 +85,7 @@ class ReviewServiceTest {
         val saved = Review(id = 5, text = "Updated text", userId = 1, stayId = 2)
         Mockito.`when`(reviewRepository.save(Mockito.any(Review::class.java))).thenReturn(saved)
 
-        val result = reviewService.updateReview(5, ReviewRequest(text = "Updated text", userId = 0, stayId = 2))
+        val result = reviewService.updateReview(5, ReviewRequest(text = "Updated text", userId = 0, stayId = 2), 1)
 
         assertEquals(5, result.id)
         assertEquals("Updated text", result.text)
@@ -94,19 +94,20 @@ class ReviewServiceTest {
 
     @Test
     fun deleteReviewReturnsNotFoundWhenMissing() {
-        Mockito.`when`(reviewRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(reviewRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.deleteReview(99)
+            reviewService.deleteReview(99, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deleteReviewInvokesRepository() {
-        Mockito.`when`(reviewRepository.existsById(5)).thenReturn(true)
+        val existing = Review(id = 5, text = "Great stay", userId = 1, stayId = 2)
+        Mockito.`when`(reviewRepository.findById(5)).thenReturn(Optional.of(existing))
 
-        reviewService.deleteReview(5)
+        reviewService.deleteReview(5, 1)
 
         Mockito.verify(reviewRepository).deleteById(5)
     }

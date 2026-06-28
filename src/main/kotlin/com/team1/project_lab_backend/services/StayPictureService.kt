@@ -4,6 +4,7 @@ import com.team1.project_lab_backend.dto.StayPictureResponse
 import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
+import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
@@ -41,10 +42,13 @@ class StayPictureService(
         file: MultipartFile,
         caption: String?,
         isPrimary: Boolean,
-        displayOrder: Int
+        displayOrder: Int,
+        requestingUserId: Int,
     ): StayPictureResponse {
         stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(stayId, "stay not found")
+        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         displayOrder.requireNonNegative("displayOrder")
         validateImageFile(file)
         if (isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
@@ -90,10 +94,13 @@ class StayPictureService(
     }
 
     @Transactional
-    fun updatePictureMetadata(stayId: Int, id: Int, caption: String?, isPrimary: Boolean, displayOrder: Int): StayPicture {
+    fun updatePictureMetadata(stayId: Int, id: Int, caption: String?, isPrimary: Boolean, displayOrder: Int, requestingUserId: Int): StayPicture {
         stayId.requirePositive("stayId")
         id.requirePositive()
         displayOrder.requireNonNegative("displayOrder")
+        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
@@ -112,9 +119,12 @@ class StayPictureService(
     }
 
     @Transactional
-    fun deletePicture(stayId: Int, id: Int) {
+    fun deletePicture(stayId: Int, id: Int, requestingUserId: Int) {
         stayId.requirePositive("stayId")
         id.requirePositive()
+        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         stayPictureRepository.deleteById(id)

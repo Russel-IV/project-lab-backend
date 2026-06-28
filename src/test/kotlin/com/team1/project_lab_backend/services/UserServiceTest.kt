@@ -39,7 +39,7 @@ class UserServiceTest {
         Mockito.`when`(userRepository.existsById(42)).thenReturn(false)
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.updateUser(42, UserRequest(name = "Updated"))
+            userService.updateUser(42, UserRequest(name = "Updated"), 42)
         }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -51,7 +51,7 @@ class UserServiceTest {
         val saved = User(id = 1, name = "Bob")
         Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenReturn(saved)
 
-        val result = userService.updateUser(1, UserRequest(name = "Bob"))
+        val result = userService.updateUser(1, UserRequest(name = "Bob"), 1)
 
         assertEquals(1, result.id)
         assertEquals("Bob", result.name)
@@ -60,7 +60,7 @@ class UserServiceTest {
     @Test
     fun updateUserRejectsBlankName() {
         val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.updateUser(1, UserRequest(name = ""))
+            userService.updateUser(1, UserRequest(name = ""), 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
@@ -70,7 +70,7 @@ class UserServiceTest {
         Mockito.`when`(userRepository.existsById(99)).thenReturn(false)
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.deleteUser(99)
+            userService.deleteUser(99, 99)
         }
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
     }
@@ -79,7 +79,7 @@ class UserServiceTest {
     fun deleteUserInvokesRepository() {
         Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
 
-        userService.deleteUser(1)
+        userService.deleteUser(1, 1)
 
         Mockito.verify(userRepository).deleteById(1)
     }

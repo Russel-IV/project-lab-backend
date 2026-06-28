@@ -33,20 +33,20 @@ class RoomResolver(private val roomService: RoomService) {
 
     @MutationMapping
     fun createRoom(@Argument stayId: Int, @Argument input: CreateRoomInput): Room {
-        requireAuthenticated()
-        return roomService.createRoom(stayId, input.toRequest())
+        val currentUser = requireAuthenticated()
+        return roomService.createRoom(stayId, input.toRequest(), currentUser.id)
     }
 
     @MutationMapping
     fun updateRoom(@Argument id: Int, @Argument input: UpdateRoomInput): Room {
-        requireAuthenticated()
-        return roomService.updateRoom(id, input.toRequest())
+        val currentUser = requireAuthenticated()
+        return roomService.updateRoom(id, input.toRequest(), currentUser.id)
     }
 
     @MutationMapping
     fun deleteRoom(@Argument id: Int): Boolean {
-        requireAuthenticated()
-        roomService.deleteRoom(id)
+        val currentUser = requireAuthenticated()
+        roomService.deleteRoom(id, currentUser.id)
         return true
     }
 }

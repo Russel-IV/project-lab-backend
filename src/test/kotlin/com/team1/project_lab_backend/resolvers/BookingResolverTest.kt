@@ -134,11 +134,11 @@ class BookingResolverTest {
     @Test
     fun deleteBookingReturnsTrueOnSuccess() {
         authenticateAs(authenticatedUser)
-        Mockito.doNothing().`when`(bookingService).deleteBooking(1)
+        Mockito.doNothing().`when`(bookingService).deleteBooking(eqArg(1), eqArg(1))
 
         val result = resolver.deleteBooking(1)
 
         assertEquals(true, result)
-        Mockito.verify(bookingService).deleteBooking(1)
+        Mockito.verify(bookingService).deleteBooking(eqArg(1), eqArg(1))
     }
 }

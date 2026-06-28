@@ -32,14 +32,14 @@ class UserResolver(private val userService: UserService) {
 
     @MutationMapping
     fun updateUser(@Argument id: Int, @Argument input: UpdateUserInput): User {
-        requireAuthenticated()
-        return userService.updateUser(id, UserRequest(name = input.name))
+        val currentUser = requireAuthenticated()
+        return userService.updateUser(id, UserRequest(name = input.name), currentUser.id)
     }
 
     @MutationMapping
     fun deleteUser(@Argument id: Int): Boolean {
-        requireAuthenticated()
-        userService.deleteUser(id)
+        val currentUser = requireAuthenticated()
+        userService.deleteUser(id, currentUser.id)
         return true
     }
 }

@@ -118,9 +118,11 @@ class BookingService(
     }
 
     @Transactional
-    fun deleteBooking(id: Int) {
+    fun deleteBooking(id: Int, requestingUserId: Int) {
         id.requirePositive()
-        bookingRepository.requireExistsById(id, "booking not found")
+        val booking = bookingRepository.findById(id).orNotFound("booking not found")
+        if (booking.user.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         bookingRepository.deleteById(id)
     }
 }

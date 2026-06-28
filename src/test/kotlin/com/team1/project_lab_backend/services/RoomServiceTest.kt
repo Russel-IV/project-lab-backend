@@ -1,7 +1,11 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.RoomRequest
+import com.team1.project_lab_backend.models.Address
+import com.team1.project_lab_backend.models.Host
+import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Room
+import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.repositories.RoomRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -40,15 +44,27 @@ class RoomServiceTest {
         bathrooms = BigDecimal("1.0"),
     )
 
+    private fun sampleStay(stayId: Int = 10, hostId: Int = 1) = Stay(
+        id = stayId,
+        name = "Test Stay",
+        propertyType = PropertyType.HOME,
+        host = Host(id = hostId),
+        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+    )
+
+    private fun stubStay(stayId: Int = 10, hostId: Int = 1) {
+        Mockito.`when`(stayRepository.findById(stayId)).thenReturn(Optional.of(sampleStay(stayId, hostId)))
+    }
+
     // ---- createRoom ----
 
     @Test
     fun createRoomReturnsPersistedRoom() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
         val saved = savedRoom()
         Mockito.`when`(roomRepository.save(Mockito.any(Room::class.java))).thenReturn(saved)
 
-        val result = roomService.createRoom(10, baseRequest())
+        val result = roomService.createRoom(10, baseRequest(), 1)
 
         assertEquals(1, result.id)
         assertEquals(10, result.stayId)
@@ -57,50 +73,50 @@ class RoomServiceTest {
 
     @Test
     fun createRoomRejectsUnknownStay() {
-        Mockito.`when`(stayRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(stayRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.createRoom(99, baseRequest())
+            roomService.createRoom(99, baseRequest(), 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun createRoomRejectsBlankName() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.createRoom(10, baseRequest().copy(name = "  "))
+            roomService.createRoom(10, baseRequest().copy(name = "  "), 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createRoomRejectsNegativePrice() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.createRoom(10, baseRequest().copy(price = BigDecimal("-1.00")))
+            roomService.createRoom(10, baseRequest().copy(price = BigDecimal("-1.00")), 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createRoomRejectsZeroSleeps() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.createRoom(10, baseRequest().copy(sleeps = 0))
+            roomService.createRoom(10, baseRequest().copy(sleeps = 0), 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createRoomRejectsNegativeBathrooms() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.createRoom(10, baseRequest().copy(bathrooms = BigDecimal("-0.5")))
+            roomService.createRoom(10, baseRequest().copy(bathrooms = BigDecimal("-0.5")), 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
@@ -111,10 +127,11 @@ class RoomServiceTest {
     fun updateRoomReturnsUpdatedRoom() {
         val existing = savedRoom(id = 1, stayId = 10)
         Mockito.`when`(roomRepository.findById(1)).thenReturn(Optional.of(existing))
+        stubStay()
         val updated = savedRoom(id = 1, stayId = 10)
         Mockito.`when`(roomRepository.save(Mockito.any(Room::class.java))).thenReturn(updated)
 
-        val result = roomService.updateRoom(1, baseRequest())
+        val result = roomService.updateRoom(1, baseRequest(), 1)
 
         assertEquals(1, result.id)
         assertEquals(10, result.stayId)
@@ -125,7 +142,7 @@ class RoomServiceTest {
         Mockito.`when`(roomRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.updateRoom(99, baseRequest())
+            roomService.updateRoom(99, baseRequest(), 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
@@ -134,19 +151,21 @@ class RoomServiceTest {
 
     @Test
     fun deleteRoomReturnsNotFoundWhenMissing() {
-        Mockito.`when`(roomRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(roomRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            roomService.deleteRoom(99)
+            roomService.deleteRoom(99, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deleteRoomInvokesRepository() {
-        Mockito.`when`(roomRepository.existsById(1)).thenReturn(true)
+        val room = savedRoom(id = 1, stayId = 10)
+        Mockito.`when`(roomRepository.findById(1)).thenReturn(Optional.of(room))
+        stubStay()
 
-        roomService.deleteRoom(1)
+        roomService.deleteRoom(1, 1)
 
         Mockito.verify(roomRepository).deleteById(1)
     }

@@ -1,5 +1,9 @@
 package com.team1.project_lab_backend.services
 
+import com.team1.project_lab_backend.models.Address
+import com.team1.project_lab_backend.models.Host
+import com.team1.project_lab_backend.models.PropertyType
+import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
@@ -28,57 +32,69 @@ class StayPictureServiceTest {
     private fun imageFile(name: String = "photo.jpg") =
         MockMultipartFile("file", name, "image/jpeg", ByteArray(8) { 0 })
 
+    private fun sampleStay(stayId: Int = 10, hostId: Int = 1) = Stay(
+        id = stayId,
+        name = "Test Stay",
+        propertyType = PropertyType.HOME,
+        host = Host(id = hostId),
+        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+    )
+
+    private fun stubStay(stayId: Int = 10, hostId: Int = 1) {
+        Mockito.`when`(stayRepository.findById(stayId)).thenReturn(Optional.of(sampleStay(stayId, hostId)))
+    }
+
     // ---- addPicture ----
 
     @Test
     fun addPictureRejectsEmptyFile() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
         val emptyFile = MockMultipartFile("file", "photo.jpg", "image/jpeg", ByteArray(0))
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(10, emptyFile, null, false, 0)
+            service.addPicture(10, emptyFile, null, false, 0, 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun addPictureRejectsNonImageContentType() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
         val pdf = MockMultipartFile("file", "doc.pdf", "application/pdf", ByteArray(8) { 0 })
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(10, pdf, null, false, 0)
+            service.addPicture(10, pdf, null, false, 0, 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun addPictureRejectsStayNotFound() {
-        Mockito.`when`(stayRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(stayRepository.findById(99)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(99, imageFile(), null, false, 0)
+            service.addPicture(99, imageFile(), null, false, 0, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun addPictureRejectsDuplicatePrimary() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
         Mockito.`when`(stayPictureRepository.existsByStayIdAndIsPrimary(10, true)).thenReturn(true)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(10, imageFile(), null, isPrimary = true, displayOrder = 0)
+            service.addPicture(10, imageFile(), null, isPrimary = true, displayOrder = 0, requestingUserId = 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun addPictureRejectsNegativeDisplayOrder() {
-        Mockito.`when`(stayRepository.existsById(10)).thenReturn(true)
+        stubStay()
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(10, imageFile(), null, false, displayOrder = -1)
+            service.addPicture(10, imageFile(), null, false, displayOrder = -1, requestingUserId = 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
@@ -87,12 +103,13 @@ class StayPictureServiceTest {
 
     @Test
     fun updatePictureMetadataReturnsUpdatedPicture() {
+        stubStay()
         val existing = picture(id = 1, stayId = 10, isPrimary = false)
         Mockito.`when`(stayPictureRepository.findByStayIdAndId(10, 1)).thenReturn(existing)
         val saved = existing.copy(caption = "New caption", displayOrder = 2)
         Mockito.`when`(stayPictureRepository.save(Mockito.any(StayPicture::class.java))).thenReturn(saved)
 
-        val result = service.updatePictureMetadata(10, 1, "New caption", false, 2)
+        val result = service.updatePictureMetadata(10, 1, "New caption", false, 2, 1)
 
         assertEquals("New caption", result.caption)
         assertEquals(2, result.displayOrder)
@@ -100,22 +117,24 @@ class StayPictureServiceTest {
 
     @Test
     fun updatePictureMetadataReturnsNotFoundWhenMissing() {
+        stubStay()
         Mockito.`when`(stayPictureRepository.findByStayIdAndId(10, 99)).thenReturn(null)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updatePictureMetadata(10, 99, null, false, 0)
+            service.updatePictureMetadata(10, 99, null, false, 0, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun updatePictureMetadataRejectsDuplicatePrimaryWhenCurrentIsNot() {
+        stubStay()
         val existing = picture(id = 1, stayId = 10, isPrimary = false)
         Mockito.`when`(stayPictureRepository.findByStayIdAndId(10, 1)).thenReturn(existing)
         Mockito.`when`(stayPictureRepository.existsByStayIdAndIsPrimary(10, true)).thenReturn(true)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updatePictureMetadata(10, 1, null, isPrimary = true, displayOrder = 0)
+            service.updatePictureMetadata(10, 1, null, isPrimary = true, displayOrder = 0, requestingUserId = 1)
         }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
@@ -124,20 +143,22 @@ class StayPictureServiceTest {
 
     @Test
     fun deletePictureReturnsNotFoundWhenMissing() {
+        stubStay()
         Mockito.`when`(stayPictureRepository.findByStayIdAndId(10, 99)).thenReturn(null)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
-            service.deletePicture(10, 99)
+            service.deletePicture(10, 99, 1)
         }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deletePictureInvokesRepository() {
+        stubStay()
         val existing = picture(id = 1, stayId = 10)
         Mockito.`when`(stayPictureRepository.findByStayIdAndId(10, 1)).thenReturn(existing)
 
-        service.deletePicture(10, 1)
+        service.deletePicture(10, 1, 1)
 
         Mockito.verify(stayPictureRepository).deleteById(1)
     }

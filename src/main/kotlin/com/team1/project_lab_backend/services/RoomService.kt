@@ -38,9 +38,11 @@ class RoomService(
     }
 
     @Transactional
-    fun createRoom(stayId: Int, request: RoomRequest): Room {
+    fun createRoom(stayId: Int, request: RoomRequest, requestingUserId: Int): Room {
         stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(stayId, "stay not found")
+        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         validateRoomRequest(request)
         return roomRepository.save(
             Room(
@@ -57,9 +59,12 @@ class RoomService(
     }
 
     @Transactional
-    fun updateRoom(id: Int, request: RoomRequest): Room {
+    fun updateRoom(id: Int, request: RoomRequest, requestingUserId: Int): Room {
         id.requirePositive()
         val existing = roomRepository.findById(id).orNotFound("room not found")
+        val stay = stayRepository.findById(existing.stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         validateRoomRequest(request)
         return roomRepository.save(
             Room(
@@ -76,9 +81,12 @@ class RoomService(
     }
 
     @Transactional
-    fun deleteRoom(id: Int) {
+    fun deleteRoom(id: Int, requestingUserId: Int) {
         id.requirePositive()
-        roomRepository.requireExistsById(id, "room not found")
+        val room = roomRepository.findById(id).orNotFound("room not found")
+        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         roomRepository.deleteById(id)
     }
 

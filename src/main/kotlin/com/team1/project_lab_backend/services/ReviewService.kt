@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import com.team1.project_lab_backend.util.requireExistsById
 
 @Service
 class ReviewService(
@@ -40,11 +41,13 @@ class ReviewService(
     }
 
     @Transactional
-    fun updateReview(id: Int, request: ReviewRequest): Review {
+    fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
         id.requirePositive()
         request.text.requireNotBlank("text")
         request.stayId.requirePositive("stayId")
         val existing = reviewRepository.findById(id).orNotFound("review not found")
+        if (existing.userId != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
@@ -54,9 +57,11 @@ class ReviewService(
     }
 
     @Transactional
-    fun deleteReview(id: Int) {
+    fun deleteReview(id: Int, requestingUserId: Int) {
         id.requirePositive()
-        reviewRepository.requireExistsById(id, "review not found")
+        val review = reviewRepository.findById(id).orNotFound("review not found")
+        if (review.userId != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         reviewRepository.deleteById(id)
     }
 }

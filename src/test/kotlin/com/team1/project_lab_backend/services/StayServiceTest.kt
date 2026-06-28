@@ -97,7 +97,7 @@ class StayServiceTest {
         val host = stubHost()
         stubSave(request, host, id = 10)
 
-        val response = stayService.createStay(request)
+        val response = stayService.createStay(request, 1)
 
         assertEquals(10, response.id)
         assertEquals("Test Stay", response.name)
@@ -109,7 +109,7 @@ class StayServiceTest {
         val request = baseRequest().copy(name = " ")
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -120,7 +120,7 @@ class StayServiceTest {
         val request = baseRequest().copy(address = baseAddress().copy(streetAddress = ""))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -131,7 +131,7 @@ class StayServiceTest {
         val request = baseRequest().copy(address = baseAddress().copy(city = " "))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -142,7 +142,7 @@ class StayServiceTest {
         val request = baseRequest().copy(address = baseAddress().copy(countryCode = ""))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -153,7 +153,7 @@ class StayServiceTest {
         val request = baseRequest().copy(starRating = BigDecimal("5.1"))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -165,7 +165,7 @@ class StayServiceTest {
         val host = stubHost()
         stubSave(request, host, id = 12)
 
-        val response = stayService.createStay(request)
+        val response = stayService.createStay(request, 1)
 
         assertEquals(12, response.id)
         assertEquals(BigDecimal("5.0"), response.starRating)
@@ -176,7 +176,7 @@ class StayServiceTest {
         val request = baseRequest().copy(hostId = 0)
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 0)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -187,7 +187,7 @@ class StayServiceTest {
         val request = baseRequest().copy(viewIds = setOf(0))
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.createStay(request)
+            stayService.createStay(request, 1)
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
@@ -199,7 +199,7 @@ class StayServiceTest {
         Mockito.`when`(stayRepository.findById(55)).thenReturn(Optional.empty())
 
         val exception = assertThrows(ResponseStatusException::class.java) {
-            stayService.updateStay(55, request)
+            stayService.updateStay(55, request, 1)
         }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -220,8 +220,8 @@ class StayServiceTest {
         Mockito.`when`(stayRepository.findById(20)).thenReturn(Optional.of(existingStay))
         stubSave(request, host, id = 20)
 
-        val first = stayService.updateStay(20, request)
-        val second = stayService.updateStay(20, request)
+        val first = stayService.updateStay(20, request, 1)
+        val second = stayService.updateStay(20, request, 1)
 
         assertEquals(first.id, second.id)
         assertEquals(first.name, second.name)

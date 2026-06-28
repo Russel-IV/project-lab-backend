@@ -51,23 +51,29 @@ class StayService(
     }
 
     @Transactional
-    fun createStay(request: StayRequest): Stay {
+    fun createStay(request: StayRequest, requestingUserId: Int): Stay {
+        if (request.hostId != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         validateStayRequest(request)
         return stayRepository.save(buildStay(0, request, existingAddressId = 0))
     }
 
     @Transactional
-    fun updateStay(id: Int, request: StayRequest): Stay {
+    fun updateStay(id: Int, request: StayRequest, requestingUserId: Int): Stay {
         id.requirePositive()
         validateStayRequest(request)
         val existingStay = stayRepository.findById(id).orNotFound("stay not found")
+        if (existingStay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         return stayRepository.save(buildStay(id, request, existingAddressId = existingStay.address.id))
     }
 
     @Transactional
-    fun deleteStay(id: Int) {
+    fun deleteStay(id: Int, requestingUserId: Int) {
         id.requirePositive()
-        stayRepository.requireExistsById(id, "stay not found")
+        val stay = stayRepository.findById(id).orNotFound("stay not found")
+        if (stay.host.id != requestingUserId)
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         stayRepository.deleteById(id)
     }
 

@@ -97,7 +97,7 @@ class StayResolverTest {
     fun createStayDelegatesToService() {
         authenticateAs(authenticatedUser)
         val stay = sampleStay(10)
-        Mockito.`when`(stayService.createStay(anyArg())).thenReturn(stay)
+        Mockito.`when`(stayService.createStay(anyArg(), eqArg(1))).thenReturn(stay)
 
         val input = CreateStayInput(
             name = "Cozy Cabin",
@@ -108,7 +108,7 @@ class StayResolverTest {
         val result = resolver.createStay(input)
 
         assertEquals(10, result.id)
-        Mockito.verify(stayService).createStay(anyArg())
+        Mockito.verify(stayService).createStay(anyArg(), eqArg(1))
     }
 
     @Test
@@ -127,7 +127,7 @@ class StayResolverTest {
     fun updateStayDelegatesToService() {
         authenticateAs(authenticatedUser)
         val stay = sampleStay(5)
-        Mockito.`when`(stayService.updateStay(eqArg(5), anyArg())).thenReturn(stay)
+        Mockito.`when`(stayService.updateStay(eqArg(5), anyArg(), eqArg(1))).thenReturn(stay)
 
         val input = UpdateStayInput(
             name = "Cozy Cabin",
@@ -138,7 +138,7 @@ class StayResolverTest {
         val result = resolver.updateStay(5, input)
 
         assertEquals(5, result.id)
-        Mockito.verify(stayService).updateStay(eqArg(5), anyArg())
+        Mockito.verify(stayService).updateStay(eqArg(5), anyArg(), eqArg(1))
     }
 
     @Test
@@ -156,12 +156,12 @@ class StayResolverTest {
     @Test
     fun deleteStayReturnsTrueOnSuccess() {
         authenticateAs(authenticatedUser)
-        Mockito.doNothing().`when`(stayService).deleteStay(1)
+        Mockito.doNothing().`when`(stayService).deleteStay(eqArg(1), eqArg(1))
 
         val result = resolver.deleteStay(1)
 
         assertEquals(true, result)
-        Mockito.verify(stayService).deleteStay(1)
+        Mockito.verify(stayService).deleteStay(eqArg(1), eqArg(1))
     }
 
     @Test

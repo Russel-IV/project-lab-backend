@@ -27,8 +27,8 @@ class StayPictureController(
         @RequestParam(defaultValue = "false") isPrimary: Boolean,
         @RequestParam(defaultValue = "0") displayOrder: Int,
     ): ResponseEntity<StayPictureResponse> {
-        requireAuthenticated()
+        val currentUser = requireAuthenticated()
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(stayPictureService.addPicture(stayId, file, caption, isPrimary, displayOrder))
+            .body(stayPictureService.addPicture(stayId, file, caption, isPrimary, displayOrder, currentUser.id))
     }
 }

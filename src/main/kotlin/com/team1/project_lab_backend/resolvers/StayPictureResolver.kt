@@ -21,20 +21,21 @@ class StayPictureResolver(private val stayPictureService: StayPictureService) {
         @Argument id: Int,
         @Argument input: UpdateStayPictureInput,
     ): StayPicture {
-        requireAuthenticated()
+        val currentUser = requireAuthenticated()
         return stayPictureService.updatePictureMetadata(
             stayId = stayId,
             id = id,
             caption = input.caption,
             isPrimary = input.isPrimary,
             displayOrder = input.displayOrder,
+            requestingUserId = currentUser.id,
         )
     }
 
     @MutationMapping
     fun deleteStayPicture(@Argument stayId: Int, @Argument id: Int): Boolean {
-        requireAuthenticated()
-        stayPictureService.deletePicture(stayId, id)
+        val currentUser = requireAuthenticated()
+        stayPictureService.deletePicture(stayId, id, currentUser.id)
         return true
     }
 }

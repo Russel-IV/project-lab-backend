@@ -7,8 +7,10 @@ import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class UserService(
@@ -30,16 +32,18 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(id: Int, request: UserRequest): User {
+    fun updateUser(id: Int, request: UserRequest, requestingUserId: Int): User {
         id.requirePositive()
+        if (id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         request.name.requireNotBlank("name")
         userRepository.requireExistsById(id, "user not found")
         return userRepository.save(User(id = id, name = request.name))
     }
 
     @Transactional
-    fun deleteUser(id: Int) {
+    fun deleteUser(id: Int, requestingUserId: Int) {
         id.requirePositive()
+        if (id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         userRepository.requireExistsById(id, "user not found")
         userRepository.deleteById(id)
     }

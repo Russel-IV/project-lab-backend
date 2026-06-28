@@ -26,20 +26,20 @@ class StayResolver(private val stayService: StayService) {
 
     @MutationMapping
     fun createStay(@Argument input: CreateStayInput): Stay {
-        requireAuthenticated()
-        return stayService.createStay(input.toRequest())
+        val currentUser = requireAuthenticated()
+        return stayService.createStay(input.toRequest(), currentUser.id)
     }
 
     @MutationMapping
     fun updateStay(@Argument id: Int, @Argument input: UpdateStayInput): Stay {
-        requireAuthenticated()
-        return stayService.updateStay(id, input.toRequest())
+        val currentUser = requireAuthenticated()
+        return stayService.updateStay(id, input.toRequest(), currentUser.id)
     }
 
     @MutationMapping
     fun deleteStay(@Argument id: Int): Boolean {
-        requireAuthenticated()
-        stayService.deleteStay(id)
+        val currentUser = requireAuthenticated()
+        stayService.deleteStay(id, currentUser.id)
         return true
     }
 }

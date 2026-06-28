@@ -46,8 +46,8 @@ class BookingResolver(private val bookingService: BookingService) {
 
     @MutationMapping
     fun deleteBooking(@Argument id: Int): Boolean {
-        requireAuthenticated()
-        bookingService.deleteBooking(id)
+        val currentUser = requireAuthenticated()
+        bookingService.deleteBooking(id, currentUser.id)
         return true
     }
 }
