@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import com.team1.project_lab_backend.util.requireExistsById
 
 @Service
 class ReviewService(
@@ -29,6 +28,8 @@ class ReviewService(
     @Transactional
     fun createReview(request: ReviewRequest): Review {
         request.text.requireNotBlank("text")
+        if (request.rating !in 1..5)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
         request.userId.requirePositive("userId")
         request.stayId.requirePositive("stayId")
         if (!userRepository.existsById(request.userId)) {
@@ -37,13 +38,17 @@ class ReviewService(
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
-        return reviewRepository.save(Review(text = request.text, userId = request.userId, stayId = request.stayId))
+        return reviewRepository.save(
+            Review(text = request.text, userId = request.userId, stayId = request.stayId, rating = request.rating),
+        )
     }
 
     @Transactional
     fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
         id.requirePositive()
         request.text.requireNotBlank("text")
+        if (request.rating !in 1..5)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
         request.stayId.requirePositive("stayId")
         val existing = reviewRepository.findById(id).orNotFound("review not found")
         if (existing.userId != requestingUserId)
@@ -52,7 +57,7 @@ class ReviewService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
         return reviewRepository.save(
-            Review(id = id, text = request.text, userId = existing.userId, stayId = request.stayId),
+            Review(id = id, text = request.text, userId = existing.userId, stayId = request.stayId, rating = request.rating),
         )
     }
 

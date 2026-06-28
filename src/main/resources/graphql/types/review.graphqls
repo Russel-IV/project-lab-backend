@@ -3,6 +3,8 @@ type Review {
     id: Int!
     "The written review content."
     text: String!
+    "Rating from 1 (lowest) to 5 (highest)."
+    rating: Int!
     "ID of the user who wrote the review."
     userId: Int!
     "ID of the stay being reviewed."

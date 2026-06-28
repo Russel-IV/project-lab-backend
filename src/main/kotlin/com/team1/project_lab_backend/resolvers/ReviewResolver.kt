@@ -21,13 +21,13 @@ class ReviewResolver(private val reviewService: ReviewService) {
     @MutationMapping
     fun createReview(@Argument input: CreateReviewInput): Review {
         val currentUser = requireAuthenticated()
-        return reviewService.createReview(ReviewRequest(text = input.text, userId = currentUser.id, stayId = input.stayId))
+        return reviewService.createReview(ReviewRequest(text = input.text, userId = currentUser.id, stayId = input.stayId, rating = input.rating))
     }
 
     @MutationMapping
     fun updateReview(@Argument id: Int, @Argument input: UpdateReviewInput): Review {
         val currentUser = requireAuthenticated()
-        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = 0, stayId = input.stayId), currentUser.id)
+        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = 0, stayId = input.stayId, rating = input.rating), currentUser.id)
     }
 
     @MutationMapping
@@ -38,5 +38,5 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 }
 
-data class CreateReviewInput(val text: String, val stayId: Int)
-data class UpdateReviewInput(val text: String, val stayId: Int)
+data class CreateReviewInput(val text: String, val rating: Int, val stayId: Int)
+data class UpdateReviewInput(val text: String, val rating: Int, val stayId: Int)

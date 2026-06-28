@@ -2,6 +2,8 @@
 input CreateReviewInput {
     "The written review content."
     text: String!
+    "Rating from 1 (lowest) to 5 (highest)."
+    rating: Int!
     "ID of the stay being reviewed."
     stayId: Int!
 }
@@ -10,6 +12,8 @@ input CreateReviewInput {
 input UpdateReviewInput {
     "Updated review text."
     text: String!
+    "Updated rating from 1 (lowest) to 5 (highest)."
+    rating: Int!
     "ID of the stay being reviewed."
     stayId: Int!
 }

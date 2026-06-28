@@ -17,4 +17,7 @@ data class Review(
 
     @Column(nullable = false, name = "stay_id")
     val stayId: Int,
+
+    @Column(nullable = false)
+    val rating: Int = 0,
 )
