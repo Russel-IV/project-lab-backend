@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.controllers
 
 import com.team1.project_lab_backend.dto.StayPictureResponse
 import com.team1.project_lab_backend.services.StayPictureService
+import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -25,7 +26,9 @@ class StayPictureController(
         @RequestParam(required = false) caption: String?,
         @RequestParam(defaultValue = "false") isPrimary: Boolean,
         @RequestParam(defaultValue = "0") displayOrder: Int,
-    ): ResponseEntity<StayPictureResponse> =
-        ResponseEntity.status(HttpStatus.CREATED)
+    ): ResponseEntity<StayPictureResponse> {
+        requireAuthenticated()
+        return ResponseEntity.status(HttpStatus.CREATED)
             .body(stayPictureService.addPicture(stayId, file, caption, isPrimary, displayOrder))
+    }
 }
