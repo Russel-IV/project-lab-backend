@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.repositories
 
 import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.models.Room
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.time.LocalDate
@@ -9,6 +10,8 @@ import java.time.LocalDate
 interface RoomRepository : JpaRepository<Room, Int> {
 
     fun findByStayId(stayId: Int): List<Room>
+
+    fun findByStayId(stayId: Int, pageable: Pageable): List<Room>
 
     fun findByStayIdIn(stayIds: Collection<Int>): List<Room>
 

@@ -16,11 +16,7 @@ class ReviewResolver(private val reviewService: ReviewService) {
     fun reviews(
         @Argument page: Int?,
         @Argument size: Int?,
-    ): List<Review> = reviewService.getAllReviews().let { all ->
-        val p = page ?: 0
-        val s = size ?: 20
-        all.drop(p * s).take(s)
-    }
+    ): List<Review> = reviewService.getAllReviews(page ?: 0, size ?: 20)
 
     @MutationMapping
     fun createReview(@Argument input: CreateReviewInput): Review {

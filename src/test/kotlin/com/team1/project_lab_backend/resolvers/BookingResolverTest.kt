@@ -52,17 +52,14 @@ class BookingResolverTest {
     // ---- queries ----
 
     @Test
-    fun bookingsPaginatesInMemory() {
-        val all = (1..5).map { sampleBooking(it) }
-        Mockito.`when`(bookingService.getAllBookings()).thenReturn(all)
+    fun bookingsDelegatesToService() {
+        val page = listOf(sampleBooking(1), sampleBooking(2))
+        Mockito.`when`(bookingService.getAllBookings(0, 2)).thenReturn(page)
 
-        val page1 = resolver.bookings(page = 0, size = 2)
-        val page2 = resolver.bookings(page = 1, size = 2)
-        val page3 = resolver.bookings(page = 2, size = 2)
+        val result = resolver.bookings(page = 0, size = 2)
 
-        assertEquals(listOf(1, 2), page1.map { it.id })
-        assertEquals(listOf(3, 4), page2.map { it.id })
-        assertEquals(listOf(5), page3.map { it.id })
+        assertEquals(listOf(1, 2), result.map { it.id })
+        Mockito.verify(bookingService).getAllBookings(0, 2)
     }
 
     @Test

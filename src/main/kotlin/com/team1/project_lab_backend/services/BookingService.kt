@@ -12,6 +12,7 @@ import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requirePositive
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,7 +28,8 @@ class BookingService(
     private val roomRepository: RoomRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllBookings(): List<Booking> = bookingRepository.findAll()
+    fun getAllBookings(page: Int = 0, size: Int = 20): List<Booking> =
+        bookingRepository.findAll(PageRequest.of(page, size)).content
 
     @Transactional(readOnly = true)
     fun getBookingById(id: Int): Booking {

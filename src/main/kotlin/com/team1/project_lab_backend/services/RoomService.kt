@@ -28,8 +28,7 @@ class RoomService(
     fun getRoomsForStay(stayId: Int, page: Int = 0, size: Int = 20): List<Room> {
         stayId.requirePositive("stayId")
         stayRepository.requireExistsById(stayId, "stay not found")
-        return roomRepository.findByStayId(stayId)
-            .let { if (size > 0) it.drop(page * size).take(size) else it }
+        return roomRepository.findByStayId(stayId, PageRequest.of(page, size))
     }
 
     @Transactional(readOnly = true)

@@ -8,6 +8,7 @@ import com.team1.project_lab_backend.repositories.UserRepository
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,7 +21,8 @@ class ReviewService(
     private val stayRepository: StayRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllReviews(): List<Review> = reviewRepository.findAll()
+    fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
+        reviewRepository.findAll(PageRequest.of(page, size)).content
 
     @Transactional
     fun createReview(request: ReviewRequest): Review {

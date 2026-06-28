@@ -19,11 +19,7 @@ class BookingResolver(private val bookingService: BookingService) {
     fun bookings(
         @Argument page: Int?,
         @Argument size: Int?,
-    ): List<Booking> = bookingService.getAllBookings().let { all ->
-        val p = page ?: 0
-        val s = size ?: 20
-        all.drop(p * s).take(s)
-    }
+    ): List<Booking> = bookingService.getAllBookings(page ?: 0, size ?: 20)
 
     @QueryMapping
     fun booking(@Argument id: Int): Booking = bookingService.getBookingById(id)
