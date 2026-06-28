@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.AddressRequest
+import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.Address
 import com.team1.project_lab_backend.models.Host
@@ -191,6 +192,67 @@ class StayServiceTest {
         }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
+    }
+
+    // ---- searchStays validation ----
+
+    @Test
+    fun searchStaysRejectsCheckInWithoutCheckOut() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(checkIn = java.time.LocalDate.now().plusDays(1)))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsCheckOutWithoutCheckIn() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(checkOut = java.time.LocalDate.now().plusDays(2)))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsCheckOutNotAfterCheckIn() {
+        val today = java.time.LocalDate.now()
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(checkIn = today.plusDays(2), checkOut = today.plusDays(1)))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsNegativeMinPrice() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(minPricePerNight = BigDecimal("-1")))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsNegativeMaxPrice() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(maxPricePerNight = BigDecimal("-0.01")))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsMinPriceAboveMaxPrice() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(
+                StayFilter(minPricePerNight = BigDecimal("200"), maxPricePerNight = BigDecimal("100"))
+            )
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun searchStaysRejectsGuestsLessThanOne() {
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.searchStays(StayFilter(guests = 0))
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test

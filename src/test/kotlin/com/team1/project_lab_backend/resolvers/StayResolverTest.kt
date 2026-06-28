@@ -50,20 +50,20 @@ class StayResolverTest {
     @Test
     fun staysPassesPageAndSizeToService() {
         val stays = listOf(sampleStay())
-        Mockito.`when`(stayService.getAllStays(2, 5)).thenReturn(stays)
+        Mockito.`when`(stayService.searchStays(anyArg(), eqArg(2), eqArg(5))).thenReturn(stays)
 
-        val result = resolver.stays(2, 5)
+        val result = resolver.stays(null, 2, 5)
 
         assertEquals(1, result.size)
         assertEquals("Cozy Cabin", result[0].name)
-        Mockito.verify(stayService).getAllStays(2, 5)
+        Mockito.verify(stayService).searchStays(anyArg(), eqArg(2), eqArg(5))
     }
 
     @Test
     fun staysReturnsEmptyListWhenNoResults() {
-        Mockito.`when`(stayService.getAllStays(0, 20)).thenReturn(emptyList())
+        Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(emptyList())
 
-        val result = resolver.stays(0, 20)
+        val result = resolver.stays(null, 0, 20)
 
         assertEquals(0, result.size)
     }

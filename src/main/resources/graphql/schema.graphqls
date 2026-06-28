@@ -22,8 +22,8 @@ type Query {
     "Returns a single host by ID."
     host(id: Int!): Host
 
-    "Returns a paginated list of stays."
-    stays(page: Int = 0, size: Int = 20): [Stay!]!
+    "Returns a paginated list of stays, with optional search filters."
+    stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): [Stay!]!
     "Returns a single stay by ID."
     stay(id: Int!): Stay
 

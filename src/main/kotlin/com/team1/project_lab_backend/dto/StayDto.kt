@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.dto
 
 import com.team1.project_lab_backend.models.PropertyType
 import java.math.BigDecimal
+import java.time.LocalDate
 
 data class StayRequest(
     val name: String,
@@ -21,6 +22,17 @@ data class StayRequest(
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
     val travelerExperienceIds: Set<Int> = emptySet()
+)
+
+data class StayFilter(
+    val city: String? = null,
+    val countryCode: String? = null,
+    val propertyType: PropertyType? = null,
+    val minPricePerNight: BigDecimal? = null,
+    val maxPricePerNight: BigDecimal? = null,
+    val checkIn: LocalDate? = null,
+    val checkOut: LocalDate? = null,
+    val guests: Int? = null,
 )
 
 data class StayResponse(

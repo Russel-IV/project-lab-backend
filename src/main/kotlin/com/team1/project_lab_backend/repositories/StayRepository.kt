@@ -2,9 +2,10 @@ package com.team1.project_lab_backend.repositories
 
 import com.team1.project_lab_backend.models.Stay
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 
-interface StayRepository : JpaRepository<Stay, Int> {
+interface StayRepository : JpaRepository<Stay, Int>, JpaSpecificationExecutor<Stay> {
 
     @Query("SELECT DISTINCT s FROM Stay s LEFT JOIN FETCH s.host WHERE s.id IN :ids")
     fun findByIdInWithHost(ids: List<Int>): List<Stay>

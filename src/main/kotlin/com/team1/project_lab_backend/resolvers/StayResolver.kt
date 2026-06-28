@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.resolvers
 
 import com.team1.project_lab_backend.dto.AddressRequest
+import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Stay
@@ -11,15 +12,17 @@ import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.stereotype.Controller
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @Controller
 class StayResolver(private val stayService: StayService) {
 
     @QueryMapping
     fun stays(
+        @Argument filter: StayFilterInput?,
         @Argument page: Int?,
         @Argument size: Int?,
-    ): List<Stay> = stayService.getAllStays(page ?: 0, size ?: 20)
+    ): List<Stay> = stayService.searchStays(filter?.toFilter() ?: StayFilter(), page ?: 0, size ?: 20)
 
     @QueryMapping
     fun stay(@Argument id: Int): Stay? = stayService.getStayById(id)
@@ -144,5 +147,27 @@ data class UpdateStayInput(
         mealPlanIds = mealPlanIds,
         paymentTypeIds = paymentTypeIds,
         travelerExperienceIds = travelerExperienceIds,
+    )
+}
+
+data class StayFilterInput(
+    val city: String? = null,
+    val countryCode: String? = null,
+    val propertyType: PropertyType? = null,
+    val minPricePerNight: BigDecimal? = null,
+    val maxPricePerNight: BigDecimal? = null,
+    val checkIn: LocalDate? = null,
+    val checkOut: LocalDate? = null,
+    val guests: Int? = null,
+) {
+    fun toFilter() = StayFilter(
+        city = city,
+        countryCode = countryCode,
+        propertyType = propertyType,
+        minPricePerNight = minPricePerNight,
+        maxPricePerNight = maxPricePerNight,
+        checkIn = checkIn,
+        checkOut = checkOut,
+        guests = guests,
     )
 }

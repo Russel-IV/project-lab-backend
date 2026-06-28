@@ -1,7 +1,11 @@
 package com.team1.project_lab_backend.services
 
+import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.Address
+import com.team1.project_lab_backend.models.Booking
+import com.team1.project_lab_backend.models.BookingStatus
+import com.team1.project_lab_backend.models.Room
 import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.repositories.AccessibilityRepository
 import com.team1.project_lab_backend.repositories.AmenityRepository
@@ -20,13 +24,17 @@ import com.team1.project_lab_backend.util.requireInRange
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import jakarta.persistence.criteria.JoinType
+import jakarta.persistence.criteria.Predicate
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @Service
 class StayService(
@@ -41,8 +49,11 @@ class StayService(
     private val travelerExperienceRepository: TravelerExperienceRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllStays(page: Int = 0, size: Int = 20): List<Stay> =
-        stayRepository.findAll(PageRequest.of(page, size)).content
+    fun searchStays(filter: StayFilter, page: Int = 0, size: Int = 20): List<Stay> {
+        validateFilter(filter)
+        val spec = buildSpec(filter)
+        return stayRepository.findAll(spec, PageRequest.of(page, size)).content
+    }
 
     @Transactional(readOnly = true)
     fun getStayById(id: Int): Stay {
@@ -152,4 +163,104 @@ class StayService(
         }
         return entities.toMutableSet()
     }
+
+    private fun validateFilter(filter: StayFilter) {
+        val hasCheckIn = filter.checkIn != null
+        val hasCheckOut = filter.checkOut != null
+        if (hasCheckIn && !hasCheckOut)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOut is required when checkIn is provided")
+        if (!hasCheckIn && hasCheckOut)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkIn is required when checkOut is provided")
+        if (hasCheckIn && hasCheckOut && !filter.checkOut!!.isAfter(filter.checkIn))
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOut must be after checkIn")
+        filter.minPricePerNight?.let {
+            if (it < BigDecimal.ZERO)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "minPricePerNight must not be negative")
+        }
+        filter.maxPricePerNight?.let {
+            if (it < BigDecimal.ZERO)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "maxPricePerNight must not be negative")
+        }
+        if (filter.minPricePerNight != null && filter.maxPricePerNight != null
+            && filter.minPricePerNight > filter.maxPricePerNight
+        ) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "minPricePerNight must not exceed maxPricePerNight")
+        filter.guests?.let {
+            if (it < 1)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "guests must be at least 1")
+        }
+    }
+
+    private fun buildSpec(filter: StayFilter): Specification<Stay> =
+        Specification { root, query, cb ->
+            val predicates = mutableListOf<Predicate>()
+
+            if (filter.city != null || filter.countryCode != null) {
+                val address = root.join<Stay, Address>("address", JoinType.INNER)
+                filter.city?.let {
+                    predicates += cb.like(cb.lower(address.get("city")), "%${it.lowercase()}%")
+                }
+                filter.countryCode?.let {
+                    predicates += cb.equal(cb.lower(address.get<String>("countryCode")), it.lowercase())
+                }
+            }
+
+            filter.propertyType?.let {
+                predicates += cb.equal(root.get<Any>("propertyType"), it)
+            }
+
+            filter.maxPricePerNight?.let { max ->
+                val sub = query!!.subquery(Int::class.java)
+                val room = sub.from(Room::class.java)
+                sub.select(cb.literal(1)).where(
+                    cb.equal(room.get<Int>("stayId"), root.get<Int>("id")),
+                    cb.le(room.get<BigDecimal>("price"), max),
+                )
+                predicates += cb.exists(sub)
+            }
+
+            filter.minPricePerNight?.let { min ->
+                val sub = query!!.subquery(Int::class.java)
+                val room = sub.from(Room::class.java)
+                sub.select(cb.literal(1)).where(
+                    cb.equal(room.get<Int>("stayId"), root.get<Int>("id")),
+                    cb.ge(room.get<BigDecimal>("price"), min),
+                )
+                predicates += cb.exists(sub)
+            }
+
+            if (filter.checkIn != null && filter.checkOut != null) {
+                val checkIn: LocalDate = filter.checkIn
+                val checkOut: LocalDate = filter.checkOut
+                val minSleeps = filter.guests ?: 1
+                val sub = query!!.subquery(Int::class.java)
+                val room = sub.from(Room::class.java)
+                val conflictSub = sub.subquery(Int::class.java)
+                val booking = conflictSub.from(Booking::class.java)
+                val bookingRoom = booking.join<Booking, Room>("rooms")
+                conflictSub.select(cb.literal(1)).where(
+                    cb.equal(bookingRoom.get<Int>("id"), room.get<Int>("id")),
+                    booking.get<BookingStatus>("status").`in`(
+                        listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
+                    ),
+                    cb.lessThan(booking.get("checkInDate"), checkOut),
+                    cb.greaterThan(booking.get("checkOutDate"), checkIn),
+                )
+                sub.select(cb.literal(1)).where(
+                    cb.equal(room.get<Int>("stayId"), root.get<Int>("id")),
+                    cb.ge(room.get<Int>("sleeps"), minSleeps),
+                    cb.not(cb.exists(conflictSub)),
+                )
+                predicates += cb.exists(sub)
+            } else if (filter.guests != null) {
+                val sub = query!!.subquery(Int::class.java)
+                val room = sub.from(Room::class.java)
+                sub.select(cb.literal(1)).where(
+                    cb.equal(room.get<Int>("stayId"), root.get<Int>("id")),
+                    cb.ge(room.get<Int>("sleeps"), filter.guests),
+                )
+                predicates += cb.exists(sub)
+            }
+
+            if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
+        }
 }

@@ -88,6 +88,26 @@ input UpdateStayInput {
     travelerExperienceIds: [Int!]! = []
 }
 
+"Search and availability filter for the stays query. All fields are optional and combined with AND logic."
+input StayFilterInput {
+    "Case-insensitive city name substring match."
+    city: String
+    "Exact ISO 3166-1 alpha-2 country code match (e.g. 'US', 'GB')."
+    countryCode: String
+    "Limit results to a specific property category."
+    propertyType: PropertyType
+    "Require at least one room with a nightly rate at or below this amount."
+    maxPricePerNight: BigDecimal
+    "Require at least one room with a nightly rate at or above this amount."
+    minPricePerNight: BigDecimal
+    "Availability check start date. Must be provided together with checkOut."
+    checkIn: Date
+    "Availability check end date. Must be provided together with checkIn."
+    checkOut: Date
+    "Minimum number of guests that at least one available room must accommodate."
+    guests: Int
+}
+
 "Input for updating a stay picture's metadata. Does not replace the image file."
 input UpdateStayPictureInput {
     "Optional descriptive caption."
