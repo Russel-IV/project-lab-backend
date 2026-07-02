@@ -158,7 +158,7 @@ INSERT INTO stay (
     id, name, about, property_type, is_refundable,
     star_rating, days_from_booking_cancellation_deadline,
     policies_text, important_information,
-    host_id, address_id, property_brand_id
+    host_id, address_id, property_brand_id, location
 ) VALUES
 (1,
     'Cozy Beachfront House',
@@ -166,35 +166,40 @@ INSERT INTO stay (
     'HOME', true, 4.5, 5,
     'No pets. Quiet hours 10 PM–8 AM.',
     'Check-in after 3 PM. Beach towels provided.',
-    1, 1, 1),
+    1, 1, 1,
+    ST_GeogFromText('SRID=4326;POINT(-80.1918 25.7617)')),   -- Miami, FL
 (2,
     'Luxury Tokyo Sky Hotel',
     'High-rise hotel overlooking the city lights of Shinjuku.',
     'HOTEL', false, 5.0, 2,
     'No smoking. No parties.',
     'Passport required at check-in. Concierge available 24/7.',
-    3, 2, 3),
+    3, 2, 3,
+    ST_GeogFromText('SRID=4326;POINT(139.7000 35.6942)')),   -- Tokyo, JP
 (3,
     'Charming Mountain Cabin',
     'A quiet retreat surrounded by pine forests. Ideal for nature lovers.',
     'HOME', true, 4.0, 7,
     'No loud music after 10 PM.',
     'Bring warm clothes. Firewood is provided.',
-    4, 3, 1),
+    4, 3, 1,
+    ST_GeogFromText('SRID=4326;POINT(-71.6127 -33.0472)')),  -- Valparaíso, CL
 (4,
     'Parisian Boutique Hotel',
     'Elegant 19th-century building steps from the Louvre.',
     'HOTEL', true, 4.8, 3,
     'No smoking. No pets.',
     'Breakfast served 7–10 AM. Late checkout upon request.',
-    1, 4, 2),
+    1, 4, 2,
+    ST_GeogFromText('SRID=4326;POINT(2.3522 48.8566)')),     -- Paris, FR
 (5,
     'Bali Jungle Retreat',
     'Private villa surrounded by rice paddies and tropical jungle.',
     'HOME', false, 4.3, 14,
     'Respect local customs. No loud music.',
     'Airport transfer available. Pool heated on request.',
-    3, 5, 1)
+    3, 5, 1,
+    ST_GeogFromText('SRID=4326;POINT(115.2625 -8.5069)'))    -- Ubud, Bali, ID
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('stay', 'id'), COALESCE(MAX(id), 1)) FROM stay;
 
@@ -252,13 +257,14 @@ SELECT setval(pg_get_serial_sequence('stay_picture', 'id'), COALESCE(MAX(id), 1)
 -- 7. BOOKINGS  (all four statuses covered)
 -- ============================================================
 
-INSERT INTO booking (id, user_id, check_in_date, check_out_date, status, guests_count, created_at) VALUES
-(1, 2, '2027-01-15', '2027-01-20', 'CONFIRMED', 2, '2026-06-01 10:00:00'),  -- Bob  → Beachfront Suite (upcoming)
-(2, 5, '2027-02-10', '2027-02-14', 'CONFIRMED', 1, '2026-06-05 14:30:00'),  -- David → Standard King (upcoming)
-(3, 2, '2027-03-01', '2027-03-05', 'PENDING',   3, '2026-06-10 09:00:00'),  -- Bob  → Paris: Classic Double + Superior Suite (multi-room)
-(4, 6, '2026-08-01', '2026-08-07', 'CANCELLED', 4, '2026-05-20 11:00:00'),  -- Emma → Mountain Loft (cancelled)
-(5, 5, '2026-04-05', '2026-04-12', 'COMPLETED', 2, '2026-03-01 16:00:00'),  -- David → Bali villa (past, completed)
-(6, 7, '2027-04-20', '2027-04-25', 'CONFIRMED', 1, '2026-06-15 08:00:00')   -- Frank → Executive Penthouse (upcoming)
+-- total_price = sum(room prices) × nights
+INSERT INTO booking (id, user_id, check_in_date, check_out_date, status, guests_count, created_at, total_price) VALUES
+(1, 2, '2027-01-15', '2027-01-20', 'CONFIRMED', 2, '2026-06-01 10:00:00',  602.50),  -- Bob  → Beachfront Suite $120.50 × 5 nights
+(2, 5, '2027-02-10', '2027-02-14', 'CONFIRMED', 1, '2026-06-05 14:30:00', 1400.00),  -- David → Standard King $350.00 × 4 nights
+(3, 2, '2027-03-01', '2027-03-05', 'PENDING',   3, '2026-06-10 09:00:00', 2800.00),  -- Bob  → Classic Double $220 + Superior Suite $480 = $700 × 4 nights
+(4, 6, '2026-08-01', '2026-08-07', 'CANCELLED', 4, '2026-05-20 11:00:00',  510.00),  -- Emma → Mountain Loft $85.00 × 6 nights
+(5, 5, '2026-04-05', '2026-04-12', 'COMPLETED', 2, '2026-03-01 16:00:00', 1225.00),  -- David → Jungle Pool Villa $175.00 × 7 nights
+(6, 7, '2027-04-20', '2027-04-25', 'CONFIRMED', 1, '2026-06-15 08:00:00', 6000.00)   -- Frank → Executive Penthouse $1200.00 × 5 nights
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('booking', 'id'), COALESCE(MAX(id), 1)) FROM booking;
 
@@ -276,13 +282,13 @@ ON CONFLICT DO NOTHING;
 -- 8. REVIEWS
 -- ============================================================
 
-INSERT INTO review (id, text, user_id, stay_id) VALUES
-(1, 'Amazing stay! The ocean view was stunning and the host was incredibly welcoming.',      2, 1),
-(2, 'Incredible service and breathtaking views. The penthouse is worth every penny.',       7, 2),
-(3, 'Standard King was spotless. Tokyo from the 32nd floor at night is pure magic.',        5, 2),
-(4, 'Cold during winter but the cabin fireplace kept us warm. Absolutely beautiful.',        2, 3),
-(5, 'Bali exceeded all expectations. The pool villa is a dream. Will definitely be back!',  5, 5),
-(6, 'Paris was magical. Hotel perfectly located and the staff are wonderfully attentive.',   6, 4)
+INSERT INTO review (id, text, user_id, stay_id, rating) VALUES
+(1, 'Amazing stay! The ocean view was stunning and the host was incredibly welcoming.',      2, 1, 5),
+(2, 'Incredible service and breathtaking views. The penthouse is worth every penny.',       7, 2, 5),
+(3, 'Standard King was spotless. Tokyo from the 32nd floor at night is pure magic.',        5, 2, 4),
+(4, 'Cold during winter but the cabin fireplace kept us warm. Absolutely beautiful.',        2, 3, 4),
+(5, 'Bali exceeded all expectations. The pool villa is a dream. Will definitely be back!',  5, 5, 5),
+(6, 'Paris was magical. Hotel perfectly located and the staff are wonderfully attentive.',   6, 4, 5)
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('review', 'id'), COALESCE(MAX(id), 1)) FROM review;
 
