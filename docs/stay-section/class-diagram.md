@@ -35,6 +35,7 @@ classDiagram
         +int days_from_booking_cancellation_deadline
         +string policies_text
         +string important_information
+        +geography location
     }
 
     class ROOM {
@@ -54,6 +55,7 @@ classDiagram
         +booking_status status
         +int guests_count
         +datetime created_at
+        +decimal total_price
     }
 
     class STAY_PICTURE {
@@ -69,6 +71,7 @@ classDiagram
     class REVIEW {
         +int id
         +string text
+        +int rating
     }
 
     class LANGUAGE {

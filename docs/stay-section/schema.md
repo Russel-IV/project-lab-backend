@@ -35,6 +35,7 @@ erDiagram
         text important_information
         int host_id FK
         int address_id FK
+        geography location "POINT(lng lat), SRID 4326, nullable"
     }
 
     ROOM {
@@ -56,6 +57,7 @@ erDiagram
         booking_status status
         int guests_count
         datetime created_at
+        decimal total_price "captured at booking time, immutable"
     }
 
     BOOKING_ROOM {
@@ -77,6 +79,7 @@ erDiagram
         text text
         int user_id FK
         int stay_id FK
+        int rating "1–5, NOT NULL DEFAULT 3"
     }
 
     LANGUAGE {
