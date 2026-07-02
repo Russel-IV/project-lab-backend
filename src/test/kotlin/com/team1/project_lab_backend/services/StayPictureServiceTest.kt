@@ -20,13 +20,12 @@ class StayPictureServiceTest {
 
     private val stayPictureRepository = Mockito.mock(StayPictureRepository::class.java)
     private val stayRepository = Mockito.mock(StayRepository::class.java)
+    private val storageService = Mockito.mock(StorageService::class.java)
 
-    private val uploadDir = System.getProperty("java.io.tmpdir")
-
-    private val service = StayPictureService(stayPictureRepository, stayRepository, uploadDir)
+    private val service = StayPictureService(stayPictureRepository, stayRepository, storageService)
 
     private fun picture(id: Int = 1, stayId: Int = 10, isPrimary: Boolean = false) =
-        StayPicture(id = id, stayId = stayId, url = "/uploads/stays/$stayId/photo.jpg",
+        StayPicture(id = id, stayId = stayId, url = "stays/$stayId/photo.jpg",
             caption = null, isPrimary = isPrimary, displayOrder = 0)
 
     private fun imageFile(name: String = "photo.jpg") =

@@ -5,24 +5,19 @@ import com.team1.project_lab_backend.models.StayPicture
 import com.team1.project_lab_backend.repositories.StayPictureRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
 
 @Service
 class StayPictureService(
     private val stayPictureRepository: StayPictureRepository,
     private val stayRepository: StayRepository,
-    @Value("\${app.upload.dir}") private val uploadDir: String
+    private val storageService: StorageService,
 ) {
     @Transactional(readOnly = true)
     fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
@@ -54,10 +49,10 @@ class StayPictureService(
         if (isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
         }
-        val url = saveFile(file, stayId)
+        val key = storageService.save(file, stayId)
         val picture = StayPicture(
-            id = 0, stayId = stayId, url = url,
-            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder
+            id = 0, stayId = stayId, url = key,
+            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
         )
         return stayPictureRepository.save(picture).toResponse()
     }
@@ -69,7 +64,7 @@ class StayPictureService(
         file: MultipartFile?,
         caption: String?,
         isPrimary: Boolean,
-        displayOrder: Int
+        displayOrder: Int,
     ): StayPictureResponse {
         stayId.requirePositive("stayId")
         id.requirePositive()
@@ -79,22 +74,29 @@ class StayPictureService(
         if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
         }
-        val url = if (file != null && !file.isEmpty) {
+        val key = if (file != null && !file.isEmpty) {
             validateImageFile(file)
-            deleteFile(existing.url)
-            saveFile(file, stayId)
+            storageService.delete(existing.url)
+            storageService.save(file, stayId)
         } else {
             existing.url
         }
         val updated = StayPicture(
-            id = id, stayId = stayId, url = url,
-            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder
+            id = id, stayId = stayId, url = key,
+            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
         )
         return stayPictureRepository.save(updated).toResponse()
     }
 
     @Transactional
-    fun updatePictureMetadata(stayId: Int, id: Int, caption: String?, isPrimary: Boolean, displayOrder: Int, requestingUserId: Int): StayPicture {
+    fun updatePictureMetadata(
+        stayId: Int,
+        id: Int,
+        caption: String?,
+        isPrimary: Boolean,
+        displayOrder: Int,
+        requestingUserId: Int,
+    ): StayPicture {
         stayId.requirePositive("stayId")
         id.requirePositive()
         displayOrder.requireNonNegative("displayOrder")
@@ -128,7 +130,7 @@ class StayPictureService(
         val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         stayPictureRepository.deleteById(id)
-        deleteFile(existing.url)
+        storageService.delete(existing.url)
     }
 
     private fun validateImageFile(file: MultipartFile) {
@@ -139,29 +141,13 @@ class StayPictureService(
         }
     }
 
-    private fun saveFile(file: MultipartFile, stayId: Int): String {
-        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val filename = "${UUID.randomUUID()}.$ext"
-        val dir = Path.of(uploadDir).toAbsolutePath().resolve("stays/$stayId")
-        Files.createDirectories(dir)
-        file.inputStream.use { Files.copy(it, dir.resolve(filename)) }
-        return "/uploads/stays/$stayId/$filename"
-    }
-
-    private fun deleteFile(url: String) {
-        try {
-            val relativePath = url.removePrefix("/uploads/")
-            Files.deleteIfExists(Path.of(uploadDir).toAbsolutePath().resolve(relativePath))
-        } catch (_: Exception) {}
-    }
+    private fun StayPicture.toResponse(): StayPictureResponse =
+        StayPictureResponse(
+            id = id,
+            stayId = stayId,
+            url = storageService.toUrl(url),
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 }
-
-private fun StayPicture.toResponse(): StayPictureResponse =
-    StayPictureResponse(
-        id = id,
-        stayId = stayId,
-        url = url,
-        caption = caption,
-        isPrimary = isPrimary,
-        displayOrder = displayOrder
-    )
