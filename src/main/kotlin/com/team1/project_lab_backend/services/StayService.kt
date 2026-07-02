@@ -4,6 +4,7 @@ import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.Address
 import com.team1.project_lab_backend.models.Booking
+import org.locationtech.jts.geom.Point
 import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.models.Room
 import com.team1.project_lab_backend.models.Stay
@@ -103,6 +104,12 @@ class StayService(
         request.mealPlanIds.requireAllPositive("mealPlanIds")
         request.paymentTypeIds.requireAllPositive("paymentTypeIds")
         request.travelerExperienceIds.requireAllPositive("travelerExperienceIds")
+        request.location?.let {
+            if (it.y !in -90.0..90.0)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "latitude must be between -90 and 90")
+            if (it.x !in -180.0..180.0)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "longitude must be between -180 and 180")
+        }
     }
 
     private fun buildStay(id: Int, request: StayRequest, existingAddressId: Int = 0): Stay {
@@ -148,6 +155,7 @@ class StayService(
             mealPlans = mealPlans,
             paymentTypes = paymentTypes,
             travelerExperiences = travelerExperiences,
+            location = request.location,
         )
     }
 

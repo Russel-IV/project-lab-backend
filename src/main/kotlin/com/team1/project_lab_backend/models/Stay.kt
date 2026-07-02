@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*
 import java.math.BigDecimal
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import org.locationtech.jts.geom.Point
 
 enum class PropertyType {
     HOTEL, HOME
@@ -112,5 +113,8 @@ open class Stay(
         inverseJoinColumns = [JoinColumn(name = "traveler_experience_id")]
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    open val travelerExperiences: MutableSet<TravelerExperience> = mutableSetOf()
+    open val travelerExperiences: MutableSet<TravelerExperience> = mutableSetOf(),
+
+    @Column(columnDefinition = "geography(Point, 4326)")
+    open val location: Point? = null,
 )

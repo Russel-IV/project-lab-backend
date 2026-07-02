@@ -1,0 +1,3 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+ALTER TABLE stay ADD COLUMN location GEOGRAPHY(POINT, 4326);
+CREATE INDEX idx_stay_location ON stay USING GIST(location);

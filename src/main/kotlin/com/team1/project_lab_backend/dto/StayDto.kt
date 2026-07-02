@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.dto
 import com.team1.project_lab_backend.models.PropertyType
 import java.math.BigDecimal
 import java.time.LocalDate
+import org.locationtech.jts.geom.Point
 
 data class StayRequest(
     val name: String,
@@ -21,7 +22,8 @@ data class StayRequest(
     val accessibilityIds: Set<Int> = emptySet(),
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
-    val travelerExperienceIds: Set<Int> = emptySet()
+    val travelerExperienceIds: Set<Int> = emptySet(),
+    val location: Point? = null,
 )
 
 data class StayFilter(

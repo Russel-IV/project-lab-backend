@@ -3,6 +3,10 @@ package com.team1.project_lab_backend.services
 import com.team1.project_lab_backend.dto.AddressRequest
 import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.PrecisionModel
 import com.team1.project_lab_backend.models.Address
 import com.team1.project_lab_backend.models.Host
 import com.team1.project_lab_backend.models.PropertyType
@@ -194,7 +198,27 @@ class StayServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
 
-    // ---- searchStays validation ----
+    private fun point(lat: Double, lng: Double): Point =
+        GeometryFactory(PrecisionModel(), 4326).createPoint(Coordinate(lng, lat))
+
+    @Test
+    fun createStayRejectsLatitudeOutOfRange() {
+        val request = baseRequest().copy(location = point(91.0, 0.0))
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.createStay(request, 1)
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun createStayRejectsLongitudeOutOfRange() {
+        val request = baseRequest().copy(location = point(0.0, 181.0))
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            stayService.createStay(request, 1)
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
 
     @Test
     fun searchStaysRejectsCheckInWithoutCheckOut() {

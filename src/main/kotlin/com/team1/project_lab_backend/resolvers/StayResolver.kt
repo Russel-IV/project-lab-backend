@@ -7,9 +7,14 @@ import com.team1.project_lab_backend.models.PropertyType
 import com.team1.project_lab_backend.models.Stay
 import com.team1.project_lab_backend.services.StayService
 import com.team1.project_lab_backend.util.requireAuthenticated
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -45,6 +50,17 @@ class StayResolver(private val stayService: StayService) {
         stayService.deleteStay(id, currentUser.id)
         return true
     }
+
+    @SchemaMapping(typeName = "Stay", field = "location")
+    fun location(stay: Stay): LocationOutput? =
+        stay.location?.let { LocationOutput(latitude = it.y, longitude = it.x) }
+}
+
+data class LocationOutput(val latitude: Double, val longitude: Double)
+
+data class LocationInput(val latitude: Double, val longitude: Double) {
+    fun toPoint(): Point = GeometryFactory(PrecisionModel(), 4326)
+        .createPoint(Coordinate(longitude, latitude))
 }
 
 data class StayAddressInput(
@@ -74,6 +90,7 @@ data class CreateStayInput(
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
     val travelerExperienceIds: Set<Int> = emptySet(),
+    val location: LocationInput? = null,
 ) {
     fun toRequest() = StayRequest(
         name = name,
@@ -100,6 +117,7 @@ data class CreateStayInput(
         mealPlanIds = mealPlanIds,
         paymentTypeIds = paymentTypeIds,
         travelerExperienceIds = travelerExperienceIds,
+        location = location?.toPoint(),
     )
 }
 
@@ -121,6 +139,7 @@ data class UpdateStayInput(
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
     val travelerExperienceIds: Set<Int> = emptySet(),
+    val location: LocationInput? = null,
 ) {
     fun toRequest() = StayRequest(
         name = name,
@@ -147,6 +166,7 @@ data class UpdateStayInput(
         mealPlanIds = mealPlanIds,
         paymentTypeIds = paymentTypeIds,
         travelerExperienceIds = travelerExperienceIds,
+        location = location?.toPoint(),
     )
 }
 

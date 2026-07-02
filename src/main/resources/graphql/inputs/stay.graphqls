@@ -48,6 +48,8 @@ input CreateStayInput {
     paymentTypeIds: [Int!]! = []
     "IDs of traveler experience categories."
     travelerExperienceIds: [Int!]! = []
+    "Geographic coordinates of the property. Omit to leave unset."
+    location: LocationInput
 }
 
 "Input for updating an existing stay listing. Replaces all provided fields."
@@ -86,6 +88,16 @@ input UpdateStayInput {
     paymentTypeIds: [Int!]! = []
     "Updated list of traveler experience IDs."
     travelerExperienceIds: [Int!]! = []
+    "Updated geographic coordinates. Omit to clear the location."
+    location: LocationInput
+}
+
+"WGS-84 geographic coordinates input."
+input LocationInput {
+    "Latitude in decimal degrees (-90 to 90)."
+    latitude: Float!
+    "Longitude in decimal degrees (-180 to 180)."
+    longitude: Float!
 }
 
 "Search and availability filter for the stays query. All fields are optional and combined with AND logic."

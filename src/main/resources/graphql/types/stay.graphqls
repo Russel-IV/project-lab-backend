@@ -41,6 +41,16 @@ type Stay {
     travelerExperiences: [TravelerExperience!]!
     "Lowest nightly price across all rooms. Null if no rooms are defined."
     startingFromPrice: BigDecimal
+    "WGS-84 geographic coordinates of the property. Null if not yet geocoded."
+    location: Location
+}
+
+"WGS-84 geographic coordinates (latitude/longitude)."
+type Location {
+    "Latitude in decimal degrees (-90 to 90)."
+    latitude: Float!
+    "Longitude in decimal degrees (-180 to 180)."
+    longitude: Float!
 }
 
 "Physical address of a stay."
