@@ -18,7 +18,7 @@ services:
                 condition: service_healthy
 
     project-lab-database:
-        image: postgres:16
+        image: postgis/postgis:16-3.4
         container_name: project-lab-database
         ports:
             - "${POSTGRES_PORT}:5432"
