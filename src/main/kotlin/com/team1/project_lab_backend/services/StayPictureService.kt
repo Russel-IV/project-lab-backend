@@ -31,6 +31,8 @@ class StayPictureService(
         return stayPictureRepository.findByStayId(stayId)
     }
 
+    fun resolveUrl(stayPicture: StayPicture): String = storageService.toUrl(stayPicture.url)
+
     @Transactional
     fun addPicture(
         stayId: Int,
@@ -54,38 +56,12 @@ class StayPictureService(
             id = 0, stayId = stayId, url = key,
             caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
         )
-        return stayPictureRepository.save(picture).toResponse()
-    }
-
-    @Transactional
-    fun updatePicture(
-        stayId: Int,
-        id: Int,
-        file: MultipartFile?,
-        caption: String?,
-        isPrimary: Boolean,
-        displayOrder: Int,
-    ): StayPictureResponse {
-        stayId.requirePositive("stayId")
-        id.requirePositive()
-        displayOrder.requireNonNegative("displayOrder")
-        val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
+        try {
+            return stayPictureRepository.save(picture).toResponse()
+        } catch (e: Exception) {
+            runCatching { storageService.delete(key) }
+            throw e
         }
-        val key = if (file != null && !file.isEmpty) {
-            validateImageFile(file)
-            storageService.delete(existing.url)
-            storageService.save(file, stayId)
-        } else {
-            existing.url
-        }
-        val updated = StayPicture(
-            id = id, stayId = stayId, url = key,
-            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
-        )
-        return stayPictureRepository.save(updated).toResponse()
     }
 
     @Transactional
@@ -139,6 +115,10 @@ class StayPictureService(
         if (!contentType.startsWith("image/")) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file must be an image (got: $contentType)")
         }
+        val ext = file.originalFilename?.substringAfterLast('.', "")?.lowercase() ?: ""
+        if (ext !in ALLOWED_EXTENSIONS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported image extension: .$ext")
+        }
     }
 
     private fun StayPicture.toResponse(): StayPictureResponse =
@@ -150,4 +130,8 @@ class StayPictureService(
             isPrimary = isPrimary,
             displayOrder = displayOrder,
         )
+
+    companion object {
+        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp", "avif")
+    }
 }

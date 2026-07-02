@@ -89,6 +89,28 @@ class StayPictureServiceTest {
     }
 
     @Test
+    fun addPictureRejectsDisallowedExtension() {
+        stubStay()
+        val html = MockMultipartFile("file", "exploit.html", "image/jpeg", ByteArray(8) { 0 })
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            service.addPicture(10, html, null, false, 0, 1)
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun addPictureRejectsPhpExtension() {
+        stubStay()
+        val php = MockMultipartFile("file", "shell.php", "image/jpeg", ByteArray(8) { 0 })
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            service.addPicture(10, php, null, false, 0, 1)
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
     fun addPictureRejectsNegativeDisplayOrder() {
         stubStay()
 
