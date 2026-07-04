@@ -1,8 +1,10 @@
 package com.team1.project_lab_backend.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -30,6 +32,7 @@ open class Booking(
     open val checkOutDate: LocalDate,
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     open val status: BookingStatus = BookingStatus.PENDING,
 

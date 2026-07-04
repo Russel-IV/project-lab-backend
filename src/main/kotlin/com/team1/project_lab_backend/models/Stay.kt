@@ -3,8 +3,10 @@ package com.team1.project_lab_backend.models
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
 import java.math.BigDecimal
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import org.hibernate.type.SqlTypes
 import org.locationtech.jts.geom.Point
 
 enum class PropertyType {
@@ -26,6 +28,7 @@ open class Stay(
     open val about: String? = null,
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "property_type", nullable = false)
     open val propertyType: PropertyType,
 
