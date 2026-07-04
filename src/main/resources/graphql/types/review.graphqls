@@ -7,6 +7,26 @@ type Review {
     rating: Int!
     "ID of the user who wrote the review."
     userId: Int!
+    "The user who wrote the review."
+    user: User!
     "ID of the stay being reviewed."
     stayId: Int!
+}
+
+"Rating distribution and average for a stay's full review set."
+type ReviewSummary {
+    "Total number of reviews."
+    count: Int!
+    "Average rating across all reviews, or null if there are no reviews."
+    average: BigDecimal
+    "Number of reviews with a rating of 1."
+    oneStar: Int!
+    "Number of reviews with a rating of 2."
+    twoStar: Int!
+    "Number of reviews with a rating of 3."
+    threeStar: Int!
+    "Number of reviews with a rating of 4."
+    fourStar: Int!
+    "Number of reviews with a rating of 5."
+    fiveStar: Int!
 }

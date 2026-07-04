@@ -41,6 +41,10 @@ type Query {
 
     "Returns a paginated list of all reviews."
     reviews(page: Int = 0, size: Int = 20): [Review!]!
+    "Returns a paginated list of reviews for a given stay."
+    reviewsByStay(stayId: Int!, page: Int = 0, size: Int = 20): [Review!]!
+    "Returns the rating distribution and average for a stay's full review set, independent of pagination."
+    reviewSummary(stayId: Int!): ReviewSummary!
 
     "Returns all available amenities."
     amenities: [Amenity!]!

@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.ReviewRequest
+import com.team1.project_lab_backend.dto.ReviewSummary
 import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Service
 class ReviewService(
@@ -24,6 +27,36 @@ class ReviewService(
     @Transactional(readOnly = true)
     fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
         reviewRepository.findAll(PageRequest.of(page, size)).content
+
+    @Transactional(readOnly = true)
+    fun getReviewsByStay(stayId: Int, page: Int = 0, size: Int = 20): List<Review> {
+        stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(stayId, "stay not found")
+        return reviewRepository.findByStayId(stayId, PageRequest.of(page, size))
+    }
+
+    @Transactional(readOnly = true)
+    fun getReviewSummary(stayId: Int): ReviewSummary {
+        stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(stayId, "stay not found")
+        val counts = reviewRepository.countByRatingForStay(stayId).associate { it.rating to it.count }
+        val total = counts.values.sum()
+        val average = if (total == 0L) {
+            null
+        } else {
+            val weightedSum = counts.entries.sumOf { (rating, count) -> rating.toLong() * count }
+            BigDecimal(weightedSum).divide(BigDecimal(total), 2, RoundingMode.HALF_UP)
+        }
+        return ReviewSummary(
+            count = total.toInt(),
+            average = average,
+            oneStar = (counts[1] ?: 0L).toInt(),
+            twoStar = (counts[2] ?: 0L).toInt(),
+            threeStar = (counts[3] ?: 0L).toInt(),
+            fourStar = (counts[4] ?: 0L).toInt(),
+            fiveStar = (counts[5] ?: 0L).toInt(),
+        )
+    }
 
     @Transactional
     fun createReview(request: ReviewRequest): Review {

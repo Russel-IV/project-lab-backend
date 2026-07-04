@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.resolvers
 
 import com.team1.project_lab_backend.dto.ReviewRequest
+import com.team1.project_lab_backend.dto.ReviewSummary
 import com.team1.project_lab_backend.models.Review
 import com.team1.project_lab_backend.services.ReviewService
 import com.team1.project_lab_backend.util.requireAuthenticated
@@ -17,6 +18,16 @@ class ReviewResolver(private val reviewService: ReviewService) {
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Review> = reviewService.getAllReviews(page ?: 0, size ?: 20)
+
+    @QueryMapping
+    fun reviewsByStay(
+        @Argument stayId: Int,
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<Review> = reviewService.getReviewsByStay(stayId, page ?: 0, size ?: 20)
+
+    @QueryMapping
+    fun reviewSummary(@Argument stayId: Int): ReviewSummary = reviewService.getReviewSummary(stayId)
 
     @MutationMapping
     fun createReview(@Argument input: CreateReviewInput): Review {
