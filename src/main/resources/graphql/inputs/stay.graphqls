@@ -118,6 +118,14 @@ input StayFilterInput {
     checkOut: Date
     "Minimum number of guests that at least one available room must accommodate."
     guests: Int
+    "Limit results to properties with one of these star rating tiers (1-5). A property matches a tier if its starRating rounds to it."
+    starRatings: [Int!]
+    "Limit results to properties with a room having one of these bedroom counts. Use 4 to mean 4 or more bedrooms."
+    bedrooms: [Int!]
+    "Limit results to properties offering ALL of these property-level amenities (e.g. Wi-Fi, pool, parking, gym, pet-friendly)."
+    propertyAmenityIds: [Int!]
+    "Limit results to properties offering ALL of these in-room amenities (e.g. air conditioning, kitchen, balcony, private bathroom, washer) somewhere on the property."
+    roomAmenityIds: [Int!]
 }
 
 "Input for updating a stay picture's metadata. Does not replace the image file."

@@ -3,6 +3,8 @@ package com.team1.project_lab_backend.services
 import com.team1.project_lab_backend.dto.StayFilter
 import com.team1.project_lab_backend.dto.StayRequest
 import com.team1.project_lab_backend.models.Address
+import com.team1.project_lab_backend.models.Amenity
+import com.team1.project_lab_backend.models.AmenityType
 import com.team1.project_lab_backend.models.Booking
 import org.locationtech.jts.geom.Point
 import com.team1.project_lab_backend.models.BookingStatus
@@ -25,8 +27,11 @@ import com.team1.project_lab_backend.util.requireInRange
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
+import jakarta.persistence.criteria.Root
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaRepository
@@ -196,6 +201,31 @@ class StayService(
             if (it < 1)
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "guests must be at least 1")
         }
+        filter.starRatings?.let { tiers ->
+            if (tiers.any { it !in 1..5 })
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "starRatings must be between 1 and 5")
+        }
+        filter.bedrooms?.let { buckets ->
+            if (buckets.any { it < 1 })
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "bedrooms must be at least 1")
+        }
+        validateAmenityIds(filter.propertyAmenityIds, AmenityType.PROPERTY_AMENITY, "propertyAmenityIds")
+        validateAmenityIds(filter.roomAmenityIds, AmenityType.ROOM_AMENITY, "roomAmenityIds")
+    }
+
+    private fun validateAmenityIds(ids: List<Int>?, expectedType: AmenityType, fieldName: String) {
+        if (ids.isNullOrEmpty()) return
+        ids.requireAllPositive(fieldName)
+        val found = amenityRepository.findAllById(ids)
+        if (found.size != ids.toSet().size) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName contains unknown ids")
+        }
+        if (found.any { it.type != expectedType }) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "$fieldName must reference ${expectedType.name} amenities",
+            )
+        }
     }
 
     private fun buildSpec(filter: StayFilter): Specification<Stay> =
@@ -269,6 +299,54 @@ class StayService(
                 predicates += cb.exists(sub)
             }
 
+            filter.starRatings?.takeIf { it.isNotEmpty() }?.let { tiers ->
+                val tierPredicates = tiers.map { tier ->
+                    cb.and(
+                        cb.ge(root.get<BigDecimal>("starRating"), BigDecimal(tier) - BigDecimal("0.5")),
+                        cb.lt(root.get<BigDecimal>("starRating"), BigDecimal(tier) + BigDecimal("0.5")),
+                    )
+                }
+                predicates += cb.or(*tierPredicates.toTypedArray())
+            }
+
+            filter.bedrooms?.takeIf { it.isNotEmpty() }?.let { buckets ->
+                val sub = query!!.subquery(Int::class.java)
+                val room = sub.from(Room::class.java)
+                val bucketPredicates = buckets.map { bucket ->
+                    if (bucket >= 4) cb.ge(room.get<Int>("bedroomAmount"), 4)
+                    else cb.equal(room.get<Int>("bedroomAmount"), bucket)
+                }
+                sub.select(cb.literal(1)).where(
+                    cb.equal(room.get<Int>("stayId"), root.get<Int>("id")),
+                    cb.or(*bucketPredicates.toTypedArray()),
+                )
+                predicates += cb.exists(sub)
+            }
+
+            filter.propertyAmenityIds?.takeIf { it.isNotEmpty() }?.let {
+                predicates += hasAllAmenities(root, query!!, cb, it)
+            }
+
+            filter.roomAmenityIds?.takeIf { it.isNotEmpty() }?.let {
+                predicates += hasAllAmenities(root, query!!, cb, it)
+            }
+
             if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
         }
+
+    private fun hasAllAmenities(
+        root: Root<Stay>,
+        query: CriteriaQuery<*>,
+        cb: CriteriaBuilder,
+        amenityIds: List<Int>,
+    ): Predicate {
+        val sub = query.subquery(Long::class.java)
+        val staySub = sub.from(Stay::class.java)
+        val amenityJoin = staySub.join<Stay, Amenity>("amenities")
+        sub.select(cb.countDistinct(amenityJoin.get<Int>("id"))).where(
+            cb.equal(staySub.get<Int>("id"), root.get<Int>("id")),
+            amenityJoin.get<Int>("id").`in`(amenityIds),
+        )
+        return cb.equal(sub, amenityIds.distinct().size.toLong())
+    }
 }

@@ -35,6 +35,10 @@ data class StayFilter(
     val checkIn: LocalDate? = null,
     val checkOut: LocalDate? = null,
     val guests: Int? = null,
+    val starRatings: List<Int>? = null,
+    val bedrooms: List<Int>? = null,
+    val propertyAmenityIds: List<Int>? = null,
+    val roomAmenityIds: List<Int>? = null,
 )
 
 data class StayResponse(

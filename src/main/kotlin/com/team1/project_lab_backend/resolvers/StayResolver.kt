@@ -179,6 +179,10 @@ data class StayFilterInput(
     val checkIn: LocalDate? = null,
     val checkOut: LocalDate? = null,
     val guests: Int? = null,
+    val starRatings: List<Int>? = null,
+    val bedrooms: List<Int>? = null,
+    val propertyAmenityIds: List<Int>? = null,
+    val roomAmenityIds: List<Int>? = null,
 ) {
     fun toFilter() = StayFilter(
         city = city,
@@ -189,5 +193,9 @@ data class StayFilterInput(
         checkIn = checkIn,
         checkOut = checkOut,
         guests = guests,
+        starRatings = starRatings,
+        bedrooms = bedrooms,
+        propertyAmenityIds = propertyAmenityIds,
+        roomAmenityIds = roomAmenityIds,
     )
 }
