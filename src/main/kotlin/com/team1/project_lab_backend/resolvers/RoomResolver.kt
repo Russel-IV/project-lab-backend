@@ -29,7 +29,8 @@ class RoomResolver(private val roomService: RoomService) {
         @Argument stayId: Int,
         @Argument checkIn: LocalDate,
         @Argument checkOut: LocalDate,
-    ): List<Room> = roomService.getAvailableRooms(stayId, checkIn, checkOut)
+        @Argument guests: Int?,
+    ): List<Room> = roomService.getAvailableRooms(stayId, checkIn, checkOut, guests)
 
     @MutationMapping
     fun createRoom(@Argument stayId: Int, @Argument input: CreateRoomInput): Room {

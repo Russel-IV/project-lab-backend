@@ -91,12 +91,15 @@ class RoomService(
     }
 
     @Transactional(readOnly = true)
-    fun getAvailableRooms(stayId: Int, checkIn: LocalDate, checkOut: LocalDate): List<Room> {
+    fun getAvailableRooms(stayId: Int, checkIn: LocalDate, checkOut: LocalDate, guests: Int? = null): List<Room> {
         stayId.requirePositive("stayId")
         if (!checkOut.isAfter(checkIn)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOut must be after checkIn")
         }
-        return roomRepository.findAvailableRooms(stayId, checkIn, checkOut, ACTIVE_STATUSES)
+        guests?.let {
+            if (it < 1) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "guests must be at least 1")
+        }
+        return roomRepository.findAvailableRooms(stayId, checkIn, checkOut, ACTIVE_STATUSES, guests)
     }
 
     private fun validateRoomRequest(request: RoomRequest) {

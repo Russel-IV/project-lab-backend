@@ -29,3 +29,13 @@ input UpdateRoomInput {
     "Updated room size in square metres."
     size: BigDecimal
 }
+
+"Input for updating a room picture's metadata. Does not replace the image file."
+input UpdateRoomPictureInput {
+    "Optional descriptive caption."
+    caption: String
+    "Set to true to make this the cover photo for the room."
+    isPrimary: Boolean! = false
+    "Sort order for display. Lower values appear first."
+    displayOrder: Int! = 0
+}

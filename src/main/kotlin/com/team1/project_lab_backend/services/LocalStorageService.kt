@@ -12,11 +12,11 @@ class LocalStorageService(
     @Value("\${app.upload.dir}") private val uploadDir: String,
 ) : StorageService {
 
-    override fun save(file: MultipartFile, stayId: Int): String {
+    override fun save(file: MultipartFile, folder: String): String {
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
         val filename = "${UUID.randomUUID()}.$ext"
-        val key = "stays/$stayId/$filename"
-        val dir = Path.of(uploadDir).toAbsolutePath().resolve("stays/$stayId")
+        val key = "$folder/$filename"
+        val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
         file.inputStream.use { Files.copy(it, dir.resolve(filename)) }
         return key

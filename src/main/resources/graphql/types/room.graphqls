@@ -15,4 +15,21 @@ type Room {
     bathrooms: BigDecimal!
     "Room size in square metres. Null if not specified."
     size: BigDecimal
+    "Photos of this room."
+    pictures: [RoomPicture!]!
+}
+
+"A photo associated with a room."
+type RoomPicture {
+    id: Int!
+    "ID of the room this picture belongs to."
+    roomId: Int!
+    "Public URL of the image."
+    url: String!
+    "Optional descriptive caption."
+    caption: String
+    "Whether this is the main cover photo shown for the room."
+    isPrimary: Boolean!
+    "Sort order for display. Lower values appear first."
+    displayOrder: Int!
 }

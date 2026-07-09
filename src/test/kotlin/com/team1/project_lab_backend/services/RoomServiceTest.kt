@@ -199,12 +199,42 @@ class RoomServiceTest {
         val rooms = listOf(savedRoom())
         Mockito.`when`(
             roomRepository.findAvailableRooms(
-                eqArg(10), eqArg(checkIn), eqArg(checkOut), anyArg()
+                eqArg(10), eqArg(checkIn), eqArg(checkOut), anyArg(), eqArg(null)
             )
         ).thenReturn(rooms)
 
         val result = roomService.getAvailableRooms(10, checkIn, checkOut)
 
         assertEquals(1, result.size)
+    }
+
+    @Test
+    fun getAvailableRoomsRejectsNonPositiveGuests() {
+        val checkIn = LocalDate.now().plusDays(1)
+        val checkOut = LocalDate.now().plusDays(3)
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            roomService.getAvailableRooms(10, checkIn, checkOut, guests = 0)
+        }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun getAvailableRoomsPassesGuestsToRepository() {
+        val checkIn = LocalDate.now().plusDays(1)
+        val checkOut = LocalDate.now().plusDays(3)
+        val rooms = listOf(savedRoom())
+        Mockito.`when`(
+            roomRepository.findAvailableRooms(
+                eqArg(10), eqArg(checkIn), eqArg(checkOut), anyArg(), eqArg(4)
+            )
+        ).thenReturn(rooms)
+
+        val result = roomService.getAvailableRooms(10, checkIn, checkOut, guests = 4)
+
+        assertEquals(1, result.size)
+        Mockito.verify(roomRepository).findAvailableRooms(
+            eqArg(10), eqArg(checkIn), eqArg(checkOut), anyArg(), eqArg(4)
+        )
     }
 }

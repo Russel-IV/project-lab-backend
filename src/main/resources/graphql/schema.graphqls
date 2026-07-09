@@ -31,8 +31,8 @@ type Query {
     rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!
     "Returns a single room by ID."
     room(id: Int!): Room
-    "Returns rooms at a stay that are available for the given date range."
-    availableRooms(stayId: Int!, checkIn: Date!, checkOut: Date!): [Room!]!
+    "Returns rooms at a stay that are available for the given date range, optionally filtered by minimum guest capacity."
+    availableRooms(stayId: Int!, checkIn: Date!, checkOut: Date!, guests: Int): [Room!]!
 
     "Returns a paginated list of all bookings."
     bookings(page: Int = 0, size: Int = 20): [Booking!]!
@@ -76,6 +76,8 @@ type Query {
 
     "Returns all pictures for a given stay."
     stayPictures(stayId: Int!): [StayPicture!]!
+    "Returns all pictures for a given room."
+    roomPictures(roomId: Int!): [RoomPicture!]!
 }
 
 type Mutation {
@@ -125,6 +127,11 @@ type Mutation {
     updateStayPicture(stayId: Int!, id: Int!, input: UpdateStayPictureInput!): StayPicture!
     "Deletes a picture from a stay. Requires authentication."
     deleteStayPicture(stayId: Int!, id: Int!): Boolean!
+
+    "Updates metadata (caption, display order, primary flag) for a room picture. Requires authentication."
+    updateRoomPicture(roomId: Int!, id: Int!, input: UpdateRoomPictureInput!): RoomPicture!
+    "Deletes a picture from a room. Requires authentication."
+    deleteRoomPicture(roomId: Int!, id: Int!): Boolean!
 
     "Creates a new amenity entry. Requires authentication."
     createAmenity(input: CreateAmenityInput!): Amenity!

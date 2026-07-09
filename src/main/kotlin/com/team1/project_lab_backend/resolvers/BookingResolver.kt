@@ -9,11 +9,22 @@ import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Controller
 class BookingResolver(private val bookingService: BookingService) {
+
+    // Booking.createdAt is stored as a timezone-less LocalDateTime, but the
+    // GraphQL DateTime scalar (ExtendedScalars.DateTime) only serializes
+    // OffsetDateTime — without this mapping, createBooking/booking/bookings
+    // fail at the createdAt field with a scalar coercion error.
+    @SchemaMapping(typeName = "Booking", field = "createdAt")
+    fun createdAt(booking: Booking): OffsetDateTime =
+        booking.createdAt.atOffset(ZoneOffset.UTC)
 
     @QueryMapping
     fun bookings(

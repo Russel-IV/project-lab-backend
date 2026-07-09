@@ -1,8 +1,9 @@
 package com.team1.project_lab_backend.services
 
-import com.team1.project_lab_backend.dto.StayPictureResponse
-import com.team1.project_lab_backend.models.StayPicture
-import com.team1.project_lab_backend.repositories.StayPictureRepository
+import com.team1.project_lab_backend.dto.RoomPictureResponse
+import com.team1.project_lab_backend.models.RoomPicture
+import com.team1.project_lab_backend.repositories.RoomPictureRepository
+import com.team1.project_lab_backend.repositories.RoomRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireNonNegative
@@ -14,50 +15,52 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 
 @Service
-class StayPictureService(
-    private val stayPictureRepository: StayPictureRepository,
+class RoomPictureService(
+    private val roomPictureRepository: RoomPictureRepository,
+    private val roomRepository: RoomRepository,
     private val stayRepository: StayRepository,
     private val storageService: StorageService,
 ) {
     @Transactional(readOnly = true)
-    fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
-        stayId.requirePositive("stayId")
-        return stayPictureRepository.findByStayId(stayId).map { it.toResponse() }
+    fun getPicturesForRoom(roomId: Int): List<RoomPictureResponse> {
+        roomId.requirePositive("roomId")
+        return roomPictureRepository.findByRoomId(roomId).map { it.toResponse() }
     }
 
     @Transactional(readOnly = true)
-    fun getPicturesForStayAsEntities(stayId: Int): List<StayPicture> {
-        stayId.requirePositive("stayId")
-        return stayPictureRepository.findByStayId(stayId)
+    fun getPicturesForRoomAsEntities(roomId: Int): List<RoomPicture> {
+        roomId.requirePositive("roomId")
+        return roomPictureRepository.findByRoomId(roomId)
     }
 
-    fun resolveUrl(stayPicture: StayPicture): String = storageService.toUrl(stayPicture.url)
+    fun resolveUrl(roomPicture: RoomPicture): String = storageService.toUrl(roomPicture.url)
 
     @Transactional
     fun addPicture(
-        stayId: Int,
+        roomId: Int,
         file: MultipartFile,
         caption: String?,
         isPrimary: Boolean,
         displayOrder: Int,
         requestingUserId: Int,
-    ): StayPictureResponse {
-        stayId.requirePositive("stayId")
-        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+    ): RoomPictureResponse {
+        roomId.requirePositive("roomId")
+        val room = roomRepository.findById(roomId).orNotFound("room not found")
+        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
         if (stay.host.id != requestingUserId)
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         displayOrder.requireNonNegative("displayOrder")
         validateImageFile(file)
-        if (isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
+        if (isPrimary && roomPictureRepository.existsByRoomIdAndIsPrimary(roomId, true)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this room")
         }
-        val key = storageService.save(file, "stays/$stayId")
-        val picture = StayPicture(
-            id = 0, stayId = stayId, url = key,
+        val key = storageService.save(file, "rooms/$roomId")
+        val picture = RoomPicture(
+            id = 0, roomId = roomId, url = key,
             caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
         )
         try {
-            return stayPictureRepository.save(picture).toResponse()
+            return roomPictureRepository.save(picture).toResponse()
         } catch (e: Exception) {
             runCatching { storageService.delete(key) }
             throw e
@@ -66,28 +69,29 @@ class StayPictureService(
 
     @Transactional
     fun updatePictureMetadata(
-        stayId: Int,
+        roomId: Int,
         id: Int,
         caption: String?,
         isPrimary: Boolean,
         displayOrder: Int,
         requestingUserId: Int,
-    ): StayPicture {
-        stayId.requirePositive("stayId")
+    ): RoomPicture {
+        roomId.requirePositive("roomId")
         id.requirePositive()
         displayOrder.requireNonNegative("displayOrder")
-        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        val room = roomRepository.findById(roomId).orNotFound("room not found")
+        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
         if (stay.host.id != requestingUserId)
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
+        val existing = roomPictureRepository.findByRoomIdAndId(roomId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        if (isPrimary && !existing.isPrimary && stayPictureRepository.existsByStayIdAndIsPrimary(stayId, true)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this stay")
+        if (isPrimary && !existing.isPrimary && roomPictureRepository.existsByRoomIdAndIsPrimary(roomId, true)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this room")
         }
-        return stayPictureRepository.save(
-            StayPicture(
+        return roomPictureRepository.save(
+            RoomPicture(
                 id = id,
-                stayId = stayId,
+                roomId = roomId,
                 url = existing.url,
                 caption = caption,
                 isPrimary = isPrimary,
@@ -97,15 +101,16 @@ class StayPictureService(
     }
 
     @Transactional
-    fun deletePicture(stayId: Int, id: Int, requestingUserId: Int) {
-        stayId.requirePositive("stayId")
+    fun deletePicture(roomId: Int, id: Int, requestingUserId: Int) {
+        roomId.requirePositive("roomId")
         id.requirePositive()
-        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        val room = roomRepository.findById(roomId).orNotFound("room not found")
+        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
         if (stay.host.id != requestingUserId)
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        val existing = stayPictureRepository.findByStayIdAndId(stayId, id)
+        val existing = roomPictureRepository.findByRoomIdAndId(roomId, id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        stayPictureRepository.deleteById(id)
+        roomPictureRepository.deleteById(id)
         storageService.delete(existing.url)
     }
 
@@ -121,10 +126,10 @@ class StayPictureService(
         }
     }
 
-    private fun StayPicture.toResponse(): StayPictureResponse =
-        StayPictureResponse(
+    private fun RoomPicture.toResponse(): RoomPictureResponse =
+        RoomPictureResponse(
             id = id,
-            stayId = stayId,
+            roomId = roomId,
             url = storageService.toUrl(url),
             caption = caption,
             isPrimary = isPrimary,

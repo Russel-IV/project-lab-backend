@@ -18,6 +18,7 @@ interface RoomRepository : JpaRepository<Room, Int> {
     @Query("""
         SELECT r FROM Room r
         WHERE r.stayId = :stayId
+        AND (:guests IS NULL OR r.sleeps >= :guests)
         AND NOT EXISTS (
             SELECT 1 FROM Booking b JOIN b.rooms r2
             WHERE r2.id = r.id
@@ -30,7 +31,8 @@ interface RoomRepository : JpaRepository<Room, Int> {
         stayId: Int,
         checkIn: LocalDate,
         checkOut: LocalDate,
-        activeStatuses: List<BookingStatus>
+        activeStatuses: List<BookingStatus>,
+        guests: Int? = null
     ): List<Room>
 
     @Query("""
