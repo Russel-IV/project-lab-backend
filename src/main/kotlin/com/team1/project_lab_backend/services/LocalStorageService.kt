@@ -10,6 +10,7 @@ import java.util.UUID
 @Service
 class LocalStorageService(
     @Value("\${app.upload.dir}") private val uploadDir: String,
+    @Value("\${app.public-url}") private val publicUrl: String,
 ) : StorageService {
 
     override fun save(file: MultipartFile, folder: String): String {
@@ -28,5 +29,5 @@ class LocalStorageService(
         } catch (_: Exception) {}
     }
 
-    override fun toUrl(key: String): String = "/uploads/$key"
+    override fun toUrl(key: String): String = "${publicUrl.trimEnd('/')}/uploads/$key"
 }

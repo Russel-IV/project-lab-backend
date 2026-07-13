@@ -6,6 +6,8 @@ services:
         container_name: project-lab-backend
         ports:
             - "${SPRING_PORT}:8080"
+        volumes:
+            - uploads:/app/uploads
         environment:
             - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
             - POSTGRES_HOST=project-lab-database
@@ -42,3 +44,4 @@ services:
 
 volumes:
     pgdata:
+    uploads:
