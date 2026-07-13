@@ -1,7 +1,5 @@
 package com.team1.project_lab_backend.dto
 
-import com.team1.project_lab_backend.models.User
-
 data class LoginRequest(
     val email: String,
     val password: String,
@@ -15,5 +13,5 @@ data class SignupRequest(
 
 data class AuthResponse(
     val token: String,
-    val user: User,
+    val user: ProfileResponse,
 )
