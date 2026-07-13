@@ -8,6 +8,7 @@ data class PaymentMethodResponse(
     val type: String,
     val expiryMonth: Int,
     val expiryYear: Int,
+    val isDefault: Boolean,
 )
 
 // Deliberately never persisted or logged as-is: cardNumber/cvv exist only

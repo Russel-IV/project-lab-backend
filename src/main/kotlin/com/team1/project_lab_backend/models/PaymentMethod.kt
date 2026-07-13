@@ -29,4 +29,7 @@ data class PaymentMethod(
 
     @Column(name = "expiry_year", nullable = false)
     val expiryYear: Int,
+
+    @Column(name = "is_default", nullable = false)
+    val isDefault: Boolean = false,
 )
