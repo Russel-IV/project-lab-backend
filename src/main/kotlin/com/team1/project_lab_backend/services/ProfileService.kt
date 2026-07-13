@@ -26,7 +26,7 @@ class ProfileService(
 ) {
     @Transactional(readOnly = true)
     fun getProfile(userId: Int): ProfileResponse =
-        userRepository.findById(userId).orNotFound("user not found").toProfileResponse()
+        userRepository.findById(userId).orNotFound("user not found").toProfileResponse(storageService)
 
     @Transactional
     fun updateProfile(userId: Int, request: UpdateProfileRequest): ProfileResponse {
@@ -56,7 +56,7 @@ class ProfileService(
                 phone = request.phone,
                 profilePictureUrl = existing.profilePictureUrl,
             ),
-        ).toProfileResponse()
+        ).toProfileResponse(storageService)
     }
 
     @Transactional
@@ -78,7 +78,7 @@ class ProfileService(
                 ),
             )
             oldPictureUrl?.let { storageService.delete(it) }
-            return saved.toProfileResponse()
+            return saved.toProfileResponse(storageService)
         } catch (e: Exception) {
             runCatching { storageService.delete(key) }
             throw e
@@ -137,14 +137,6 @@ class ProfileService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported image extension: .$ext")
         }
     }
-
-    private fun User.toProfileResponse() = ProfileResponse(
-        id = id,
-        name = name,
-        email = email,
-        phone = phone,
-        profilePictureUrl = profilePictureUrl?.let { storageService.toUrl(it) },
-    )
 
     companion object {
         private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp", "avif")
