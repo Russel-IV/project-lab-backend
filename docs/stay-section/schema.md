@@ -3,6 +3,39 @@ erDiagram
     USER {
         int id PK
         string name
+        string email
+        string phone
+        string stripe_customer_id
+        int default_payment_method_id FK
+        datetime created_at
+        datetime modified_at
+    }
+
+    PAYMENT_METHOD {
+        int id PK
+        int user_id FK
+        string stripe_payment_method_id
+        string card_data
+        string type DEFAULT 'credit_card'
+        string brand
+        string last_four
+        int expiry_month
+        int expiry_year
+        string response_code
+        datetime created_at
+        datetime modified_at
+    }
+
+    TRANSACTION {
+        int id PK
+        int user_id FK
+        int payment_method_id FK
+        string stripe_payment_intent_id
+        float amount
+        string currency
+        string status
+        datetime created_at
+        datetime modified_at
     }
 
     HOST {

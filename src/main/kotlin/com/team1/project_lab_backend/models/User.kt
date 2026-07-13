@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "\"user\"")
@@ -23,4 +24,13 @@ open class User(
     @JsonIgnore
     @Column(name = "password_hash")
     open val passwordHash: String? = null,
+
+    @Column(name = "phone", length = 32)
+    open val phone: String? = null,
+
+    @Column(name = "profile_picture_url")
+    open val profilePictureUrl: String? = null,
+
+    @Column(name = "deleted_at")
+    open val deletedAt: LocalDateTime? = null,
 )

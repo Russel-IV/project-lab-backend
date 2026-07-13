@@ -15,7 +15,7 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
 ) {
     fun signup(name: String, email: String, rawPassword: String): AuthResponse {
-        if (userRepository.findByEmail(email).isPresent)
+        if (userRepository.findByEmailAndDeletedAtIsNull(email).isPresent)
             throw ResponseStatusException(HttpStatus.CONFLICT, "email already in use")
         val user = userRepository.save(
             User(name = name, email = email, passwordHash = passwordEncoder.encode(rawPassword)),
@@ -24,7 +24,7 @@ class AuthService(
     }
 
     fun login(email: String, rawPassword: String): AuthResponse {
-        val user = userRepository.findByEmail(email)
+        val user = userRepository.findByEmailAndDeletedAtIsNull(email)
             .orElseThrow { ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid credentials") }
         if (!passwordEncoder.matches(rawPassword, user.passwordHash))
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid credentials")

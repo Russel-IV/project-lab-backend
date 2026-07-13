@@ -27,11 +27,13 @@ class JwtAuthFilter(
             val token = header.removePrefix("Bearer ").trim()
             val userId = jwtService.extractUserId(token)
             if (userId != null && SecurityContextHolder.getContext().authentication == null) {
-                userRepository.findById(userId).ifPresent { user ->
-                    val auth = UsernamePasswordAuthenticationToken(user, null, emptyList())
-                    auth.details = WebAuthenticationDetailsSource().buildDetails(request)
-                    SecurityContextHolder.getContext().authentication = auth
-                }
+                userRepository.findById(userId)
+                    .filter { it.deletedAt == null }
+                    .ifPresent { user ->
+                        val auth = UsernamePasswordAuthenticationToken(user, null, emptyList())
+                        auth.details = WebAuthenticationDetailsSource().buildDetails(request)
+                        SecurityContextHolder.getContext().authentication = auth
+                    }
             }
         }
         filterChain.doFilter(request, response)
