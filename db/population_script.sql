@@ -6,15 +6,24 @@
 --
 -- Test credentials (BCrypt, cost 10):
 --   plain-text password → "password"
---   hash               → $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+--   hash               → $2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS
 --
 -- Scale: 20 users (8 hosts / 12 guests), 15 stays across 5 continents,
--- 26 rooms, 30 bookings (all 4 statuses represented), 71 reviews
--- (2–10 per stay, ratings 1–5).
+-- 26 rooms, 30 "narrative" bookings (all 4 statuses represented) plus
+-- 64 synthetic COMPLETED bookings (section 7b) backing review
+-- eligibility and 15 more (section 7c, one per stay) for a guest who
+-- is eligible but hasn't reviewed yet, and 71 reviews (2–10 per stay,
+-- ratings 1–5).
 --
 -- Booking status coverage (see section 7 for the full table):
 --   CONFIRMED, PENDING, CANCELLED and COMPLETED all appear on
 --   multiple stays, including multi-room bookings.
+--
+-- Every review's (user_id, stay_id) pair has a matching COMPLETED
+-- booking (see section 7b), consistent with createReview()'s
+-- eligibility check and its unique-per-(user, stay) constraint (V17).
+-- Section 7c seeds one additional eligible-but-unreviewed guest per
+-- stay for exercising the createReview happy path.
 --
 -- Free rooms with no bookings at all: 3 (Deluxe Suite), 7 (Superior Suite)
 -- ============================================================
@@ -129,26 +138,26 @@ SELECT setval(pg_get_serial_sequence('traveler_experience', 'id'), COALESCE(MAX(
 -- All passwords: "password"
 
 INSERT INTO "user" (id, name, email, password_hash) VALUES
-(1,  'Alice Johnson',     'alice@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(2,  'Bob Smith',         'bob@test.com',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(3,  'Takashi Murakami',  'takashi@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(4,  'Clara Oswald',      'clara@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(5,  'David Kim',         'david@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(6,  'Emma García',       'emma@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(7,  'Frank Lee',         'frank@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(8,  'Priya Patel',       'priya@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(9,  'Liam O''Connor',    'liam@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(10, 'Sofia Rossi',       'sofia@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(11, 'Noah Andersen',     'noah@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(12, 'Amara Okafor',      'amara@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(13, 'Mateo Fernández',   'mateo@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(14, 'Yuki Tanaka',       'yuki@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(15, 'Isabel Santos',     'isabel@test.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(16, 'Ethan Walker',      'ethan@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(17, 'Zara Ahmed',        'zara@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(18, 'Lucas Müller',      'lucas@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(19, 'Chloe Martin',      'chloe@test.com',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'),
-(20, 'Omar Hassan',       'omar@test.com',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy')
+(1,  'Alice Johnson',     'alice@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(2,  'Bob Smith',         'bob@test.com',     '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(3,  'Takashi Murakami',  'takashi@test.com', '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(4,  'Clara Oswald',      'clara@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(5,  'David Kim',         'david@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(6,  'Emma García',       'emma@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(7,  'Frank Lee',         'frank@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(8,  'Priya Patel',       'priya@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(9,  'Liam O''Connor',    'liam@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(10, 'Sofia Rossi',       'sofia@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(11, 'Noah Andersen',     'noah@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(12, 'Amara Okafor',      'amara@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(13, 'Mateo Fernández',   'mateo@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(14, 'Yuki Tanaka',       'yuki@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(15, 'Isabel Santos',     'isabel@test.com',  '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(16, 'Ethan Walker',      'ethan@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(17, 'Zara Ahmed',        'zara@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(18, 'Lucas Müller',      'lucas@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(19, 'Chloe Martin',      'chloe@test.com',   '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS'),
+(20, 'Omar Hassan',       'omar@test.com',    '$2b$10$Qr9OTs9LDghn16/QbKviZ.3w2EVu1CsRfe/s1l642Q.oK9rWhycLS')
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('"user"', 'id'), COALESCE(MAX(id), 1)) FROM "user";
 
@@ -519,6 +528,201 @@ INSERT INTO booking_room (booking_id, room_id) VALUES
 (28, 25),
 (29, 26),
 (30, 25)
+ON CONFLICT DO NOTHING;
+
+
+-- ------------------------------------------------------------
+-- 7b. REVIEW-ELIGIBILITY BOOKINGS
+-- ------------------------------------------------------------
+-- createReview() now requires the reviewer to have a COMPLETED booking
+-- for the stay being reviewed, and rejects a second review for the same
+-- stay (unique constraint on review(user_id, stay_id), see V17). The
+-- synthetic bookings below backfill a COMPLETED booking for every
+-- (user, stay) pair reviewed in section 8, so this seed data stays
+-- internally consistent with that rule and is usable for exercising
+-- createReview / myBookingStatusForStay / myReviewForStay end-to-end.
+
+INSERT INTO booking (id, user_id, check_in_date, check_out_date, status, guests_count, created_at, total_price) VALUES
+(31, 2, '2025-01-05', '2025-01-08', 'COMPLETED', 1, '2024-11-06 09:00:00', 361.50),  -- user 2 -> stay 1 (review eligibility)
+(32, 6, '2025-01-10', '2025-01-13', 'COMPLETED', 1, '2024-11-11 09:00:00', 361.50),  -- user 6 -> stay 1 (review eligibility)
+(33, 9, '2025-01-15', '2025-01-18', 'COMPLETED', 1, '2024-11-16 09:00:00', 361.50),  -- user 9 -> stay 1 (review eligibility)
+(34, 16, '2025-01-20', '2025-01-23', 'COMPLETED', 1, '2024-11-21 09:00:00', 361.50),  -- user 16 -> stay 1 (review eligibility)
+(35, 7, '2025-01-25', '2025-01-28', 'COMPLETED', 1, '2024-11-26 09:00:00', 1050.00),  -- user 7 -> stay 2 (review eligibility)
+(36, 5, '2025-01-30', '2025-02-02', 'COMPLETED', 1, '2024-12-01 09:00:00', 1050.00),  -- user 5 -> stay 2 (review eligibility)
+(37, 11, '2025-02-04', '2025-02-07', 'COMPLETED', 1, '2024-12-06 09:00:00', 1050.00),  -- user 11 -> stay 2 (review eligibility)
+(38, 17, '2025-02-09', '2025-02-12', 'COMPLETED', 1, '2024-12-11 09:00:00', 1050.00),  -- user 17 -> stay 2 (review eligibility)
+(39, 13, '2025-02-14', '2025-02-17', 'COMPLETED', 1, '2024-12-16 09:00:00', 1050.00),  -- user 13 -> stay 2 (review eligibility)
+(40, 20, '2025-02-19', '2025-02-22', 'COMPLETED', 1, '2024-12-21 09:00:00', 1050.00),  -- user 20 -> stay 2 (review eligibility)
+(41, 2, '2025-02-24', '2025-02-27', 'COMPLETED', 1, '2024-12-26 09:00:00', 255.00),  -- user 2 -> stay 3 (review eligibility)
+(42, 7, '2025-03-01', '2025-03-04', 'COMPLETED', 1, '2024-12-31 09:00:00', 255.00),  -- user 7 -> stay 3 (review eligibility)
+(43, 14, '2025-03-06', '2025-03-09', 'COMPLETED', 1, '2025-01-05 09:00:00', 255.00),  -- user 14 -> stay 3 (review eligibility)
+(44, 6, '2025-03-11', '2025-03-14', 'COMPLETED', 1, '2025-01-10 09:00:00', 660.00),  -- user 6 -> stay 4 (review eligibility)
+(45, 9, '2025-03-16', '2025-03-19', 'COMPLETED', 1, '2025-01-15 09:00:00', 660.00),  -- user 9 -> stay 4 (review eligibility)
+(46, 19, '2025-03-21', '2025-03-24', 'COMPLETED', 1, '2025-01-20 09:00:00', 660.00),  -- user 19 -> stay 4 (review eligibility)
+(47, 2, '2025-03-26', '2025-03-29', 'COMPLETED', 1, '2025-01-25 09:00:00', 525.00),  -- user 2 -> stay 5 (review eligibility)
+(48, 11, '2025-03-31', '2025-04-03', 'COMPLETED', 1, '2025-01-30 09:00:00', 525.00),  -- user 11 -> stay 5 (review eligibility)
+(49, 17, '2025-04-05', '2025-04-08', 'COMPLETED', 1, '2025-02-04 09:00:00', 525.00),  -- user 17 -> stay 5 (review eligibility)
+(50, 20, '2025-04-10', '2025-04-13', 'COMPLETED', 1, '2025-02-09 09:00:00', 525.00),  -- user 20 -> stay 5 (review eligibility)
+(51, 9, '2025-04-15', '2025-04-18', 'COMPLETED', 1, '2025-02-14 09:00:00', 930.00),  -- user 9 -> stay 6 (review eligibility)
+(52, 13, '2025-04-20', '2025-04-23', 'COMPLETED', 1, '2025-02-19 09:00:00', 930.00),  -- user 13 -> stay 6 (review eligibility)
+(53, 6, '2025-04-25', '2025-04-28', 'COMPLETED', 1, '2025-02-24 09:00:00', 930.00),  -- user 6 -> stay 6 (review eligibility)
+(54, 5, '2025-04-30', '2025-05-03', 'COMPLETED', 1, '2025-03-01 09:00:00', 840.00),  -- user 5 -> stay 7 (review eligibility)
+(55, 14, '2025-05-05', '2025-05-08', 'COMPLETED', 1, '2025-03-06 09:00:00', 840.00),  -- user 14 -> stay 7 (review eligibility)
+(56, 19, '2025-05-10', '2025-05-13', 'COMPLETED', 1, '2025-03-11 09:00:00', 840.00),  -- user 19 -> stay 7 (review eligibility)
+(57, 7, '2025-05-15', '2025-05-18', 'COMPLETED', 1, '2025-03-16 09:00:00', 840.00),  -- user 7 -> stay 7 (review eligibility)
+(58, 20, '2025-05-20', '2025-05-23', 'COMPLETED', 1, '2025-03-21 09:00:00', 840.00),  -- user 20 -> stay 7 (review eligibility)
+(59, 2, '2025-05-25', '2025-05-28', 'COMPLETED', 1, '2025-03-26 09:00:00', 840.00),  -- user 2 -> stay 7 (review eligibility)
+(60, 17, '2025-05-30', '2025-06-02', 'COMPLETED', 1, '2025-03-31 09:00:00', 840.00),  -- user 17 -> stay 7 (review eligibility)
+(61, 11, '2025-06-04', '2025-06-07', 'COMPLETED', 1, '2025-04-05 09:00:00', 840.00),  -- user 11 -> stay 7 (review eligibility)
+(62, 13, '2025-06-09', '2025-06-12', 'COMPLETED', 1, '2025-04-10 09:00:00', 450.00),  -- user 13 -> stay 8 (review eligibility)
+(63, 9, '2025-06-14', '2025-06-17', 'COMPLETED', 1, '2025-04-15 09:00:00', 450.00),  -- user 9 -> stay 8 (review eligibility)
+(64, 6, '2025-06-19', '2025-06-22', 'COMPLETED', 1, '2025-04-20 09:00:00', 420.00),  -- user 6 -> stay 9 (review eligibility)
+(65, 16, '2025-06-24', '2025-06-27', 'COMPLETED', 1, '2025-04-25 09:00:00', 420.00),  -- user 16 -> stay 9 (review eligibility)
+(66, 14, '2025-06-29', '2025-07-02', 'COMPLETED', 1, '2025-04-30 09:00:00', 420.00),  -- user 14 -> stay 9 (review eligibility)
+(67, 2, '2025-07-04', '2025-07-07', 'COMPLETED', 1, '2025-05-05 09:00:00', 420.00),  -- user 2 -> stay 9 (review eligibility)
+(68, 19, '2025-07-09', '2025-07-12', 'COMPLETED', 1, '2025-05-10 09:00:00', 420.00),  -- user 19 -> stay 9 (review eligibility)
+(69, 7, '2025-07-14', '2025-07-17', 'COMPLETED', 1, '2025-05-15 09:00:00', 1440.00),  -- user 7 -> stay 10 (review eligibility)
+(70, 11, '2025-07-19', '2025-07-22', 'COMPLETED', 1, '2025-05-20 09:00:00', 1440.00),  -- user 11 -> stay 10 (review eligibility)
+(71, 17, '2025-07-24', '2025-07-27', 'COMPLETED', 1, '2025-05-25 09:00:00', 1440.00),  -- user 17 -> stay 10 (review eligibility)
+(72, 5, '2025-07-29', '2025-08-01', 'COMPLETED', 1, '2025-05-30 09:00:00', 570.00),  -- user 5 -> stay 11 (review eligibility)
+(73, 9, '2025-08-03', '2025-08-06', 'COMPLETED', 1, '2025-06-04 09:00:00', 570.00),  -- user 9 -> stay 11 (review eligibility)
+(74, 20, '2025-08-08', '2025-08-11', 'COMPLETED', 1, '2025-06-09 09:00:00', 570.00),  -- user 20 -> stay 11 (review eligibility)
+(75, 16, '2025-08-13', '2025-08-16', 'COMPLETED', 1, '2025-06-14 09:00:00', 570.00),  -- user 16 -> stay 11 (review eligibility)
+(76, 6, '2025-08-18', '2025-08-21', 'COMPLETED', 1, '2025-06-19 09:00:00', 570.00),  -- user 6 -> stay 11 (review eligibility)
+(77, 14, '2025-08-23', '2025-08-26', 'COMPLETED', 1, '2025-06-24 09:00:00', 570.00),  -- user 14 -> stay 11 (review eligibility)
+(78, 19, '2025-08-28', '2025-08-31', 'COMPLETED', 1, '2025-06-29 09:00:00', 495.00),  -- user 19 -> stay 12 (review eligibility)
+(79, 11, '2025-09-02', '2025-09-05', 'COMPLETED', 1, '2025-07-04 09:00:00', 495.00),  -- user 11 -> stay 12 (review eligibility)
+(80, 2, '2025-09-07', '2025-09-10', 'COMPLETED', 1, '2025-07-09 09:00:00', 495.00),  -- user 2 -> stay 12 (review eligibility)
+(81, 6, '2025-09-12', '2025-09-15', 'COMPLETED', 1, '2025-07-14 09:00:00', 660.00),  -- user 6 -> stay 13 (review eligibility)
+(82, 14, '2025-09-17', '2025-09-20', 'COMPLETED', 1, '2025-07-19 09:00:00', 660.00),  -- user 14 -> stay 13 (review eligibility)
+(83, 20, '2025-09-22', '2025-09-25', 'COMPLETED', 1, '2025-07-24 09:00:00', 660.00),  -- user 20 -> stay 13 (review eligibility)
+(84, 7, '2025-09-27', '2025-09-30', 'COMPLETED', 1, '2025-07-29 09:00:00', 660.00),  -- user 7 -> stay 13 (review eligibility)
+(85, 9, '2025-10-02', '2025-10-05', 'COMPLETED', 1, '2025-08-03 09:00:00', 660.00),  -- user 9 -> stay 13 (review eligibility)
+(86, 13, '2025-10-07', '2025-10-10', 'COMPLETED', 1, '2025-08-08 09:00:00', 660.00),  -- user 13 -> stay 13 (review eligibility)
+(87, 16, '2025-10-12', '2025-10-15', 'COMPLETED', 1, '2025-08-13 09:00:00', 660.00),  -- user 16 -> stay 13 (review eligibility)
+(88, 5, '2025-10-17', '2025-10-20', 'COMPLETED', 1, '2025-08-18 09:00:00', 660.00),  -- user 5 -> stay 13 (review eligibility)
+(89, 11, '2025-10-22', '2025-10-25', 'COMPLETED', 1, '2025-08-23 09:00:00', 630.00),  -- user 11 -> stay 14 (review eligibility)
+(90, 17, '2025-10-27', '2025-10-30', 'COMPLETED', 1, '2025-08-28 09:00:00', 630.00),  -- user 17 -> stay 14 (review eligibility)
+(91, 13, '2025-11-01', '2025-11-04', 'COMPLETED', 1, '2025-09-02 09:00:00', 720.00),  -- user 13 -> stay 15 (review eligibility)
+(92, 9, '2025-11-06', '2025-11-09', 'COMPLETED', 1, '2025-09-07 09:00:00', 720.00),  -- user 9 -> stay 15 (review eligibility)
+(93, 20, '2025-11-11', '2025-11-14', 'COMPLETED', 1, '2025-09-12 09:00:00', 720.00),  -- user 20 -> stay 15 (review eligibility)
+(94, 16, '2025-11-16', '2025-11-19', 'COMPLETED', 1, '2025-09-17 09:00:00', 720.00)  -- user 16 -> stay 15 (review eligibility)
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('booking', 'id'), COALESCE(MAX(id), 1)) FROM booking;
+
+INSERT INTO booking_room (booking_id, room_id) VALUES
+(31, 1),
+(32, 1),
+(33, 1),
+(34, 1),
+(35, 2),
+(36, 2),
+(37, 2),
+(38, 2),
+(39, 2),
+(40, 2),
+(41, 5),
+(42, 5),
+(43, 5),
+(44, 6),
+(45, 6),
+(46, 6),
+(47, 8),
+(48, 8),
+(49, 8),
+(50, 8),
+(51, 9),
+(52, 9),
+(53, 9),
+(54, 10),
+(55, 10),
+(56, 10),
+(57, 10),
+(58, 10),
+(59, 10),
+(60, 10),
+(61, 10),
+(62, 13),
+(63, 13),
+(64, 14),
+(65, 14),
+(66, 14),
+(67, 14),
+(68, 14),
+(69, 16),
+(70, 16),
+(71, 16),
+(72, 17),
+(73, 17),
+(74, 17),
+(75, 17),
+(76, 17),
+(77, 17),
+(78, 20),
+(79, 20),
+(80, 20),
+(81, 21),
+(82, 21),
+(83, 21),
+(84, 21),
+(85, 21),
+(86, 21),
+(87, 21),
+(88, 21),
+(89, 24),
+(90, 24),
+(91, 25),
+(92, 25),
+(93, 25),
+(94, 25)
+ON CONFLICT DO NOTHING;
+
+
+-- ------------------------------------------------------------
+-- 7c. UNREVIEWED COMPLETED BOOKINGS
+-- ------------------------------------------------------------
+-- One extra COMPLETED booking per stay, for a guest who has *not* left
+-- a review for it. Section 7b makes every existing review eligible,
+-- which leaves no seed user in the "eligible, hasn't reviewed yet"
+-- state — the actual createReview happy path. These fill that gap so
+-- it can be exercised end-to-end (log in as the noted user, call
+-- myBookingStatusForStay for the stay, then createReview).
+
+INSERT INTO booking (id, user_id, check_in_date, check_out_date, status, guests_count, created_at, total_price) VALUES
+(95, 5, '2025-12-01', '2025-12-04', 'COMPLETED', 1, '2025-10-17 09:00:00', 361.50),  -- user 5 -> stay 1 (eligible, not yet reviewed)
+(96, 6, '2025-12-07', '2025-12-10', 'COMPLETED', 1, '2025-10-23 09:00:00', 1050.00),  -- user 6 -> stay 2 (eligible, not yet reviewed)
+(97, 9, '2025-12-13', '2025-12-16', 'COMPLETED', 1, '2025-10-29 09:00:00', 255.00),  -- user 9 -> stay 3 (eligible, not yet reviewed)
+(98, 11, '2025-12-19', '2025-12-22', 'COMPLETED', 1, '2025-11-04 09:00:00', 660.00),  -- user 11 -> stay 4 (eligible, not yet reviewed)
+(99, 13, '2025-12-25', '2025-12-28', 'COMPLETED', 1, '2025-11-10 09:00:00', 525.00),  -- user 13 -> stay 5 (eligible, not yet reviewed)
+(100, 14, '2025-12-31', '2026-01-03', 'COMPLETED', 1, '2025-11-16 09:00:00', 930.00),  -- user 14 -> stay 6 (eligible, not yet reviewed)
+(101, 16, '2026-01-06', '2026-01-09', 'COMPLETED', 1, '2025-11-22 09:00:00', 840.00),  -- user 16 -> stay 7 (eligible, not yet reviewed)
+(102, 17, '2026-01-12', '2026-01-15', 'COMPLETED', 1, '2025-11-28 09:00:00', 450.00),  -- user 17 -> stay 8 (eligible, not yet reviewed)
+(103, 5, '2026-01-18', '2026-01-21', 'COMPLETED', 1, '2025-12-04 09:00:00', 420.00),  -- user 5 -> stay 9 (eligible, not yet reviewed)
+(104, 6, '2026-01-24', '2026-01-27', 'COMPLETED', 1, '2025-12-10 09:00:00', 1440.00),  -- user 6 -> stay 10 (eligible, not yet reviewed)
+(105, 7, '2026-01-30', '2026-02-02', 'COMPLETED', 1, '2025-12-16 09:00:00', 570.00),  -- user 7 -> stay 11 (eligible, not yet reviewed)
+(106, 9, '2026-02-05', '2026-02-08', 'COMPLETED', 1, '2025-12-22 09:00:00', 495.00),  -- user 9 -> stay 12 (eligible, not yet reviewed)
+(107, 11, '2026-02-11', '2026-02-14', 'COMPLETED', 1, '2025-12-28 09:00:00', 660.00),  -- user 11 -> stay 13 (eligible, not yet reviewed)
+(108, 13, '2026-02-17', '2026-02-20', 'COMPLETED', 1, '2026-01-03 09:00:00', 630.00),  -- user 13 -> stay 14 (eligible, not yet reviewed)
+(109, 14, '2026-02-23', '2026-02-26', 'COMPLETED', 1, '2026-01-09 09:00:00', 720.00)  -- user 14 -> stay 15 (eligible, not yet reviewed)
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('booking', 'id'), COALESCE(MAX(id), 1)) FROM booking;
+
+INSERT INTO booking_room (booking_id, room_id) VALUES
+(95, 1),
+(96, 2),
+(97, 5),
+(98, 6),
+(99, 8),
+(100, 9),
+(101, 10),
+(102, 13),
+(103, 14),
+(104, 16),
+(105, 17),
+(106, 20),
+(107, 21),
+(108, 24),
+(109, 25)
 ON CONFLICT DO NOTHING;
 
 
