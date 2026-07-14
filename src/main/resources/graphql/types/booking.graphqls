@@ -18,3 +18,8 @@ type Booking {
     "Rooms included in this booking."
     rooms: [Room!]!
 }
+
+"Whether the authenticated user has a completed booking for a stay — used to gate review eligibility."
+type BookingStatusForStay {
+    hasCompletedBooking: Boolean!
+}

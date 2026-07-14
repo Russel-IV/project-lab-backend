@@ -38,6 +38,12 @@ class BookingService(
         return bookingRepository.findById(id).orNotFound("booking not found")
     }
 
+    @Transactional(readOnly = true)
+    fun hasCompletedBookingForStay(userId: Int, stayId: Int): Boolean {
+        stayId.requirePositive("stayId")
+        return bookingRepository.existsBookingForUserAndStayWithStatus(userId, stayId, BookingStatus.COMPLETED)
+    }
+
     @Transactional
     fun createBooking(request: BookingRequest): Booking {
         request.userId.requirePositive("userId")

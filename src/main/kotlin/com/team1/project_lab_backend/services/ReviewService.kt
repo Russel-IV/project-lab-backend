@@ -2,10 +2,13 @@ package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.ReviewRequest
 import com.team1.project_lab_backend.dto.ReviewSummary
+import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.models.Review
+import com.team1.project_lab_backend.repositories.BookingRepository
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.GraphQLBusinessException
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
@@ -23,6 +26,7 @@ class ReviewService(
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
     private val stayRepository: StayRepository,
+    private val bookingRepository: BookingRepository,
 ) {
     @Transactional(readOnly = true)
     fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
@@ -58,9 +62,16 @@ class ReviewService(
         )
     }
 
+    @Transactional(readOnly = true)
+    fun getMyReviewForStay(userId: Int, stayId: Int): Review? {
+        stayId.requirePositive("stayId")
+        return reviewRepository.findByUserIdAndStayId(userId, stayId)
+    }
+
     @Transactional
     fun createReview(request: ReviewRequest): Review {
-        request.text.requireNotBlank("text")
+        val text = request.text.trim()
+        text.requireNotBlank("text")
         if (request.rating !in 1..5)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
         request.userId.requirePositive("userId")
@@ -71,8 +82,22 @@ class ReviewService(
         if (!stayRepository.existsById(request.stayId)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
         }
+        if (reviewRepository.existsByUserIdAndStayId(request.userId, request.stayId)) {
+            throw GraphQLBusinessException(
+                "ALREADY_REVIEWED",
+                HttpStatus.CONFLICT,
+                "you have already reviewed this stay",
+            )
+        }
+        if (!bookingRepository.existsBookingForUserAndStayWithStatus(request.userId, request.stayId, BookingStatus.COMPLETED)) {
+            throw GraphQLBusinessException(
+                "NOT_ELIGIBLE",
+                HttpStatus.FORBIDDEN,
+                "you must have a completed booking for this stay to review it",
+            )
+        }
         return reviewRepository.save(
-            Review(text = request.text, userId = request.userId, stayId = request.stayId, rating = request.rating),
+            Review(text = text, userId = request.userId, stayId = request.stayId, rating = request.rating),
         )
     }
 

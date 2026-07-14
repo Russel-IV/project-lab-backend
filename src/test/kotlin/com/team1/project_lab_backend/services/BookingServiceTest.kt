@@ -203,6 +203,30 @@ class BookingServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
+    // ---- hasCompletedBookingForStay ----
+
+    @Test
+    fun hasCompletedBookingForStayReturnsTrueWhenCompletedBookingExists() {
+        Mockito.`when`(
+            bookingRepository.existsBookingForUserAndStayWithStatus(1, 2, BookingStatus.COMPLETED),
+        ).thenReturn(true)
+
+        val result = bookingService.hasCompletedBookingForStay(1, 2)
+
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun hasCompletedBookingForStayReturnsFalseWhenNoneExists() {
+        Mockito.`when`(
+            bookingRepository.existsBookingForUserAndStayWithStatus(1, 2, BookingStatus.COMPLETED),
+        ).thenReturn(false)
+
+        val result = bookingService.hasCompletedBookingForStay(1, 2)
+
+        assertEquals(false, result)
+    }
+
     // ---- updateBookingStatus ----
 
     @Test

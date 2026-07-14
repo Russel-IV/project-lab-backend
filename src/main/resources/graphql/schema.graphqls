@@ -38,6 +38,8 @@ type Query {
     bookings(page: Int = 0, size: Int = 20): [Booking!]!
     "Returns a single booking by ID."
     booking(id: Int!): Booking
+    "Returns whether the authenticated user has a completed booking for a given stay. Requires authentication."
+    myBookingStatusForStay(stayId: Int!): BookingStatusForStay!
 
     "Returns a paginated list of all reviews."
     reviews(page: Int = 0, size: Int = 20): [Review!]!
@@ -45,6 +47,8 @@ type Query {
     reviewsByStay(stayId: Int!, page: Int = 0, size: Int = 20): [Review!]!
     "Returns the rating distribution and average for a stay's full review set, independent of pagination."
     reviewSummary(stayId: Int!): ReviewSummary!
+    "Returns the authenticated user's existing review for a given stay, or null if none exists. Requires authentication."
+    myReviewForStay(stayId: Int!): Review
 
     "Returns all available amenities."
     amenities: [Amenity!]!

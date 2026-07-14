@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.config
 
+import com.team1.project_lab_backend.util.GraphQLBusinessException
 import graphql.GraphQLError
 import graphql.GraphqlErrorBuilder
 import graphql.schema.DataFetchingEnvironment
@@ -15,6 +16,11 @@ class GraphQLExceptionHandler : DataFetcherExceptionResolverAdapter() {
 
     override fun resolveToSingleError(ex: Throwable, env: DataFetchingEnvironment): GraphQLError? {
         return when (ex) {
+            is GraphQLBusinessException -> GraphqlErrorBuilder.newError(env)
+                .message(ex.reason ?: ex.message ?: "An error occurred")
+                .errorType(ex.statusCode.toErrorType())
+                .extensions(mapOf("code" to ex.code))
+                .build()
             is ResponseStatusException -> GraphqlErrorBuilder.newError(env)
                 .message(ex.reason ?: ex.message ?: "An error occurred")
                 .errorType(ex.statusCode.toErrorType())

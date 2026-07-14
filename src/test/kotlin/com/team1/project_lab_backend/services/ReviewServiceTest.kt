@@ -1,11 +1,15 @@
 package com.team1.project_lab_backend.services
 
 import com.team1.project_lab_backend.dto.ReviewRequest
+import com.team1.project_lab_backend.models.BookingStatus
 import com.team1.project_lab_backend.models.Review
+import com.team1.project_lab_backend.repositories.BookingRepository
 import com.team1.project_lab_backend.repositories.ReviewRepository
 import com.team1.project_lab_backend.repositories.StayRepository
 import com.team1.project_lab_backend.repositories.UserRepository
+import com.team1.project_lab_backend.util.GraphQLBusinessException
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -17,8 +21,15 @@ class ReviewServiceTest {
     private val reviewRepository = Mockito.mock(ReviewRepository::class.java)
     private val userRepository = Mockito.mock(UserRepository::class.java)
     private val stayRepository = Mockito.mock(StayRepository::class.java)
+    private val bookingRepository = Mockito.mock(BookingRepository::class.java)
 
-    private val reviewService = ReviewService(reviewRepository, userRepository, stayRepository)
+    private val reviewService = ReviewService(reviewRepository, userRepository, stayRepository, bookingRepository)
+
+    private fun stubEligible(userId: Int, stayId: Int) {
+        Mockito.`when`(reviewRepository.existsByUserIdAndStayId(userId, stayId)).thenReturn(false)
+        Mockito.`when`(bookingRepository.existsBookingForUserAndStayWithStatus(userId, stayId, BookingStatus.COMPLETED))
+            .thenReturn(true)
+    }
 
     @Test
     fun createReviewRejectsMissingUser() {
@@ -38,6 +49,7 @@ class ReviewServiceTest {
         val request = ReviewRequest(text = "Great stay", userId = 1, stayId = 2, rating = 4)
         Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
         Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
+        stubEligible(1, 2)
         val saved = Review(id = 5, text = request.text, userId = request.userId, stayId = request.stayId, rating = request.rating)
         Mockito.`when`(reviewRepository.save(Mockito.any(Review::class.java))).thenReturn(saved)
 
@@ -46,6 +58,71 @@ class ReviewServiceTest {
         assertEquals(5, response.id)
         assertEquals("Great stay", response.text)
         assertEquals(4, response.rating)
+    }
+
+    @Test
+    fun createReviewRejectsAlreadyReviewed() {
+        val request = ReviewRequest(text = "Great stay", userId = 1, stayId = 2, rating = 4)
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
+        Mockito.`when`(reviewRepository.existsByUserIdAndStayId(1, 2)).thenReturn(true)
+
+        val ex = assertThrows(GraphQLBusinessException::class.java) {
+            reviewService.createReview(request)
+        }
+
+        assertEquals(HttpStatus.CONFLICT, ex.statusCode)
+        assertEquals("ALREADY_REVIEWED", ex.code)
+    }
+
+    @Test
+    fun createReviewRejectsWithoutCompletedBooking() {
+        val request = ReviewRequest(text = "Great stay", userId = 1, stayId = 2, rating = 4)
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
+        Mockito.`when`(reviewRepository.existsByUserIdAndStayId(1, 2)).thenReturn(false)
+        Mockito.`when`(bookingRepository.existsBookingForUserAndStayWithStatus(1, 2, BookingStatus.COMPLETED))
+            .thenReturn(false)
+
+        val ex = assertThrows(GraphQLBusinessException::class.java) {
+            reviewService.createReview(request)
+        }
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+        assertEquals("NOT_ELIGIBLE", ex.code)
+    }
+
+    @Test
+    fun createReviewTrimsText() {
+        val request = ReviewRequest(text = "  Great stay  ", userId = 1, stayId = 2, rating = 4)
+        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
+        Mockito.`when`(stayRepository.existsById(2)).thenReturn(true)
+        stubEligible(1, 2)
+        Mockito.`when`(reviewRepository.save(Mockito.any(Review::class.java)))
+            .thenAnswer { it.arguments[0] as Review }
+
+        val response = reviewService.createReview(request)
+
+        assertEquals("Great stay", response.text)
+    }
+
+    @Test
+    fun getMyReviewForStayReturnsNullWhenNoneExists() {
+        Mockito.`when`(reviewRepository.findByUserIdAndStayId(1, 2)).thenReturn(null)
+
+        val result = reviewService.getMyReviewForStay(1, 2)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun getMyReviewForStayReturnsExistingReview() {
+        val existing = Review(id = 5, text = "Great stay", userId = 1, stayId = 2, rating = 4)
+        Mockito.`when`(reviewRepository.findByUserIdAndStayId(1, 2)).thenReturn(existing)
+
+        val result = reviewService.getMyReviewForStay(1, 2)
+
+        assertEquals(5, result?.id)
     }
 
     @Test
