@@ -1,101 +1,74 @@
 package com.team1.project_lab_backend.review.services
 
+import com.team1.project_lab_backend.booking.models.BookingStatus
+import com.team1.project_lab_backend.booking.repositories.BookingRepository
+import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.review.dto.ReviewRequest
 import com.team1.project_lab_backend.review.dto.ReviewSummary
-import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.review.models.Review
-import com.team1.project_lab_backend.booking.repositories.BookingRepository
-import com.team1.project_lab_backend.review.repositories.ReviewRepository
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
-import com.team1.project_lab_backend.identity.repositories.UserRepository
 import com.team1.project_lab_backend.util.GraphQLBusinessException
-import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
+import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.math.BigDecimal
-import java.math.RoundingMode
+import tools.jackson.databind.ObjectMapper
 
+/**
+ * Orchestration shim (docs/adr/0005): the actual Review data and its own business
+ * rules (text/rating format, duplicate-review check) now live in review-service,
+ * reached via reviewFeignClient. What's still here is exactly the cross-domain
+ * validation review-service can't do itself, because Inventory and Booking haven't
+ * been extracted yet and review-service has no way to reach their data:
+ *  - stayId existence — trusted from local Inventory data (stayRepository) until
+ *    Inventory is extracted (docs/adr/0011), at which point this becomes a Feign call.
+ *  - booking-completion eligibility — trusted from local Booking data
+ *    (bookingRepository) until Booking is extracted (Phase 6).
+ * userId existence is no longer checked at all (not deferred — dropped for good, per
+ * docs/adr/0011): it's always the JWT-authenticated caller's own id, and a valid JWT
+ * already implies a real user.
+ */
 @Service
 class ReviewService(
-    private val reviewRepository: ReviewRepository,
-    private val userRepository: UserRepository,
+    private val reviewFeignClient: ReviewFeignClient,
     private val stayRepository: StayRepository,
     private val bookingRepository: BookingRepository,
 ) {
-    @Transactional(readOnly = true)
-    fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
-        reviewRepository.findAll(PageRequest.of(page, size)).content
+    private val objectMapper = ObjectMapper()
 
-    @Transactional(readOnly = true)
+    fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
+        reviewFeignClient.list(stayId = null, userId = null, ids = null, page = page, size = size)
+
     fun getReviewsByStay(stayId: Int, page: Int = 0, size: Int = 20): List<Review> {
         stayId.requirePositive("stayId")
         stayRepository.requireExistsById(stayId, "stay not found")
-        return reviewRepository.findByStayId(stayId, PageRequest.of(page, size))
+        return reviewFeignClient.list(stayId = stayId, userId = null, ids = null, page = page, size = size)
     }
 
-    @Transactional(readOnly = true)
     fun getMyReviews(userId: Int, page: Int = 0, size: Int = 20): List<Review> {
         userId.requirePositive("userId")
-        return reviewRepository.findByUserId(userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")))
+        return reviewFeignClient.list(stayId = null, userId = userId, ids = null, page = page, size = size)
     }
 
-    @Transactional(readOnly = true)
     fun getReviewSummary(stayId: Int): ReviewSummary {
         stayId.requirePositive("stayId")
         stayRepository.requireExistsById(stayId, "stay not found")
-        val counts = reviewRepository.countByRatingForStay(stayId).associate { it.rating to it.count }
-        val total = counts.values.sum()
-        val average = if (total == 0L) {
-            null
-        } else {
-            val weightedSum = counts.entries.sumOf { (rating, count) -> rating.toLong() * count }
-            BigDecimal(weightedSum).divide(BigDecimal(total), 2, RoundingMode.HALF_UP)
-        }
-        return ReviewSummary(
-            count = total.toInt(),
-            average = average,
-            oneStar = (counts[1] ?: 0L).toInt(),
-            twoStar = (counts[2] ?: 0L).toInt(),
-            threeStar = (counts[3] ?: 0L).toInt(),
-            fourStar = (counts[4] ?: 0L).toInt(),
-            fiveStar = (counts[5] ?: 0L).toInt(),
-        )
+        return reviewFeignClient.summary(stayId)
     }
 
-    @Transactional(readOnly = true)
     fun getMyReviewForStay(userId: Int, stayId: Int): Review? {
         stayId.requirePositive("stayId")
-        return reviewRepository.findByUserIdAndStayId(userId, stayId)
+        return try {
+            reviewFeignClient.mine(userId, stayId)
+        } catch (e: FeignException.NotFound) {
+            null
+        }
     }
 
-    @Transactional
     fun createReview(request: ReviewRequest): Review {
-        val text = request.text.trim()
-        text.requireNotBlank("text")
-        if (request.rating !in 1..5)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
-        request.userId.requirePositive("userId")
         request.stayId.requirePositive("stayId")
-        if (!userRepository.existsById(request.userId)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "userId not found")
-        }
-        if (!stayRepository.existsById(request.stayId)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
-        }
-        if (reviewRepository.existsByUserIdAndStayId(request.userId, request.stayId)) {
-            throw GraphQLBusinessException(
-                "ALREADY_REVIEWED",
-                HttpStatus.CONFLICT,
-                "you have already reviewed this stay",
-            )
-        }
+        stayRepository.requireExistsById(request.stayId, "stay not found")
         if (!bookingRepository.existsBookingForUserAndStayWithStatus(request.userId, request.stayId, BookingStatus.COMPLETED)) {
             throw GraphQLBusinessException(
                 "NOT_ELIGIBLE",
@@ -103,35 +76,47 @@ class ReviewService(
                 "you must have a completed booking for this stay to review it",
             )
         }
-        return reviewRepository.save(
-            Review(text = text, userId = request.userId, stayId = request.stayId, rating = request.rating),
-        )
-    }
-
-    @Transactional
-    fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
-        id.requirePositive()
-        request.text.requireNotBlank("text")
-        if (request.rating !in 1..5)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
-        request.stayId.requirePositive("stayId")
-        val existing = reviewRepository.findById(id).orNotFound("review not found")
-        if (existing.userId != requestingUserId)
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        if (!stayRepository.existsById(request.stayId)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stayId not found")
+        return try {
+            reviewFeignClient.create(
+                CreateReviewRequest(text = request.text, userId = request.userId, stayId = request.stayId, rating = request.rating),
+            )
+        } catch (e: FeignException.Conflict) {
+            throw GraphQLBusinessException("ALREADY_REVIEWED", HttpStatus.CONFLICT, "you have already reviewed this stay")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid review")
         }
-        return reviewRepository.save(
-            Review(id = id, text = request.text, userId = existing.userId, stayId = request.stayId, rating = request.rating),
-        )
     }
 
-    @Transactional
-    fun deleteReview(id: Int, requestingUserId: Int) {
-        id.requirePositive()
-        val review = reviewRepository.findById(id).orNotFound("review not found")
-        if (review.userId != requestingUserId)
+    fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
+        request.stayId.requirePositive("stayId")
+        stayRepository.requireExistsById(request.stayId, "stay not found")
+        return try {
+            reviewFeignClient.update(
+                id,
+                UpdateReviewRequest(text = request.text, stayId = request.stayId, rating = request.rating, requestingUserId = requestingUserId),
+            )
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
+        } catch (e: FeignException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        reviewRepository.deleteById(id)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid review")
+        }
+    }
+
+    fun deleteReview(id: Int, requestingUserId: Int) {
+        try {
+            reviewFeignClient.delete(id, requestingUserId)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
+        } catch (e: FeignException.Forbidden) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        }
+    }
+
+    private fun feignErrorMessage(e: FeignException): String? = try {
+        objectMapper.readTree(e.contentUTF8()).get("message")?.stringValue()
+    } catch (parseError: Exception) {
+        null
     }
 }

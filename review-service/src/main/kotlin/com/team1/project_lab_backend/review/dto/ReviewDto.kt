@@ -12,9 +12,16 @@ data class ReviewSummary(
     val fiveStar: Int,
 )
 
-data class ReviewRequest(
+data class CreateReviewRequest(
     val text: String,
     val userId: Int,
     val stayId: Int,
     val rating: Int,
+)
+
+data class UpdateReviewRequest(
+    val text: String,
+    val stayId: Int,
+    val rating: Int,
+    val requestingUserId: Int,
 )

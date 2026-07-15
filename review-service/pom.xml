@@ -11,9 +11,9 @@
 	<artifactId>review-service</artifactId>
 	<name>review-service</name>
 	<description>
-		Empty skeleton (docs/adr/0002) — stood up ahead of its extraction phase so the
-		multi-module reactor build and Eureka registration are proven before real
-		domain code moves in.
+		Review domain (docs/adr/0002), extracted per Phase 2 of the migration plan.
+		Owns its own Postgres database and Flyway history; exposes a plain internal
+		REST API consumed by the Gateway's Feign client (docs/adr/0005, docs/adr/0008).
 	</description>
 
 	<dependencies>
@@ -26,6 +26,27 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
@@ -36,6 +57,20 @@
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>tools.jackson.module</groupId>
+			<artifactId>jackson-module-kotlin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test-junit5</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

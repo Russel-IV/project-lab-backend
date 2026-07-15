@@ -92,6 +92,16 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<!-- Feign's default Client wraps java.net.HttpURLConnection, which cannot send
+		     PATCH requests (updateReview -> review-service PATCH /internal/reviews/{id}
+		     fails with "Invalid HTTP method: PATCH" without this). This Spring Cloud
+		     version has no OkHttp auto-configuration of its own (for the plain Client
+		     bean or its LoadBalancer-wrapped variant), so both are wired manually in
+		     config/FeignConfig.kt. -->
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-okhttp</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
@@ -153,6 +163,27 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Feign contract tests (docs/adr/0008) — stubs review-service's internal API -->
+		<dependency>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock-standalone</artifactId>
+			<version>3.13.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-jackson</artifactId>
+			<version>13.6.1</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- feign-jackson uses classic com.fasterxml.jackson (not this project's Jackson 3
+		     tools.jackson), so it needs its own Kotlin module for data class decoding. -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.module</groupId>
+			<artifactId>jackson-module-kotlin</artifactId>
+			<version>2.22.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

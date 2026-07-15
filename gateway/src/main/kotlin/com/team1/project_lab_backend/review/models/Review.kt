@@ -1,23 +1,14 @@
 package com.team1.project_lab_backend.review.models
 
-import jakarta.persistence.*
-
-@Entity
-@Table(name = "review")
+/**
+ * No longer a JPA @Entity — Review is owned by review-service now (docs/adr/0002).
+ * This is a plain DTO: the GraphQL return type for ReviewResolver/ReviewBatchResolver,
+ * and the JSON shape review-service's internal REST API serializes/deserializes.
+ */
 data class Review(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int = 0,
-
-    @Column(nullable = false, columnDefinition = "TEXT")
+    val id: Int,
     val text: String,
-
-    @Column(nullable = false, name = "user_id")
     val userId: Int,
-
-    @Column(nullable = false, name = "stay_id")
     val stayId: Int,
-
-    @Column(nullable = false)
-    val rating: Int = 0,
+    val rating: Int,
 )
