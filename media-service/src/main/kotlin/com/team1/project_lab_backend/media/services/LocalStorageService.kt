@@ -7,6 +7,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.UUID
 
+/**
+ * Writes to the same `uploads` Docker volume the Gateway mounts and serves static
+ * uploads from (see gateway's WebConfig) — the Gateway's static resource handler
+ * didn't move here, so `app.public-url` below must be the Gateway's own
+ * externally-reachable URL, not this service's. A real StorageService swap-in
+ * (e.g. S3, per CLAUDE.md) would make this shared-volume detail moot: object
+ * storage URLs are already globally reachable without routing through Gateway.
+ */
 @Service
 class LocalStorageService(
     @Value("\${app.upload.dir}") private val uploadDir: String,

@@ -107,7 +107,56 @@ services:
             retries: 10
             start_period: 10s
 
+    media-service:
+        build:
+            context: .
+            dockerfile: media-service/Dockerfile
+        container_name: media-service
+        ports:
+            - "8085:8085"
+        # Same named volume project-lab-backend mounts — media-service writes files
+        # here, Gateway's existing WebConfig still serves /uploads/** from it
+        # unchanged (see media-service's LocalStorageService kdoc, docs/adr/0003).
+        volumes:
+            - uploads:/app/uploads
+        environment:
+            - MEDIA_DB_HOST=media-database
+            - MEDIA_DB_PORT=5432
+            - MEDIA_DB_NAME=${POSTGRES_DB}
+            - MEDIA_DB_USER=${POSTGRES_USER}
+            - MEDIA_DB_PASSWORD=${POSTGRES_PASSWORD}
+            - EUREKA_URL=http://eureka-server:8761/eureka
+        depends_on:
+            media-database:
+                condition: service_healthy
+            eureka-server:
+                condition: service_healthy
+
+    # Own database (docs/adr/0011). Plain postgres (no PostGIS): media has no geo data.
+    media-database:
+        image: postgres:16
+        container_name: media-database
+        ports:
+            - "5434:5432"
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        volumes:
+            - media_pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+                ]
+            interval: 2s
+            timeout: 10s
+            retries: 10
+            start_period: 10s
+
 volumes:
     pgdata:
     review_pgdata:
+    media_pgdata:
     uploads:

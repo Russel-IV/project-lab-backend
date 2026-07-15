@@ -6,9 +6,11 @@ import com.team1.project_lab_backend.identity.dto.UpdateProfileRequest
 import com.team1.project_lab_backend.identity.dto.toProfileResponse
 import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.identity.repositories.UserRepository
-import com.team1.project_lab_backend.media.services.StorageService
+import com.team1.project_lab_backend.media.services.MediaFeignClient
 import com.team1.project_lab_backend.util.FieldValidationException
+import com.team1.project_lab_backend.util.feignErrorMessage
 import com.team1.project_lab_backend.util.orNotFound
+import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -23,12 +25,12 @@ private val PHONE_REGEX = Regex("^[0-9+()\\-\\s]{7,32}$")
 @Service
 class ProfileService(
     private val userRepository: UserRepository,
-    private val storageService: StorageService,
+    private val mediaFeignClient: MediaFeignClient,
     private val passwordEncoder: PasswordEncoder,
 ) {
     @Transactional(readOnly = true)
     fun getProfile(userId: Int): ProfileResponse =
-        userRepository.findById(userId).orNotFound("user not found").toProfileResponse(storageService)
+        userRepository.findById(userId).orNotFound("user not found").toProfileResponse()
 
     @Transactional
     fun updateProfile(userId: Int, request: UpdateProfileRequest): ProfileResponse {
@@ -58,33 +60,39 @@ class ProfileService(
                 phone = request.phone,
                 profilePictureUrl = existing.profilePictureUrl,
             ),
-        ).toProfileResponse(storageService)
+        ).toProfileResponse()
     }
 
+    /**
+     * media-service owns validation/storage/the one-primary-per-owner invariant now
+     * (docs/adr/0003) — a user only ever has one picture, so isPrimary is irrelevant
+     * here (always false) and just needs media-service's per-owner uniqueness to
+     * never trigger. Upload happens before deleting the old picture (not after) so a
+     * failed upload never leaves the user with no picture at all.
+     */
     @Transactional
     fun uploadProfilePicture(userId: Int, file: MultipartFile): ProfileResponse {
         val existing = userRepository.findById(userId).orNotFound("user not found")
-        validateImageFile(file)
-        val oldPictureUrl = existing.profilePictureUrl
+        val previous = mediaFeignClient.listForOwner("USER", userId)
 
-        val key = storageService.save(file, "users/$userId")
-        try {
-            val saved = userRepository.save(
-                User(
-                    id = userId,
-                    name = existing.name,
-                    email = existing.email,
-                    passwordHash = existing.passwordHash,
-                    phone = existing.phone,
-                    profilePictureUrl = key,
-                ),
-            )
-            oldPictureUrl?.let { storageService.delete(it) }
-            return saved.toProfileResponse(storageService)
-        } catch (e: Exception) {
-            runCatching { storageService.delete(key) }
-            throw e
+        val uploaded = try {
+            mediaFeignClient.upload("USER", userId, file, caption = null, isPrimary = false, displayOrder = 0)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid image")
         }
+
+        val saved = userRepository.save(
+            User(
+                id = userId,
+                name = existing.name,
+                email = existing.email,
+                passwordHash = existing.passwordHash,
+                phone = existing.phone,
+                profilePictureUrl = uploaded.url,
+            ),
+        )
+        previous.forEach { old -> runCatching { mediaFeignClient.delete("USER", userId, old.id) } }
+        return saved.toProfileResponse()
     }
 
     @Transactional
@@ -126,21 +134,5 @@ class ProfileService(
                 deletedAt = LocalDateTime.now(),
             ),
         )
-    }
-
-    private fun validateImageFile(file: MultipartFile) {
-        if (file.isEmpty) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file must not be empty")
-        val contentType = file.contentType ?: ""
-        if (!contentType.startsWith("image/")) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file must be an image (got: $contentType)")
-        }
-        val ext = file.originalFilename?.substringAfterLast('.', "")?.lowercase() ?: ""
-        if (ext !in ALLOWED_EXTENSIONS) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported image extension: .$ext")
-        }
-    }
-
-    companion object {
-        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp", "avif")
     }
 }

@@ -1,8 +1,10 @@
 package com.team1.project_lab_backend.config
 
+import jakarta.servlet.MultipartConfigElement
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.web.servlet.HandlerInterceptor
@@ -15,6 +17,15 @@ import java.nio.file.Path
 class WebConfig(
     @Value("\${app.upload.dir}") private val uploadDir: String
 ) : WebMvcConfigurer {
+    // This Spring Boot version moved MultipartAutoConfiguration into a separate
+    // spring-boot-servlet artifact (transitively present, confirmed via `jar tf` on
+    // the built fat jar), but the DispatcherServlet registration this app actually
+    // gets never picks up its MultipartConfigElement bean — file uploads fail with
+    // "Unable to process parts as no multi-part configuration has been provided"
+    // without this explicit bean.
+    @Bean
+    fun multipartConfigElement(): MultipartConfigElement = MultipartConfigElement("")
+
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
         val absolutePath = Path.of(uploadDir).toAbsolutePath().toString()
         registry.addResourceHandler("/uploads/**")

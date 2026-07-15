@@ -1,7 +1,6 @@
 package com.team1.project_lab_backend.identity.dto
 
 import com.team1.project_lab_backend.identity.models.User
-import com.team1.project_lab_backend.media.services.StorageService
 
 data class ProfileResponse(
     val id: Int,
@@ -22,10 +21,15 @@ data class ChangePasswordRequest(
     val newPassword: String,
 )
 
-fun User.toProfileResponse(storageService: StorageService) = ProfileResponse(
+/**
+ * profilePictureUrl is stored as the fully-resolved public URL media-service's
+ * upload response returned (docs/adr/0003, Phase 3) — Identity has no StorageService
+ * of its own to resolve a key, so there's nothing left to transform here.
+ */
+fun User.toProfileResponse() = ProfileResponse(
     id = id,
     name = name,
     email = email,
     phone = phone,
-    profilePictureUrl = profilePictureUrl?.let { storageService.toUrl(it) },
+    profilePictureUrl = profilePictureUrl,
 )

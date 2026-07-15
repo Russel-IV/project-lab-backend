@@ -7,13 +7,13 @@ import com.team1.project_lab_backend.review.dto.ReviewRequest
 import com.team1.project_lab_backend.review.dto.ReviewSummary
 import com.team1.project_lab_backend.review.models.Review
 import com.team1.project_lab_backend.util.GraphQLBusinessException
+import com.team1.project_lab_backend.util.feignErrorMessage
 import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requirePositive
 import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import tools.jackson.databind.ObjectMapper
 
 /**
  * Orchestration shim (docs/adr/0005): the actual Review data and its own business
@@ -35,8 +35,6 @@ class ReviewService(
     private val stayRepository: StayRepository,
     private val bookingRepository: BookingRepository,
 ) {
-    private val objectMapper = ObjectMapper()
-
     fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
         reviewFeignClient.list(stayId = null, userId = null, ids = null, page = page, size = size)
 
@@ -112,11 +110,5 @@ class ReviewService(
         } catch (e: FeignException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
-    }
-
-    private fun feignErrorMessage(e: FeignException): String? = try {
-        objectMapper.readTree(e.contentUTF8()).get("message")?.stringValue()
-    } catch (parseError: Exception) {
-        null
     }
 }

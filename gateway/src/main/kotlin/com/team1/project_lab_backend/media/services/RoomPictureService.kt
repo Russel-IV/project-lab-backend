@@ -1,41 +1,45 @@
 package com.team1.project_lab_backend.media.services
 
-import com.team1.project_lab_backend.media.dto.RoomPictureResponse
-import com.team1.project_lab_backend.media.models.RoomPicture
-import com.team1.project_lab_backend.media.repositories.RoomPictureRepository
 import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.media.dto.RoomPictureResponse
+import com.team1.project_lab_backend.media.models.RoomPicture
+import com.team1.project_lab_backend.util.feignErrorMessage
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
+import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): picture storage/validation and the
+ * one-primary-per-owner invariant now live in media-service, reached via
+ * mediaFeignClient. What's still here is the ownership check media-service
+ * can't do itself (resolve room -> stay -> host) — until Inventory is
+ * extracted (Phase 5), at which point this becomes a Feign call too.
+ */
 @Service
 class RoomPictureService(
-    private val roomPictureRepository: RoomPictureRepository,
+    private val mediaFeignClient: MediaFeignClient,
     private val roomRepository: RoomRepository,
     private val stayRepository: StayRepository,
-    private val storageService: StorageService,
 ) {
-    @Transactional(readOnly = true)
     fun getPicturesForRoom(roomId: Int): List<RoomPictureResponse> {
         roomId.requirePositive("roomId")
-        return roomPictureRepository.findByRoomId(roomId).map { it.toResponse() }
+        return mediaFeignClient.listForOwner("ROOM", roomId).map { it.toRoomPictureResponse() }
     }
 
-    @Transactional(readOnly = true)
     fun getPicturesForRoomAsEntities(roomId: Int): List<RoomPicture> {
         roomId.requirePositive("roomId")
-        return roomPictureRepository.findByRoomId(roomId)
+        return mediaFeignClient.listForOwner("ROOM", roomId).map { it.toRoomPicture() }
     }
 
-    fun resolveUrl(roomPicture: RoomPicture): String = storageService.toUrl(roomPicture.url)
+    fun getPicturesForRooms(roomIds: List<Int>): Map<Int, List<RoomPicture>> =
+        mediaFeignClient.listForOwners("ROOM", roomIds).map { it.toRoomPicture() }.groupBy { it.roomId }
 
-    @Transactional
     fun addPicture(
         roomId: Int,
         file: MultipartFile,
@@ -45,29 +49,15 @@ class RoomPictureService(
         requestingUserId: Int,
     ): RoomPictureResponse {
         roomId.requirePositive("roomId")
-        val room = roomRepository.findById(roomId).orNotFound("room not found")
-        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId)
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        requireOwnedByRoomHost(roomId, requestingUserId)
         displayOrder.requireNonNegative("displayOrder")
-        validateImageFile(file)
-        if (isPrimary && roomPictureRepository.existsByRoomIdAndIsPrimary(roomId, true)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this room")
-        }
-        val key = storageService.save(file, "rooms/$roomId")
-        val picture = RoomPicture(
-            id = 0, roomId = roomId, url = key,
-            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
-        )
-        try {
-            return roomPictureRepository.save(picture).toResponse()
-        } catch (e: Exception) {
-            runCatching { storageService.delete(key) }
-            throw e
+        return try {
+            mediaFeignClient.upload("ROOM", roomId, file, caption, isPrimary, displayOrder).toRoomPictureResponse()
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
         }
     }
 
-    @Transactional
     fun updatePictureMetadata(
         roomId: Int,
         id: Int,
@@ -79,64 +69,36 @@ class RoomPictureService(
         roomId.requirePositive("roomId")
         id.requirePositive()
         displayOrder.requireNonNegative("displayOrder")
-        val room = roomRepository.findById(roomId).orNotFound("room not found")
-        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId)
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        val existing = roomPictureRepository.findByRoomIdAndId(roomId, id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        if (isPrimary && !existing.isPrimary && roomPictureRepository.existsByRoomIdAndIsPrimary(roomId, true)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this room")
+        requireOwnedByRoomHost(roomId, requestingUserId)
+        return try {
+            mediaFeignClient.update("ROOM", roomId, id, UpdateMediaRequest(caption, isPrimary, displayOrder)).toRoomPicture()
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
         }
-        return roomPictureRepository.save(
-            RoomPicture(
-                id = id,
-                roomId = roomId,
-                url = existing.url,
-                caption = caption,
-                isPrimary = isPrimary,
-                displayOrder = displayOrder,
-            ),
-        )
     }
 
-    @Transactional
     fun deletePicture(roomId: Int, id: Int, requestingUserId: Int) {
         roomId.requirePositive("roomId")
         id.requirePositive()
+        requireOwnedByRoomHost(roomId, requestingUserId)
+        try {
+            mediaFeignClient.delete("ROOM", roomId, id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
+        }
+    }
+
+    private fun requireOwnedByRoomHost(roomId: Int, requestingUserId: Int) {
         val room = roomRepository.findById(roomId).orNotFound("room not found")
         val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId)
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        val existing = roomPictureRepository.findByRoomIdAndId(roomId, id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        roomPictureRepository.deleteById(id)
-        storageService.delete(existing.url)
+        if (stay.host.id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
     }
 
-    private fun validateImageFile(file: MultipartFile) {
-        if (file.isEmpty) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file must not be empty")
-        val contentType = file.contentType ?: ""
-        if (!contentType.startsWith("image/")) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file must be an image (got: $contentType)")
-        }
-        val ext = file.originalFilename?.substringAfterLast('.', "")?.lowercase() ?: ""
-        if (ext !in ALLOWED_EXTENSIONS) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported image extension: .$ext")
-        }
-    }
+    private fun MediaResponse.toRoomPicture() =
+        RoomPicture(id = id, roomId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
 
-    private fun RoomPicture.toResponse(): RoomPictureResponse =
-        RoomPictureResponse(
-            id = id,
-            roomId = roomId,
-            url = storageService.toUrl(url),
-            caption = caption,
-            isPrimary = isPrimary,
-            displayOrder = displayOrder,
-        )
-
-    companion object {
-        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp", "avif")
-    }
+    private fun MediaResponse.toRoomPictureResponse() =
+        RoomPictureResponse(id = id, roomId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
 }

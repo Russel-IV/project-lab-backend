@@ -1,26 +1,14 @@
 package com.team1.project_lab_backend.media.models
 
-import jakarta.persistence.*
-
-@Entity
-@Table(name = "room_picture")
+/**
+ * Owned by media-service (docs/adr/0003) as a generic Media(ownerType=ROOM, ...) row —
+ * this is just the GraphQL-facing DTO shape, not a JPA entity.
+ */
 data class RoomPicture(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int = 0,
-
-    @Column(name = "room_id", nullable = false)
+    val id: Int,
     val roomId: Int,
-
-    @Column(name = "url", nullable = false, columnDefinition = "TEXT")
     val url: String,
-
-    @Column(name = "caption", columnDefinition = "TEXT")
     val caption: String? = null,
-
-    @Column(name = "is_primary", nullable = false)
     val isPrimary: Boolean = false,
-
-    @Column(name = "display_order", nullable = false)
-    val displayOrder: Int = 0
+    val displayOrder: Int = 0,
 )

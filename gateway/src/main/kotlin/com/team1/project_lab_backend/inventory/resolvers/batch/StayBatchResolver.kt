@@ -13,7 +13,7 @@ import com.team1.project_lab_backend.inventory.models.View
 import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.media.models.StayPicture
-import com.team1.project_lab_backend.media.repositories.StayPictureRepository
+import com.team1.project_lab_backend.media.services.StayPictureService
 import org.springframework.graphql.data.method.annotation.BatchMapping
 import org.springframework.stereotype.Controller
 import java.math.BigDecimal
@@ -22,7 +22,7 @@ import java.math.BigDecimal
 class StayBatchResolver(
     private val stayRepository: StayRepository,
     private val roomRepository: RoomRepository,
-    private val stayPictureRepository: StayPictureRepository,
+    private val stayPictureService: StayPictureService,
 ) {
     @BatchMapping
     fun rooms(stays: List<Stay>): Map<Stay, List<Room>> {
@@ -34,7 +34,7 @@ class StayBatchResolver(
     @BatchMapping
     fun pictures(stays: List<Stay>): Map<Stay, List<StayPicture>> {
         val ids = stays.map { it.id }
-        val byStayId = stayPictureRepository.findByStayIdIn(ids).groupBy { it.stayId }
+        val byStayId = stayPictureService.getPicturesForStays(ids)
         return stays.associateWith { byStayId[it.id] ?: emptyList() }
     }
 

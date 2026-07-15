@@ -4,8 +4,12 @@ import com.team1.project_lab_backend.identity.dto.ChangePasswordRequest
 import com.team1.project_lab_backend.identity.dto.UpdateProfileRequest
 import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.identity.repositories.UserRepository
-import com.team1.project_lab_backend.media.services.StorageService
+import com.team1.project_lab_backend.media.services.MediaFeignClient
+import com.team1.project_lab_backend.media.services.MediaResponse
 import com.team1.project_lab_backend.util.FieldValidationException
+import feign.FeignException
+import feign.Request
+import feign.RequestTemplate
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -16,13 +20,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.server.ResponseStatusException
+import java.nio.charset.StandardCharsets
 import java.util.Optional
 
 class ProfileServiceTest {
     private val userRepository = Mockito.mock(UserRepository::class.java)
-    private val storageService = Mockito.mock(StorageService::class.java)
+    private val mediaFeignClient = Mockito.mock(MediaFeignClient::class.java)
     private val passwordEncoder = Mockito.mock(PasswordEncoder::class.java)
-    private val service = ProfileService(userRepository, storageService, passwordEncoder)
+    private val service = ProfileService(userRepository, mediaFeignClient, passwordEncoder)
 
     private fun existingUser(
         id: Int = 1,
@@ -35,6 +40,11 @@ class ProfileServiceTest {
         email: String = "ada@example.com",
         phone: String? = "+1 555 123 4567",
     ) = UpdateProfileRequest(name = name, email = email, phone = phone)
+
+    private fun feignBadRequest(body: String) = FeignException.BadRequest(
+        "bad request", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
+    )
 
     // ---- getProfile ----
 
@@ -162,13 +172,19 @@ class ProfileServiceTest {
     fun uploadProfilePictureSavesFileAndUpdatesUser() {
         val file = MockMultipartFile("file", "avatar.png", "image/png", byteArrayOf(1, 2, 3))
         Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existingUser()))
-        Mockito.`when`(storageService.save(file, "users/1")).thenReturn("users/1/new-key.png")
-        Mockito.`when`(storageService.toUrl("users/1/new-key.png")).thenReturn("/uploads/users/1/new-key.png")
+        Mockito.`when`(mediaFeignClient.listForOwner("USER", 1)).thenReturn(emptyList())
+        Mockito.`when`(mediaFeignClient.upload("USER", 1, file, null, false, 0)).thenReturn(
+            MediaResponse(
+                id = 7, ownerType = "USER", ownerId = 1,
+                url = "http://localhost:8080/uploads/users/1/new-key.png",
+                caption = null, isPrimary = false, displayOrder = 0,
+            ),
+        )
         Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenAnswer { it.arguments[0] }
 
         val result = service.uploadProfilePicture(1, file)
 
-        assertEquals("/uploads/users/1/new-key.png", result.profilePictureUrl)
+        assertEquals("http://localhost:8080/uploads/users/1/new-key.png", result.profilePictureUrl)
         val captor = ArgumentCaptor.forClass(User::class.java)
         Mockito.verify(userRepository).save(captor.capture())
         assertEquals("hashed-secret", captor.value.passwordHash)
@@ -177,30 +193,41 @@ class ProfileServiceTest {
     @Test
     fun uploadProfilePictureDeletesPreviousPicture() {
         val file = MockMultipartFile("file", "avatar.png", "image/png", byteArrayOf(1, 2, 3))
-        val existing =
-            User(
-                id = 1,
-                name = "Ada Lovelace",
-                email = "ada@example.com",
-                passwordHash = "hashed-secret",
-                profilePictureUrl = "users/1/old-key.png",
-            )
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existing))
-        Mockito.`when`(storageService.save(file, "users/1")).thenReturn("users/1/new-key.png")
+        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existingUser()))
+        Mockito.`when`(mediaFeignClient.listForOwner("USER", 1)).thenReturn(
+            listOf(
+                MediaResponse(
+                    id = 3, ownerType = "USER", ownerId = 1,
+                    url = "http://localhost:8080/uploads/users/1/old-key.png",
+                    caption = null, isPrimary = false, displayOrder = 0,
+                ),
+            ),
+        )
+        Mockito.`when`(mediaFeignClient.upload("USER", 1, file, null, false, 0)).thenReturn(
+            MediaResponse(
+                id = 7, ownerType = "USER", ownerId = 1,
+                url = "http://localhost:8080/uploads/users/1/new-key.png",
+                caption = null, isPrimary = false, displayOrder = 0,
+            ),
+        )
         Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenAnswer { it.arguments[0] }
 
         service.uploadProfilePicture(1, file)
 
-        Mockito.verify(storageService).delete("users/1/old-key.png")
+        Mockito.verify(mediaFeignClient).delete("USER", 1, 3)
     }
 
     @Test
-    fun uploadProfilePictureRejectsNonImageFile() {
+    fun uploadProfilePictureMapsFeignBadRequestToResponseStatusException() {
         val file = MockMultipartFile("file", "notes.txt", "text/plain", byteArrayOf(1))
         Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existingUser()))
+        Mockito.`when`(mediaFeignClient.listForOwner("USER", 1)).thenReturn(emptyList())
+        Mockito.`when`(mediaFeignClient.upload("USER", 1, file, null, false, 0))
+            .thenThrow(feignBadRequest("""{"message":"file must be an image (got: text/plain)"}"""))
 
         val ex = assertThrows(ResponseStatusException::class.java) { service.uploadProfilePicture(1, file) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+        assertEquals("file must be an image (got: text/plain)", ex.reason)
     }
 
     // ---- changePassword ----
