@@ -155,8 +155,57 @@ services:
             retries: 10
             start_period: 10s
 
+    identity-service:
+        build:
+            context: .
+            dockerfile: identity-service/Dockerfile
+        container_name: identity-service
+        ports:
+            - "8081:8081"
+        environment:
+            - IDENTITY_DB_HOST=identity-database
+            - IDENTITY_DB_PORT=5432
+            - IDENTITY_DB_NAME=${POSTGRES_DB}
+            - IDENTITY_DB_USER=${POSTGRES_USER}
+            - IDENTITY_DB_PASSWORD=${POSTGRES_PASSWORD}
+            - EUREKA_URL=http://eureka-server:8761/eureka
+            # No JWT_SECRET here, matching gateway (docker-compose.yml's gateway
+            # entry doesn't set it either) — .env doesn't define JWT_SECRET in this
+            # lab environment, and Spring's ${JWT_SECRET:default} fallback only
+            # kicks in when the env var is genuinely absent, not empty. Setting
+            # JWT_SECRET= here would pass an empty string and break that fallback.
+        depends_on:
+            identity-database:
+                condition: service_healthy
+            eureka-server:
+                condition: service_healthy
+
+    # Own database (docs/adr/0011). Plain postgres (no PostGIS): identity has no geo data.
+    identity-database:
+        image: postgres:16
+        container_name: identity-database
+        ports:
+            - "5435:5432"
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        volumes:
+            - identity_pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+                ]
+            interval: 2s
+            timeout: 10s
+            retries: 10
+            start_period: 10s
+
 volumes:
     pgdata:
     review_pgdata:
     media_pgdata:
+    identity_pgdata:
     uploads:

@@ -1,7 +1,7 @@
 package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.identity.models.Host
-import com.team1.project_lab_backend.identity.repositories.HostRepository
+import com.team1.project_lab_backend.identity.services.HostFeignClient
 import com.team1.project_lab_backend.inventory.dto.AddressRequest
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
@@ -31,7 +31,7 @@ import java.util.Optional
 
 class StayServiceTest {
     private val stayRepository = Mockito.mock(StayRepository::class.java)
-    private val hostRepository = Mockito.mock(HostRepository::class.java)
+    private val hostFeignClient = Mockito.mock(HostFeignClient::class.java)
     private val propertyBrandRepository = Mockito.mock(PropertyBrandRepository::class.java)
     private val viewRepository = Mockito.mock(ViewRepository::class.java)
     private val amenityRepository = Mockito.mock(AmenityRepository::class.java)
@@ -42,7 +42,7 @@ class StayServiceTest {
     private val stayService =
         StayService(
             stayRepository,
-            hostRepository,
+            hostFeignClient,
             propertyBrandRepository,
             viewRepository,
             amenityRepository,
@@ -68,14 +68,14 @@ class StayServiceTest {
         )
 
     private fun stubHost(id: Int = 1): Host {
-        val host = Host(id = id)
-        Mockito.`when`(hostRepository.findById(id)).thenReturn(Optional.of(host))
+        val host = Host(id = id, communicationRating = null, checkinProcessRating = null, cancellationRate = null)
+        Mockito.`when`(hostFeignClient.get(id)).thenReturn(host)
         return host
     }
 
     private fun stubSave(
         request: StayRequest,
-        host: Host,
+        hostId: Int,
         id: Int = 10,
     ): Stay {
         val address =
@@ -97,7 +97,7 @@ class StayServiceTest {
                 daysFromBookingCancellationDeadline = request.daysFromBookingCancellationDeadline,
                 policiesText = request.policiesText,
                 importantInformation = request.importantInformation,
-                host = host,
+                hostId = hostId,
             )
         Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenReturn(stay)
         return stay
@@ -107,13 +107,13 @@ class StayServiceTest {
     fun createStayReturnsPersistedStay() {
         val request = baseRequest()
         val host = stubHost()
-        stubSave(request, host, id = 10)
+        stubSave(request, host.id, id = 10)
 
         val response = stayService.createStay(request, 1)
 
         assertEquals(10, response.id)
         assertEquals("Test Stay", response.name)
-        assertEquals(1, response.host.id)
+        assertEquals(1, response.hostId)
     }
 
     @Test
@@ -180,7 +180,7 @@ class StayServiceTest {
     fun createStayAllowsStarRatingAtFive() {
         val request = baseRequest().copy(starRating = BigDecimal("5.0"))
         val host = stubHost()
-        stubSave(request, host, id = 12)
+        stubSave(request, host.id, id = 12)
 
         val response = stayService.createStay(request, 1)
 
@@ -327,10 +327,10 @@ class StayServiceTest {
                 name = request.name,
                 propertyType = request.propertyType,
                 address = address,
-                host = host,
+                hostId = host.id,
             )
         Mockito.`when`(stayRepository.findById(20)).thenReturn(Optional.of(existingStay))
-        stubSave(request, host, id = 20)
+        stubSave(request, host.id, id = 20)
 
         val first = stayService.updateStay(20, request, 1)
         val second = stayService.updateStay(20, request, 1)

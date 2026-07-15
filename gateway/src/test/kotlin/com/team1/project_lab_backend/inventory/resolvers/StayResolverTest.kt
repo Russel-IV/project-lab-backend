@@ -1,6 +1,5 @@
 package com.team1.project_lab_backend.inventory.resolvers
 
-import com.team1.project_lab_backend.identity.models.Host
 import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
@@ -28,7 +27,7 @@ private fun <T> eqArg(value: T): T = Mockito.eq(value) ?: value
 class StayResolverTest {
     private val stayService = Mockito.mock(StayService::class.java)
     private val resolver = StayResolver(stayService)
-    private val authenticatedUser = User(id = 1, name = "Alice")
+    private val authenticatedUser = User(id = 1, name = "Alice", email = null)
 
     @AfterEach
     fun clearSecurityContext() {
@@ -45,7 +44,7 @@ class StayResolverTest {
             id = id,
             name = "Cozy Cabin",
             propertyType = PropertyType.HOME,
-            host = Host(id = 42),
+            hostId = 42,
             address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
         )
 

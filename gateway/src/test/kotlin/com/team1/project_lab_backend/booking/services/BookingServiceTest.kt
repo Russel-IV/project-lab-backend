@@ -5,8 +5,6 @@ import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.repositories.BookingRepository
-import com.team1.project_lab_backend.identity.models.User
-import com.team1.project_lab_backend.identity.repositories.UserRepository
 import com.team1.project_lab_backend.inventory.models.Room
 import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -29,10 +27,9 @@ private fun <T> anyArg(): T {
 
 class BookingServiceTest {
     private val bookingRepository = Mockito.mock(BookingRepository::class.java)
-    private val userRepository = Mockito.mock(UserRepository::class.java)
     private val roomRepository = Mockito.mock(RoomRepository::class.java)
 
-    private val bookingService = BookingService(bookingRepository, userRepository, roomRepository)
+    private val bookingService = BookingService(bookingRepository, roomRepository)
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
@@ -52,8 +49,6 @@ class BookingServiceTest {
             bathrooms = BigDecimal("1.0"),
         )
 
-    private fun user(id: Int = 1): User = User(id = id, name = "Alice")
-
     private fun baseRequest(
         userId: Int = 1,
         roomIds: Set<Int> = setOf(10),
@@ -72,9 +67,7 @@ class BookingServiceTest {
         roomIds: Set<Int> = setOf(10),
         sleeps: Int = 2,
     ): Booking {
-        val u = user()
         val rooms = roomIds.map { room(it, sleeps = sleeps) }
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(u))
         Mockito.`when`(roomRepository.findAllById(roomIds)).thenReturn(rooms)
         Mockito.`when`(
             roomRepository.findConflictingRooms(
@@ -87,7 +80,7 @@ class BookingServiceTest {
         val saved =
             Booking(
                 id = 99,
-                user = u,
+                userId = 1,
                 checkInDate = tomorrow,
                 checkOutDate = dayAfterTomorrow,
                 status = BookingStatus.PENDING,
@@ -163,8 +156,6 @@ class BookingServiceTest {
 
     @Test
     fun createBookingRejectsZeroGuestsCount() {
-        // Needs userId stub to get past the user lookup
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(user()))
         val ex =
             assertThrows(ResponseStatusException::class.java) {
                 bookingService.createBooking(baseRequest(guests = 0))
@@ -173,19 +164,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun createBookingRejectsUnknownUserId() {
-        Mockito.`when`(userRepository.findById(99)).thenReturn(Optional.empty())
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(userId = 99))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
     fun createBookingRejectsUnknownRoomIds() {
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(user()))
         Mockito.`when`(roomRepository.findAllById(setOf(10))).thenReturn(emptyList())
 
         val ex =
@@ -197,7 +176,6 @@ class BookingServiceTest {
 
     @Test
     fun createBookingRejectsRoomsFromDifferentStays() {
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(user()))
         val mixedStayRooms = listOf(room(10, stayId = 1), room(11, stayId = 2))
         Mockito.`when`(roomRepository.findAllById(setOf(10, 11))).thenReturn(mixedStayRooms)
 
@@ -210,7 +188,6 @@ class BookingServiceTest {
 
     @Test
     fun createBookingRejectsConflictingRooms() {
-        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(user()))
         val rooms = listOf(room(10))
         Mockito.`when`(roomRepository.findAllById(setOf(10))).thenReturn(rooms)
         Mockito.`when`(
@@ -245,12 +222,11 @@ class BookingServiceTest {
 
     @Test
     fun getBookingsByUserDelegatesToRepositoryWithPaging() {
-        val u = user()
         val bookings =
             listOf(
                 Booking(
                     id = 1,
-                    user = u,
+                    userId = 1,
                     checkInDate = tomorrow,
                     checkOutDate = dayAfterTomorrow,
                     status = BookingStatus.CONFIRMED,
@@ -294,10 +270,9 @@ class BookingServiceTest {
 
     @Test
     fun updateBookingStatusReturnsUpdatedBooking() {
-        val u = user()
         val existing =
             Booking(
-                id = 5, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
+                id = 5, userId = 1, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
                 status = BookingStatus.PENDING, guestsCount = 1,
                 createdAt = LocalDateTime.now(), totalPrice = BigDecimal("200.00"), rooms = mutableSetOf(),
             )
@@ -336,11 +311,10 @@ class BookingServiceTest {
 
     @Test
     fun deleteBookingInvokesRepository() {
-        val u = user()
         val booking =
             Booking(
                 id = 5,
-                user = u,
+                userId = 1,
                 checkInDate = tomorrow,
                 checkOutDate = dayAfterTomorrow,
                 status = BookingStatus.PENDING,
@@ -359,6 +333,6 @@ class BookingServiceTest {
 // Booking is a data class — copy is available
 private fun Booking.copy(status: BookingStatus) =
     Booking(
-        id = id, user = user, checkInDate = checkInDate, checkOutDate = checkOutDate,
+        id = id, userId = userId, checkInDate = checkInDate, checkOutDate = checkOutDate,
         status = status, guestsCount = guestsCount, createdAt = createdAt, totalPrice = totalPrice, rooms = rooms,
     )

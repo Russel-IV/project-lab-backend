@@ -32,7 +32,7 @@ class BookingResolverTest {
 
     private val tomorrow = LocalDate.now().plusDays(1)
     private val dayAfter = LocalDate.now().plusDays(2)
-    private val authenticatedUser = User(id = 1, name = "Alice")
+    private val authenticatedUser = User(id = 1, name = "Alice", email = null)
 
     @AfterEach
     fun clearSecurityContext() {
@@ -47,7 +47,7 @@ class BookingResolverTest {
     private fun sampleBooking(id: Int = 1) =
         Booking(
             id = id,
-            user = authenticatedUser,
+            userId = authenticatedUser.id,
             checkInDate = tomorrow,
             checkOutDate = dayAfter,
             status = BookingStatus.PENDING,
@@ -163,7 +163,7 @@ class BookingResolverTest {
         val confirmed =
             Booking(
                 id = 1,
-                user = authenticatedUser,
+                userId = authenticatedUser.id,
                 checkInDate = tomorrow,
                 checkOutDate = dayAfter,
                 status = BookingStatus.CONFIRMED,

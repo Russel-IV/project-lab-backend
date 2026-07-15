@@ -29,7 +29,7 @@ class ReviewResolverTest {
     private val reviewService = Mockito.mock(ReviewService::class.java)
     private val resolver = ReviewResolver(reviewService)
 
-    private val authenticatedUser = User(id = 1, name = "Alice")
+    private val authenticatedUser = User(id = 1, name = "Alice", email = null)
 
     @AfterEach
     fun clearSecurityContext() {

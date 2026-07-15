@@ -93,7 +93,7 @@ class RoomPictureService(
     private fun requireOwnedByRoomHost(roomId: Int, requestingUserId: Int) {
         val room = roomRepository.findById(roomId).orNotFound("room not found")
         val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        if (stay.hostId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
     }
 
     private fun MediaResponse.toRoomPicture() =

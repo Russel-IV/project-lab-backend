@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.resolvers.batch
 
 import com.team1.project_lab_backend.identity.models.Host
+import com.team1.project_lab_backend.identity.services.HostFeignClient
 import com.team1.project_lab_backend.inventory.models.Accessibility
 import com.team1.project_lab_backend.inventory.models.Amenity
 import com.team1.project_lab_backend.inventory.models.MealPlan
@@ -23,6 +24,7 @@ class StayBatchResolver(
     private val stayRepository: StayRepository,
     private val roomRepository: RoomRepository,
     private val stayPictureService: StayPictureService,
+    private val hostFeignClient: HostFeignClient,
 ) {
     @BatchMapping
     fun rooms(stays: List<Stay>): Map<Stay, List<Room>> {
@@ -40,9 +42,9 @@ class StayBatchResolver(
 
     @BatchMapping
     fun host(stays: List<Stay>): Map<Stay, Host> {
-        val ids = stays.map { it.id }
-        val loaded = stayRepository.findByIdInWithHost(ids).associateBy { it.id }
-        return stays.associateWith { loaded[it.id]!!.host }
+        val ids = stays.map { it.hostId }.distinct()
+        val loaded = hostFeignClient.list(ids).associateBy { it.id }
+        return stays.associateWith { loaded[it.hostId]!! }
     }
 
     @BatchMapping

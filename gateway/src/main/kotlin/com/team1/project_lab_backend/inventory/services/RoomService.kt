@@ -49,7 +49,7 @@ class RoomService(
     ): Room {
         stayId.requirePositive("stayId")
         val stay = stayRepository.findById(stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) {
+        if (stay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         validateRoomRequest(request)
@@ -76,7 +76,7 @@ class RoomService(
         id.requirePositive()
         val existing = roomRepository.findById(id).orNotFound("room not found")
         val stay = stayRepository.findById(existing.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) {
+        if (stay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         validateRoomRequest(request)
@@ -102,7 +102,7 @@ class RoomService(
         id.requirePositive()
         val room = roomRepository.findById(id).orNotFound("room not found")
         val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) {
+        if (stay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         roomRepository.deleteById(id)

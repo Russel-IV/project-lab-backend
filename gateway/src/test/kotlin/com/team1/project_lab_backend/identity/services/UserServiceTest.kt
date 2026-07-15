@@ -2,7 +2,7 @@ package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.UserRequest
 import com.team1.project_lab_backend.identity.models.User
-import com.team1.project_lab_backend.identity.repositories.UserRepository
+import feign.FeignException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -11,23 +11,24 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
 class UserServiceTest {
-    private val userRepository = Mockito.mock(UserRepository::class.java)
-    private val userService = UserService(userRepository)
+    private val userFeignClient = Mockito.mock(UserFeignClient::class.java)
+    private val userService = UserService(userFeignClient)
 
     @Test
-    fun createUserRejectsBlankName() {
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                userService.createUser(UserRequest(name = "  "))
-            }
+    fun createUserMapsFeignBadRequestToBadRequest() {
+        Mockito.`when`(userFeignClient.create(UserUpsertRequest(name = "  ")))
+            .thenThrow(FeignException.BadRequest::class.java)
 
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            userService.createUser(UserRequest(name = "  "))
+        }
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
 
     @Test
     fun createUserReturnsPersistedUser() {
-        val saved = User(id = 1, name = "Alice")
-        Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenReturn(saved)
+        Mockito.`when`(userFeignClient.create(UserUpsertRequest(name = "Alice")))
+            .thenReturn(User(id = 1, name = "Alice", email = null))
 
         val response = userService.createUser(UserRequest(name = "Alice"))
 
@@ -37,21 +38,30 @@ class UserServiceTest {
 
     @Test
     fun updateUserReturnsNotFoundWhenMissing() {
-        Mockito.`when`(userRepository.existsById(42)).thenReturn(false)
+        Mockito.`when`(userFeignClient.update(42, 42, UserUpsertRequest(name = "Updated")))
+            .thenThrow(FeignException.NotFound::class.java)
 
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                userService.updateUser(42, UserRequest(name = "Updated"), 42)
-            }
-
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            userService.updateUser(42, UserRequest(name = "Updated"), 42)
+        }
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
     }
 
     @Test
+    fun updateUserRejectsNonOwner() {
+        Mockito.`when`(userFeignClient.update(1, 2, UserUpsertRequest(name = "Bob")))
+            .thenThrow(FeignException.Forbidden::class.java)
+
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            userService.updateUser(1, UserRequest(name = "Bob"), 2)
+        }
+        assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
+    }
+
+    @Test
     fun updateUserReturnsUpdatedUser() {
-        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
-        val saved = User(id = 1, name = "Bob")
-        Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenReturn(saved)
+        Mockito.`when`(userFeignClient.update(1, 1, UserUpsertRequest(name = "Bob")))
+            .thenReturn(User(id = 1, name = "Bob", email = null))
 
         val result = userService.updateUser(1, UserRequest(name = "Bob"), 1)
 
@@ -60,31 +70,19 @@ class UserServiceTest {
     }
 
     @Test
-    fun updateUserRejectsBlankName() {
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                userService.updateUser(1, UserRequest(name = ""), 1)
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
-    }
-
-    @Test
     fun deleteUserReturnsNotFoundWhenMissing() {
-        Mockito.`when`(userRepository.existsById(99)).thenReturn(false)
+        Mockito.`when`(userFeignClient.delete(99, 99)).thenThrow(FeignException.NotFound::class.java)
 
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                userService.deleteUser(99, 99)
-            }
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            userService.deleteUser(99, 99)
+        }
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
     }
 
     @Test
-    fun deleteUserInvokesRepository() {
-        Mockito.`when`(userRepository.existsById(1)).thenReturn(true)
-
+    fun deleteUserInvokesFeignClient() {
         userService.deleteUser(1, 1)
 
-        Mockito.verify(userRepository).deleteById(1)
+        Mockito.verify(userFeignClient).delete(1, 1)
     }
 }

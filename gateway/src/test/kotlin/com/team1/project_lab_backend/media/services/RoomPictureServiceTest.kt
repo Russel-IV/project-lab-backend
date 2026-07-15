@@ -1,6 +1,5 @@
 package com.team1.project_lab_backend.media.services
 
-import com.team1.project_lab_backend.identity.models.Host
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Room
@@ -47,7 +46,7 @@ class RoomPictureServiceTest {
 
     private fun sampleStay(stayId: Int = 10, hostId: Int = 1) = Stay(
         id = stayId, name = "Test Stay", propertyType = PropertyType.HOME,
-        host = Host(id = hostId),
+        hostId = hostId,
         address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
     )
 

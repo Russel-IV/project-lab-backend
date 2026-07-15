@@ -1,6 +1,5 @@
 package com.team1.project_lab_backend.inventory.models
 
-import com.team1.project_lab_backend.identity.models.Host
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
 import java.math.BigDecimal
@@ -51,10 +50,12 @@ open class Stay(
     @Column(name = "important_information", columnDefinition = "TEXT")
     open val importantInformation: String? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "host_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.RESTRICT)
-    open val host: Host,
+    // Host lives in identity-service now (docs/adr/0002, docs/adr/0011, Phase 4) — no
+    // FK, no live JPA relation. Existence is verified via a Feign call at write time
+    // (StayService.buildStay), not a DB constraint. StayBatchResolver.host() Feign-
+    // fetches host details for the GraphQL Stay.host field.
+    @Column(name = "host_id", nullable = false)
+    open val hostId: Int,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_brand_id")

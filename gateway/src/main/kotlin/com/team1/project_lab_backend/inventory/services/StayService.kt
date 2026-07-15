@@ -2,7 +2,7 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
-import com.team1.project_lab_backend.identity.repositories.HostRepository
+import com.team1.project_lab_backend.identity.services.HostFeignClient
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Address
@@ -25,6 +25,7 @@ import com.team1.project_lab_backend.util.requireInRange
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import feign.FeignException
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.JoinType
@@ -43,7 +44,7 @@ import java.time.LocalDate
 @Service
 class StayService(
     private val stayRepository: StayRepository,
-    private val hostRepository: HostRepository,
+    private val hostFeignClient: HostFeignClient,
     private val propertyBrandRepository: PropertyBrandRepository,
     private val viewRepository: ViewRepository,
     private val amenityRepository: AmenityRepository,
@@ -90,7 +91,7 @@ class StayService(
         id.requirePositive()
         validateStayRequest(request)
         val existingStay = stayRepository.findById(id).orNotFound("stay not found")
-        if (existingStay.host.id != requestingUserId) {
+        if (existingStay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         return stayRepository.save(buildStay(id, request, existingAddressId = existingStay.address.id))
@@ -103,7 +104,7 @@ class StayService(
     ) {
         id.requirePositive()
         val stay = stayRepository.findById(id).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) {
+        if (stay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         stayRepository.deleteById(id)
@@ -139,7 +140,15 @@ class StayService(
         request: StayRequest,
         existingAddressId: Int = 0,
     ): Stay {
-        val host = hostRepository.findById(request.hostId).orBadRequest("hostId not found")
+        // Host is a genuine opt-in specialization of User (not every authenticated
+        // user has a host profile), so unlike userId elsewhere in this migration this
+        // existence check can't just be dropped as "implied by a valid JWT" — it's a
+        // real Feign call to identity-service (docs/adr/0002, docs/adr/0011, Phase 4).
+        try {
+            hostFeignClient.get(request.hostId)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "hostId not found")
+        }
         val propertyBrand =
             request.propertyBrandId?.let { brandId ->
                 propertyBrandRepository.findById(brandId).orBadRequest("propertyBrandId not found")
@@ -176,7 +185,7 @@ class StayService(
             daysFromBookingCancellationDeadline = request.daysFromBookingCancellationDeadline,
             policiesText = request.policiesText,
             importantInformation = request.importantInformation,
-            host = host,
+            hostId = request.hostId,
             propertyBrand = propertyBrand,
             views = views,
             amenities = amenities,

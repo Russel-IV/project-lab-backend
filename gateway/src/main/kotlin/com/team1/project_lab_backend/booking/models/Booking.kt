@@ -1,11 +1,8 @@
 package com.team1.project_lab_backend.booking.models
 
-import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.inventory.models.Room
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.OnDelete
-import org.hibernate.annotations.OnDeleteAction
 import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -22,10 +19,13 @@ open class Booking(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     open val id: Int = 0,
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.RESTRICT)
-    open val user: User,
+    // User lives in identity-service now (docs/adr/0002, docs/adr/0011, Phase 4) — no
+    // FK, no live JPA relation, and no existence check either: userId is always the
+    // JWT-authenticated caller's own id (BookingResolver.createBooking), and a valid
+    // JWT already implies a real user. BookingBatchResolver.user() Feign-fetches user
+    // details for the GraphQL Booking.user field.
+    @Column(name = "user_id", nullable = false)
+    open val userId: Int,
 
     @Column(name = "check_in_date", nullable = false)
     open val checkInDate: LocalDate,

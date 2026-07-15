@@ -90,7 +90,7 @@ class StayPictureService(
 
     private fun requireOwnedByStayHost(stayId: Int, requestingUserId: Int) {
         val stay = stayRepository.findById(stayId).orNotFound("stay not found")
-        if (stay.host.id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        if (stay.hostId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
     }
 
     private fun MediaResponse.toStayPicture() =

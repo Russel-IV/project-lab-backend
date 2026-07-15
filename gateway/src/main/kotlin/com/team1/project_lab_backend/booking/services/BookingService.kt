@@ -6,8 +6,6 @@ import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.repositories.BookingRepository
 import com.team1.project_lab_backend.inventory.repositories.RoomRepository
-import com.team1.project_lab_backend.identity.repositories.UserRepository
-import com.team1.project_lab_backend.util.orBadRequest
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
 import com.team1.project_lab_backend.util.requireExistsById
@@ -26,7 +24,6 @@ private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIR
 @Service
 class BookingService(
     private val bookingRepository: BookingRepository,
-    private val userRepository: UserRepository,
     private val roomRepository: RoomRepository,
 ) {
     @Transactional(readOnly = true)
@@ -54,10 +51,13 @@ class BookingService(
         return bookingRepository.existsBookingForUserAndStayWithStatus(userId, stayId, BookingStatus.COMPLETED)
     }
 
+    // request.userId is always the JWT-authenticated caller's own id
+    // (BookingResolver.createBooking) — existence is implied by a valid JWT, not
+    // re-checked (docs/adr/0011, Phase 4; User itself no longer has a local
+    // repository here to check against anyway).
     @Transactional
     fun createBooking(request: BookingRequest): Booking {
         request.userId.requirePositive("userId")
-        val user = userRepository.findById(request.userId).orBadRequest("userId not found")
 
         if (request.roomIds.isEmpty()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds must not be empty")
@@ -109,7 +109,7 @@ class BookingService(
         return bookingRepository.save(
             Booking(
                 id = 0,
-                user = user,
+                userId = request.userId,
                 checkInDate = request.checkInDate,
                 checkOutDate = request.checkOutDate,
                 status = BookingStatus.PENDING,
@@ -127,7 +127,7 @@ class BookingService(
         return bookingRepository.save(
             Booking(
                 id = existing.id,
-                user = existing.user,
+                userId = existing.userId,
                 checkInDate = existing.checkInDate,
                 checkOutDate = existing.checkOutDate,
                 status = request.status,
@@ -143,7 +143,7 @@ class BookingService(
     fun deleteBooking(id: Int, requestingUserId: Int) {
         id.requirePositive()
         val booking = bookingRepository.findById(id).orNotFound("booking not found")
-        if (booking.user.id != requestingUserId)
+        if (booking.userId != requestingUserId)
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         bookingRepository.deleteById(id)
     }
