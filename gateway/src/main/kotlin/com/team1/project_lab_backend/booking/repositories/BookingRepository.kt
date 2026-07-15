@@ -5,17 +5,41 @@ import com.team1.project_lab_backend.booking.models.BookingStatus
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import java.time.LocalDate
 
 interface BookingRepository : JpaRepository<Booking, Int> {
 
     fun findByUserId(userId: Int, pageable: Pageable): List<Booking>
 
-    @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.rooms WHERE b.id IN :ids")
-    fun findByIdInWithRooms(ids: List<Int>): List<Booking>
+    @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.roomIds WHERE b.id IN :ids")
+    fun findByIdInWithRoomIds(ids: List<Int>): List<Booking>
 
+    // Pure booking_room + booking data (docs/adr/0010, Phase 5) — Room itself moved to
+    // inventory-service, so this can no longer join to it; it doesn't need to, since
+    // only room ids (not any Room attribute) are required to answer "which of these
+    // rooms conflict with this date range". Backs both booking-service's own
+    // createBooking check and the interim /internal/bookings/conflicting-room-ids
+    // endpoint inventory-service calls (BookingConflictController).
     @Query(
-        "SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b JOIN b.rooms r " +
-            "WHERE b.userId = :userId AND r.stayId = :stayId AND b.status = :status",
+        """
+        SELECT DISTINCT ri FROM Booking b JOIN b.roomIds ri
+        WHERE (:roomIds IS NULL OR ri IN :roomIds)
+        AND b.status IN :activeStatuses
+        AND b.checkInDate < :checkOut
+        AND b.checkOutDate > :checkIn
+        """,
     )
-    fun existsBookingForUserAndStayWithStatus(userId: Int, stayId: Int, status: BookingStatus): Boolean
+    fun findConflictingRoomIds(
+        roomIds: List<Int>?,
+        checkIn: LocalDate,
+        checkOut: LocalDate,
+        activeStatuses: List<BookingStatus>,
+    ): Set<Int>
+
+    // Used by hasCompletedBookingForStay (BookingService) — returns every room id the
+    // user has a booking with the given status against, so the caller can resolve
+    // those ids to stayIds via inventory-service and check for a match. Room's own
+    // stayId column isn't reachable from here anymore (docs/adr/0010, Phase 5).
+    @Query("SELECT DISTINCT ri FROM Booking b JOIN b.roomIds ri WHERE b.userId = :userId AND b.status = :status")
+    fun findRoomIdsForUserWithStatus(userId: Int, status: BookingStatus): Set<Int>
 }

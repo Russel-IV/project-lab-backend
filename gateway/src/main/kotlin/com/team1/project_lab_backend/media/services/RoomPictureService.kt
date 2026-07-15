@@ -1,11 +1,10 @@
 package com.team1.project_lab_backend.media.services
 
-import com.team1.project_lab_backend.inventory.repositories.RoomRepository
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.inventory.services.RoomFeignClient
+import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import com.team1.project_lab_backend.media.dto.RoomPictureResponse
 import com.team1.project_lab_backend.media.models.RoomPicture
 import com.team1.project_lab_backend.util.feignErrorMessage
-import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
 import feign.FeignException
@@ -17,15 +16,15 @@ import org.springframework.web.server.ResponseStatusException
 /**
  * Orchestration shim (docs/adr/0005): picture storage/validation and the
  * one-primary-per-owner invariant now live in media-service, reached via
- * mediaFeignClient. What's still here is the ownership check media-service
- * can't do itself (resolve room -> stay -> host) — until Inventory is
- * extracted (Phase 5), at which point this becomes a Feign call too.
+ * mediaFeignClient. What's still here is the ownership check media-service can't do
+ * itself (resolve room -> stay -> host) — now two Feign calls to inventory-service
+ * (docs/adr/0011, Phase 5) rather than local repository lookups.
  */
 @Service
 class RoomPictureService(
     private val mediaFeignClient: MediaFeignClient,
-    private val roomRepository: RoomRepository,
-    private val stayRepository: StayRepository,
+    private val roomFeignClient: RoomFeignClient,
+    private val stayFeignClient: StayFeignClient,
 ) {
     fun getPicturesForRoom(roomId: Int): List<RoomPictureResponse> {
         roomId.requirePositive("roomId")
@@ -91,8 +90,18 @@ class RoomPictureService(
     }
 
     private fun requireOwnedByRoomHost(roomId: Int, requestingUserId: Int) {
-        val room = roomRepository.findById(roomId).orNotFound("room not found")
-        val stay = stayRepository.findById(room.stayId).orNotFound("stay not found")
+        val room =
+            try {
+                roomFeignClient.get(roomId)
+            } catch (e: FeignException.NotFound) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "room not found")
+            }
+        val stay =
+            try {
+                stayFeignClient.get(room.stayId)
+            } catch (e: FeignException.NotFound) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
+            }
         if (stay.hostId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
     }
 

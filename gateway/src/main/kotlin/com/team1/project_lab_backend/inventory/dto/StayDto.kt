@@ -1,8 +1,6 @@
 package com.team1.project_lab_backend.inventory.dto
 
 import com.team1.project_lab_backend.inventory.models.PropertyType
-import com.team1.project_lab_backend.media.dto.StayPictureResponse
-import org.locationtech.jts.geom.Point
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -24,7 +22,11 @@ data class StayRequest(
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
     val travelerExperienceIds: Set<Int> = emptySet(),
-    val location: Point? = null,
+    // Not a JTS Point (docs/adr/0010, Phase 5) — this DTO is now sent as the Feign
+    // request body to inventory-service, and Point has no Jackson mapping without an
+    // extra datatype module this project doesn't otherwise need.
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
 
 data class StayFilter(
@@ -40,28 +42,4 @@ data class StayFilter(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
-)
-
-data class StayResponse(
-    val id: Int,
-    val name: String,
-    val about: String?,
-    val propertyType: PropertyType,
-    val address: AddressResponse,
-    val isRefundable: Boolean,
-    val starRating: BigDecimal?,
-    val daysFromBookingCancellationDeadline: Int?,
-    val policiesText: String?,
-    val importantInformation: String?,
-    val hostId: Int,
-    val propertyBrandId: Int?,
-    val viewIds: Set<Int>,
-    val amenityIds: Set<Int>,
-    val accessibilityIds: Set<Int>,
-    val mealPlanIds: Set<Int>,
-    val paymentTypeIds: Set<Int>,
-    val travelerExperienceIds: Set<Int>,
-    val rooms: List<RoomResponse>,
-    val pictures: List<StayPictureResponse>,
-    val startingFromPrice: BigDecimal?,
 )

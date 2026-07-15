@@ -2,48 +2,49 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.PropertyBrandRequest
 import com.team1.project_lab_backend.inventory.models.PropertyBrand
-import com.team1.project_lab_backend.inventory.repositories.PropertyBrandRepository
-import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
-import com.team1.project_lab_backend.util.requirePositive
+import com.team1.project_lab_backend.util.feignErrorMessage
+import feign.FeignException
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): PropertyBrand CRUD now lives in inventory-service,
+ * reached via propertyBrandFeignClient.
+ */
 @Service
-class PropertyBrandService(
-    private val propertyBrandRepository: PropertyBrandRepository,
-) {
-    @Transactional(readOnly = true)
-    fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandRepository.findAll()
+class PropertyBrandService(private val propertyBrandFeignClient: PropertyBrandFeignClient) {
 
-    @Transactional(readOnly = true)
-    fun getPropertyBrandById(id: Int): PropertyBrand {
-        id.requirePositive()
-        return propertyBrandRepository.findById(id).orNotFound("property brand not found")
-    }
+    fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandFeignClient.list(ids = null)
 
-    @Transactional
-    fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrand {
-        request.brandName.requireNotBlank("brandName")
-        return propertyBrandRepository.save(PropertyBrand(brandName = request.brandName))
-    }
+    fun getPropertyBrandById(id: Int): PropertyBrand =
+        try {
+            propertyBrandFeignClient.get(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
+        }
 
-    @Transactional
-    fun updatePropertyBrand(
-        id: Int,
-        request: PropertyBrandRequest,
-    ): PropertyBrand {
-        id.requirePositive()
-        request.brandName.requireNotBlank("brandName")
-        propertyBrandRepository.requireExistsById(id, "property brand not found")
-        return propertyBrandRepository.save(PropertyBrand(id = id, brandName = request.brandName))
-    }
+    fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrand =
+        try {
+            propertyBrandFeignClient.create(request)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid property brand")
+        }
 
-    @Transactional
+    fun updatePropertyBrand(id: Int, request: PropertyBrandRequest): PropertyBrand =
+        try {
+            propertyBrandFeignClient.update(id, request)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid property brand")
+        }
+
     fun deletePropertyBrand(id: Int) {
-        id.requirePositive()
-        propertyBrandRepository.requireExistsById(id, "property brand not found")
-        propertyBrandRepository.deleteById(id)
+        try {
+            propertyBrandFeignClient.delete(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
+        }
     }
 }

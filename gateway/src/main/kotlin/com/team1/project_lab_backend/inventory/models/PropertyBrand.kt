@@ -1,21 +1,7 @@
 package com.team1.project_lab_backend.inventory.models
 
-import jakarta.persistence.*
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
-
-@Entity
-@Table(
-    name = "property_brand",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["brand_name"])]
-)
-open class PropertyBrand(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open val id: Int = 0,
-
-    @Column(name = "brand_name", nullable = false, unique = true, length = 100)
-    @field:NotBlank
-    @field:Size(max = 100)
-    open val brandName: String
+/** Owned by inventory-service (docs/adr/0002, Phase 5) — GraphQL-facing DTO, not a JPA entity. */
+data class PropertyBrand(
+    val id: Int,
+    val brandName: String,
 )

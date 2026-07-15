@@ -1,10 +1,9 @@
 package com.team1.project_lab_backend.media.services
 
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import com.team1.project_lab_backend.media.dto.StayPictureResponse
 import com.team1.project_lab_backend.media.models.StayPicture
 import com.team1.project_lab_backend.util.feignErrorMessage
-import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
 import feign.FeignException
@@ -16,14 +15,14 @@ import org.springframework.web.server.ResponseStatusException
 /**
  * Orchestration shim (docs/adr/0005): picture storage/validation and the
  * one-primary-per-owner invariant now live in media-service, reached via
- * mediaFeignClient. What's still here is the ownership check media-service
- * can't do itself — it has no local Stay data — until Inventory is extracted
- * (Phase 5), at which point this becomes a Feign call too.
+ * mediaFeignClient. What's still here is the ownership check media-service can't do
+ * itself — it has no Stay data — now a Feign call to inventory-service (docs/adr/0011,
+ * Phase 5) rather than a local repository lookup.
  */
 @Service
 class StayPictureService(
     private val mediaFeignClient: MediaFeignClient,
-    private val stayRepository: StayRepository,
+    private val stayFeignClient: StayFeignClient,
 ) {
     fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
         stayId.requirePositive("stayId")
@@ -89,7 +88,12 @@ class StayPictureService(
     }
 
     private fun requireOwnedByStayHost(stayId: Int, requestingUserId: Int) {
-        val stay = stayRepository.findById(stayId).orNotFound("stay not found")
+        val stay =
+            try {
+                stayFeignClient.get(stayId)
+            } catch (e: FeignException.NotFound) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
+            }
         if (stay.hostId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
     }
 

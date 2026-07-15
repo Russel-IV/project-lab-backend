@@ -2,48 +2,42 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.ViewRequest
 import com.team1.project_lab_backend.inventory.models.View
-import com.team1.project_lab_backend.inventory.repositories.ViewRepository
-import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
-import com.team1.project_lab_backend.util.requirePositive
+import com.team1.project_lab_backend.util.feignErrorMessage
+import feign.FeignException
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): View CRUD now lives in inventory-service,
+ * reached via viewFeignClient.
+ */
 @Service
-class ViewService(
-    private val viewRepository: ViewRepository,
-) {
-    @Transactional(readOnly = true)
-    fun getAllViews(): List<View> = viewRepository.findAll()
+class ViewService(private val viewFeignClient: ViewFeignClient) {
 
-    @Transactional(readOnly = true)
-    fun getViewById(id: Int): View {
-        id.requirePositive()
-        return viewRepository.findById(id).orNotFound("view not found")
-    }
+    fun getAllViews(): List<View> = viewFeignClient.list(ids = null)
 
-    @Transactional
-    fun createView(request: ViewRequest): View {
-        request.viewType.requireNotBlank("viewType")
-        return viewRepository.save(View(viewType = request.viewType))
-    }
+    fun createView(request: ViewRequest): View =
+        try {
+            viewFeignClient.create(request)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid view")
+        }
 
-    @Transactional
-    fun updateView(
-        id: Int,
-        request: ViewRequest,
-    ): View {
-        id.requirePositive()
-        request.viewType.requireNotBlank("viewType")
-        viewRepository.requireExistsById(id, "view not found")
-        return viewRepository.save(View(id = id, viewType = request.viewType))
-    }
+    fun updateView(id: Int, request: ViewRequest): View =
+        try {
+            viewFeignClient.update(id, request)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "view not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid view")
+        }
 
-    @Transactional
     fun deleteView(id: Int) {
-        id.requirePositive()
-        viewRepository.requireExistsById(id, "view not found")
-        viewRepository.deleteById(id)
+        try {
+            viewFeignClient.delete(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "view not found")
+        }
     }
 }

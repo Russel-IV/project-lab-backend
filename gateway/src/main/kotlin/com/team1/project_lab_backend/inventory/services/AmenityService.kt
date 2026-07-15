@@ -2,48 +2,49 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.AmenityRequest
 import com.team1.project_lab_backend.inventory.models.Amenity
-import com.team1.project_lab_backend.inventory.repositories.AmenityRepository
-import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
-import com.team1.project_lab_backend.util.requirePositive
+import com.team1.project_lab_backend.util.feignErrorMessage
+import feign.FeignException
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): Amenity CRUD now lives in inventory-service,
+ * reached via amenityFeignClient.
+ */
 @Service
-class AmenityService(
-    private val amenityRepository: AmenityRepository,
-) {
-    @Transactional(readOnly = true)
-    fun getAllAmenities(): List<Amenity> = amenityRepository.findAll()
+class AmenityService(private val amenityFeignClient: AmenityFeignClient) {
 
-    @Transactional(readOnly = true)
-    fun getAmenityById(id: Int): Amenity {
-        id.requirePositive()
-        return amenityRepository.findById(id).orNotFound("amenity not found")
-    }
+    fun getAllAmenities(): List<Amenity> = amenityFeignClient.list(ids = null)
 
-    @Transactional
-    fun createAmenity(request: AmenityRequest): Amenity {
-        request.name.requireNotBlank("name")
-        return amenityRepository.save(Amenity(name = request.name, type = request.type))
-    }
+    fun getAmenityById(id: Int): Amenity =
+        try {
+            amenityFeignClient.get(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "amenity not found")
+        }
 
-    @Transactional
-    fun updateAmenity(
-        id: Int,
-        request: AmenityRequest,
-    ): Amenity {
-        id.requirePositive()
-        request.name.requireNotBlank("name")
-        amenityRepository.requireExistsById(id, "amenity not found")
-        return amenityRepository.save(Amenity(id = id, name = request.name, type = request.type))
-    }
+    fun createAmenity(request: AmenityRequest): Amenity =
+        try {
+            amenityFeignClient.create(request)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid amenity")
+        }
 
-    @Transactional
+    fun updateAmenity(id: Int, request: AmenityRequest): Amenity =
+        try {
+            amenityFeignClient.update(id, request)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "amenity not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid amenity")
+        }
+
     fun deleteAmenity(id: Int) {
-        id.requirePositive()
-        amenityRepository.requireExistsById(id, "amenity not found")
-        amenityRepository.deleteById(id)
+        try {
+            amenityFeignClient.delete(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "amenity not found")
+        }
     }
 }

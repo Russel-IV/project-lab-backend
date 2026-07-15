@@ -3,7 +3,7 @@ package com.team1.project_lab_backend.media.services
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import feign.FeignException
 import feign.Request
 import feign.RequestTemplate
@@ -15,13 +15,12 @@ import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.server.ResponseStatusException
 import java.nio.charset.StandardCharsets
-import java.util.Optional
 
 class StayPictureServiceTest {
     private val mediaFeignClient = Mockito.mock(MediaFeignClient::class.java)
-    private val stayRepository = Mockito.mock(StayRepository::class.java)
+    private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
 
-    private val service = StayPictureService(mediaFeignClient, stayRepository)
+    private val service = StayPictureService(mediaFeignClient, stayFeignClient)
 
     private fun mediaResponse(
         id: Int = 1,
@@ -42,7 +41,7 @@ class StayPictureServiceTest {
     )
 
     private fun stubStay(stayId: Int = 10, hostId: Int = 1) {
-        Mockito.`when`(stayRepository.findById(stayId)).thenReturn(Optional.of(sampleStay(stayId, hostId)))
+        Mockito.`when`(stayFeignClient.get(stayId)).thenReturn(sampleStay(stayId, hostId))
     }
 
     private fun feignBadRequest(body: String) = FeignException.BadRequest(
@@ -54,7 +53,7 @@ class StayPictureServiceTest {
 
     @Test
     fun addPictureRejectsStayNotFound() {
-        Mockito.`when`(stayRepository.findById(99)).thenReturn(Optional.empty())
+        Mockito.`when`(stayFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
             service.addPicture(99, imageFile(), null, false, 0, 1)

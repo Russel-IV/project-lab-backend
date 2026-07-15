@@ -11,9 +11,14 @@
 	<artifactId>inventory-service</artifactId>
 	<name>inventory-service</name>
 	<description>
-		Empty skeleton (docs/adr/0002) — stood up ahead of its extraction phase so the
-		multi-module reactor build and Eureka registration are proven before real
-		domain code moves in.
+		Inventory domain (docs/adr/0002, docs/adr/0010), extracted per Phase 5 of the
+		migration plan. Owns Stay, Room, Address, PropertyBrand and the six lookup
+		tables (Amenity, Accessibility, MealPlan, PaymentType, TravelerExperience,
+		View) and their own Postgres/PostGIS database and Flyway history. Calls
+		identity-service (host existence) and booking-service (availability conflict
+		checks, Resilience4j-wrapped per docs/adr/0010) via Feign; exposes a plain
+		internal REST API consumed by the Gateway's Feign clients (docs/adr/0005,
+		docs/adr/0008).
 	</description>
 
 	<dependencies>
@@ -23,11 +28,57 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-spatial</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+		<!-- Same OkHttp/LoadBalancer wiring gap as gateway's config/FeignConfig.kt —
+		     this fictional spring-cloud-openfeign 5.0.2 has no built-in OkHttp
+		     auto-configuration and DefaultFeignLoadBalancerConfiguration hardcodes
+		     Client.Default as its wrapped delegate, so both feign-okhttp and an
+		     explicit FeignBlockingLoadBalancerClient bean are required here too. -->
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-okhttp</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -36,6 +87,20 @@
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>tools.jackson.module</groupId>
+			<artifactId>jackson-module-kotlin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test-junit5</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

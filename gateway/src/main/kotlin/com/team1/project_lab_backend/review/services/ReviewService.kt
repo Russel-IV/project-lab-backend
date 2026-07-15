@@ -1,14 +1,12 @@
 package com.team1.project_lab_backend.review.services
 
-import com.team1.project_lab_backend.booking.models.BookingStatus
-import com.team1.project_lab_backend.booking.repositories.BookingRepository
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.booking.services.BookingService
+import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import com.team1.project_lab_backend.review.dto.ReviewRequest
 import com.team1.project_lab_backend.review.dto.ReviewSummary
 import com.team1.project_lab_backend.review.models.Review
 import com.team1.project_lab_backend.util.GraphQLBusinessException
 import com.team1.project_lab_backend.util.feignErrorMessage
-import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requirePositive
 import feign.FeignException
 import org.springframework.http.HttpStatus
@@ -19,12 +17,15 @@ import org.springframework.web.server.ResponseStatusException
  * Orchestration shim (docs/adr/0005): the actual Review data and its own business
  * rules (text/rating format, duplicate-review check) now live in review-service,
  * reached via reviewFeignClient. What's still here is exactly the cross-domain
- * validation review-service can't do itself, because Inventory and Booking haven't
- * been extracted yet and review-service has no way to reach their data:
- *  - stayId existence — trusted from local Inventory data (stayRepository) until
- *    Inventory is extracted (docs/adr/0011), at which point this becomes a Feign call.
- *  - booking-completion eligibility — trusted from local Booking data
- *    (bookingRepository) until Booking is extracted (Phase 6).
+ * validation review-service can't do itself, because Booking hasn't been extracted
+ * yet and review-service has no way to reach its data:
+ *  - stayId existence — now a Feign call to inventory-service (docs/adr/0011,
+ *    Phase 5), same pattern as every other cross-service existence check in this
+ *    migration.
+ *  - booking-completion eligibility — delegates to BookingService (still local until
+ *    Phase 6) rather than the repository directly, since that check now needs its own
+ *    Feign round trip to inventory-service (Room.stayId) that BookingService already
+ *    implements for myBookingStatusForStay.
  * userId existence is no longer checked at all (not deferred — dropped for good, per
  * docs/adr/0011): it's always the JWT-authenticated caller's own id, and a valid JWT
  * already implies a real user.
@@ -32,15 +33,15 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 class ReviewService(
     private val reviewFeignClient: ReviewFeignClient,
-    private val stayRepository: StayRepository,
-    private val bookingRepository: BookingRepository,
+    private val stayFeignClient: StayFeignClient,
+    private val bookingService: BookingService,
 ) {
     fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
         reviewFeignClient.list(stayId = null, userId = null, ids = null, page = page, size = size)
 
     fun getReviewsByStay(stayId: Int, page: Int = 0, size: Int = 20): List<Review> {
         stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(stayId, "stay not found")
+        requireStayExists(stayId)
         return reviewFeignClient.list(stayId = stayId, userId = null, ids = null, page = page, size = size)
     }
 
@@ -51,7 +52,7 @@ class ReviewService(
 
     fun getReviewSummary(stayId: Int): ReviewSummary {
         stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(stayId, "stay not found")
+        requireStayExists(stayId)
         return reviewFeignClient.summary(stayId)
     }
 
@@ -66,8 +67,8 @@ class ReviewService(
 
     fun createReview(request: ReviewRequest): Review {
         request.stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(request.stayId, "stay not found")
-        if (!bookingRepository.existsBookingForUserAndStayWithStatus(request.userId, request.stayId, BookingStatus.COMPLETED)) {
+        requireStayExists(request.stayId)
+        if (!bookingService.hasCompletedBookingForStay(request.userId, request.stayId)) {
             throw GraphQLBusinessException(
                 "NOT_ELIGIBLE",
                 HttpStatus.FORBIDDEN,
@@ -87,7 +88,7 @@ class ReviewService(
 
     fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
         request.stayId.requirePositive("stayId")
-        stayRepository.requireExistsById(request.stayId, "stay not found")
+        requireStayExists(request.stayId)
         return try {
             reviewFeignClient.update(
                 id,
@@ -109,6 +110,14 @@ class ReviewService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
         } catch (e: FeignException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        }
+    }
+
+    private fun requireStayExists(stayId: Int) {
+        try {
+            stayFeignClient.get(stayId)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }
     }
 }

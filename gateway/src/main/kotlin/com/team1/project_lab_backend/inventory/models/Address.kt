@@ -1,29 +1,16 @@
 package com.team1.project_lab_backend.inventory.models
 
-import jakarta.persistence.*
-
-@Entity
-@Table(name = "address")
-open class Address(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open val id: Int = 0,
-
-    @Column(name = "street_address", nullable = false, columnDefinition = "TEXT")
-    open val streetAddress: String,
-
-    @Column(name = "extended_address", columnDefinition = "TEXT")
-    open val extendedAddress: String? = null,
-
-    @Column(name = "city", nullable = false, columnDefinition = "TEXT")
-    open val city: String,
-
-    @Column(name = "state_province", columnDefinition = "TEXT")
-    open val stateProvince: String? = null,
-
-    @Column(name = "postal_code", columnDefinition = "TEXT")
-    open val postalCode: String? = null,
-
-    @Column(name = "country_code", nullable = false, length = 2)
-    open val countryCode: String
+/**
+ * Owned by inventory-service (docs/adr/0002, Phase 5) — this is just the
+ * GraphQL-facing DTO shape, not a JPA entity. Travels nested inside Stay (see
+ * Stay.kt's kdoc) rather than being resolved via its own Feign client.
+ */
+data class Address(
+    val id: Int,
+    val streetAddress: String,
+    val extendedAddress: String? = null,
+    val city: String,
+    val stateProvince: String? = null,
+    val postalCode: String? = null,
+    val countryCode: String,
 )

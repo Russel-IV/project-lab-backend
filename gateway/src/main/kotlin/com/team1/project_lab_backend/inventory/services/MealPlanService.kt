@@ -2,48 +2,42 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.MealPlanRequest
 import com.team1.project_lab_backend.inventory.models.MealPlan
-import com.team1.project_lab_backend.inventory.repositories.MealPlanRepository
-import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
-import com.team1.project_lab_backend.util.requirePositive
+import com.team1.project_lab_backend.util.feignErrorMessage
+import feign.FeignException
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): MealPlan CRUD now lives in inventory-service,
+ * reached via mealPlanFeignClient.
+ */
 @Service
-class MealPlanService(
-    private val mealPlanRepository: MealPlanRepository,
-) {
-    @Transactional(readOnly = true)
-    fun getAllMealPlans(): List<MealPlan> = mealPlanRepository.findAll()
+class MealPlanService(private val mealPlanFeignClient: MealPlanFeignClient) {
 
-    @Transactional(readOnly = true)
-    fun getMealPlanById(id: Int): MealPlan {
-        id.requirePositive()
-        return mealPlanRepository.findById(id).orNotFound("meal plan not found")
-    }
+    fun getAllMealPlans(): List<MealPlan> = mealPlanFeignClient.list(ids = null)
 
-    @Transactional
-    fun createMealPlan(request: MealPlanRequest): MealPlan {
-        request.mealPlanType.requireNotBlank("mealPlanType")
-        return mealPlanRepository.save(MealPlan(mealPlanType = request.mealPlanType))
-    }
+    fun createMealPlan(request: MealPlanRequest): MealPlan =
+        try {
+            mealPlanFeignClient.create(request)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid meal plan")
+        }
 
-    @Transactional
-    fun updateMealPlan(
-        id: Int,
-        request: MealPlanRequest,
-    ): MealPlan {
-        id.requirePositive()
-        request.mealPlanType.requireNotBlank("mealPlanType")
-        mealPlanRepository.requireExistsById(id, "meal plan not found")
-        return mealPlanRepository.save(MealPlan(id = id, mealPlanType = request.mealPlanType))
-    }
+    fun updateMealPlan(id: Int, request: MealPlanRequest): MealPlan =
+        try {
+            mealPlanFeignClient.update(id, request)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "meal plan not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid meal plan")
+        }
 
-    @Transactional
     fun deleteMealPlan(id: Int) {
-        id.requirePositive()
-        mealPlanRepository.requireExistsById(id, "meal plan not found")
-        mealPlanRepository.deleteById(id)
+        try {
+            mealPlanFeignClient.delete(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "meal plan not found")
+        }
     }
 }

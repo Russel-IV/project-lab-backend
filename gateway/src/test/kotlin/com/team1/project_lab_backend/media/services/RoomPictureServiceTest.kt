@@ -4,8 +4,8 @@ import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Room
 import com.team1.project_lab_backend.inventory.models.Stay
-import com.team1.project_lab_backend.inventory.repositories.RoomRepository
-import com.team1.project_lab_backend.inventory.repositories.StayRepository
+import com.team1.project_lab_backend.inventory.services.RoomFeignClient
+import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import feign.FeignException
 import feign.Request
 import feign.RequestTemplate
@@ -18,14 +18,13 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.nio.charset.StandardCharsets
-import java.util.Optional
 
 class RoomPictureServiceTest {
     private val mediaFeignClient = Mockito.mock(MediaFeignClient::class.java)
-    private val roomRepository = Mockito.mock(RoomRepository::class.java)
-    private val stayRepository = Mockito.mock(StayRepository::class.java)
+    private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
+    private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
 
-    private val service = RoomPictureService(mediaFeignClient, roomRepository, stayRepository)
+    private val service = RoomPictureService(mediaFeignClient, roomFeignClient, stayFeignClient)
 
     private fun mediaResponse(
         id: Int = 1,
@@ -51,8 +50,8 @@ class RoomPictureServiceTest {
     )
 
     private fun stubRoomAndStay(roomId: Int = 20, stayId: Int = 10, hostId: Int = 1) {
-        Mockito.`when`(roomRepository.findById(roomId)).thenReturn(Optional.of(sampleRoom(roomId, stayId)))
-        Mockito.`when`(stayRepository.findById(stayId)).thenReturn(Optional.of(sampleStay(stayId, hostId)))
+        Mockito.`when`(roomFeignClient.get(roomId)).thenReturn(sampleRoom(roomId, stayId))
+        Mockito.`when`(stayFeignClient.get(stayId)).thenReturn(sampleStay(stayId, hostId))
     }
 
     private fun feignBadRequest(body: String) = FeignException.BadRequest(
@@ -64,7 +63,7 @@ class RoomPictureServiceTest {
 
     @Test
     fun addPictureRejectsRoomNotFound() {
-        Mockito.`when`(roomRepository.findById(99)).thenReturn(Optional.empty())
+        Mockito.`when`(roomFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
 
         val ex = assertThrows(ResponseStatusException::class.java) {
             service.addPicture(99, imageFile(), null, false, 0, 1)

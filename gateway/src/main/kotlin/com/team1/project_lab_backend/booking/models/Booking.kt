@@ -1,6 +1,5 @@
 package com.team1.project_lab_backend.booking.models
 
-import com.team1.project_lab_backend.inventory.models.Room
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -47,11 +46,14 @@ open class Booking(
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     open val totalPrice: BigDecimal = BigDecimal.ZERO,
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "booking_room",
-        joinColumns = [JoinColumn(name = "booking_id")],
-        inverseJoinColumns = [JoinColumn(name = "room_id")]
-    )
-    open val rooms: MutableSet<Room> = mutableSetOf()
+    // Room lives in inventory-service now (docs/adr/0002, docs/adr/0010, Phase 5) — no
+    // FK (dropped in V21), no live JPA relation to a Room entity. The booking_room
+    // bridge table stays here unchanged (this is Booking's own data, and Booking isn't
+    // extracted until Phase 6), just mapped as a plain id collection instead of an
+    // object graph. BookingBatchResolver.rooms() Feign-fetches Room details for the
+    // GraphQL Booking.rooms field.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "booking_room", joinColumns = [JoinColumn(name = "booking_id")])
+    @Column(name = "room_id")
+    open val roomIds: MutableSet<Int> = mutableSetOf(),
 )

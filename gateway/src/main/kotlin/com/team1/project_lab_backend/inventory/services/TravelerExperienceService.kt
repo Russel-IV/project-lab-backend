@@ -2,50 +2,42 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.TravelerExperienceRequest
 import com.team1.project_lab_backend.inventory.models.TravelerExperience
-import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
-import com.team1.project_lab_backend.util.orNotFound
-import com.team1.project_lab_backend.util.requireExistsById
-import com.team1.project_lab_backend.util.requireNotBlank
-import com.team1.project_lab_backend.util.requirePositive
+import com.team1.project_lab_backend.util.feignErrorMessage
+import feign.FeignException
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
+/**
+ * Orchestration shim (docs/adr/0005): TravelerExperience CRUD now lives in inventory-service,
+ * reached via travelerExperienceFeignClient.
+ */
 @Service
-class TravelerExperienceService(
-    private val travelerExperienceRepository: TravelerExperienceRepository,
-) {
-    @Transactional(readOnly = true)
-    fun getAllTravelerExperiences(): List<TravelerExperience> = travelerExperienceRepository.findAll()
+class TravelerExperienceService(private val travelerExperienceFeignClient: TravelerExperienceFeignClient) {
 
-    @Transactional(readOnly = true)
-    fun getTravelerExperienceById(id: Int): TravelerExperience {
-        id.requirePositive()
-        return travelerExperienceRepository.findById(id).orNotFound("traveler experience not found")
-    }
+    fun getAllTravelerExperiences(): List<TravelerExperience> = travelerExperienceFeignClient.list(ids = null)
 
-    @Transactional
-    fun createTravelerExperience(request: TravelerExperienceRequest): TravelerExperience {
-        request.travelerExperienceType.requireNotBlank("travelerExperienceType")
-        return travelerExperienceRepository.save(TravelerExperience(travelerExperienceType = request.travelerExperienceType))
-    }
+    fun createTravelerExperience(request: TravelerExperienceRequest): TravelerExperience =
+        try {
+            travelerExperienceFeignClient.create(request)
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid traveler experience")
+        }
 
-    @Transactional
-    fun updateTravelerExperience(
-        id: Int,
-        request: TravelerExperienceRequest,
-    ): TravelerExperience {
-        id.requirePositive()
-        request.travelerExperienceType.requireNotBlank("travelerExperienceType")
-        travelerExperienceRepository.requireExistsById(id, "traveler experience not found")
-        return travelerExperienceRepository.save(
-            TravelerExperience(id = id, travelerExperienceType = request.travelerExperienceType),
-        )
-    }
+    fun updateTravelerExperience(id: Int, request: TravelerExperienceRequest): TravelerExperience =
+        try {
+            travelerExperienceFeignClient.update(id, request)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "traveler experience not found")
+        } catch (e: FeignException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid traveler experience")
+        }
 
-    @Transactional
     fun deleteTravelerExperience(id: Int) {
-        id.requirePositive()
-        travelerExperienceRepository.requireExistsById(id, "traveler experience not found")
-        travelerExperienceRepository.deleteById(id)
+        try {
+            travelerExperienceFeignClient.delete(id)
+        } catch (e: FeignException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "traveler experience not found")
+        }
     }
 }

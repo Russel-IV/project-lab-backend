@@ -7,10 +7,6 @@ import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.inventory.services.StayService
 import com.team1.project_lab_backend.util.requireAuthenticated
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.Point
-import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
@@ -60,16 +56,17 @@ class StayResolver(private val stayService: StayService) {
     }
 
     @SchemaMapping(typeName = "Stay", field = "location")
-    fun location(stay: Stay): LocationOutput? = stay.location?.let { LocationOutput(latitude = it.y, longitude = it.x) }
+    fun location(stay: Stay): LocationOutput? =
+        if (stay.latitude != null && stay.longitude != null) {
+            LocationOutput(latitude = stay.latitude, longitude = stay.longitude)
+        } else {
+            null
+        }
 }
 
 data class LocationOutput(val latitude: Double, val longitude: Double)
 
-data class LocationInput(val latitude: Double, val longitude: Double) {
-    fun toPoint(): Point =
-        GeometryFactory(PrecisionModel(), 4326)
-            .createPoint(Coordinate(longitude, latitude))
-}
+data class LocationInput(val latitude: Double, val longitude: Double)
 
 data class StayAddressInput(
     val streetAddress: String,
@@ -127,7 +124,8 @@ data class CreateStayInput(
             mealPlanIds = mealPlanIds,
             paymentTypeIds = paymentTypeIds,
             travelerExperienceIds = travelerExperienceIds,
-            location = location?.toPoint(),
+            latitude = location?.latitude,
+            longitude = location?.longitude,
         )
 }
 
@@ -178,7 +176,8 @@ data class UpdateStayInput(
             mealPlanIds = mealPlanIds,
             paymentTypeIds = paymentTypeIds,
             travelerExperienceIds = travelerExperienceIds,
-            location = location?.toPoint(),
+            latitude = location?.latitude,
+            longitude = location?.longitude,
         )
 }
 

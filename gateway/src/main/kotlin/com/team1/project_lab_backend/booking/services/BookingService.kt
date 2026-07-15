@@ -5,10 +5,9 @@ import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.repositories.BookingRepository
-import com.team1.project_lab_backend.inventory.repositories.RoomRepository
+import com.team1.project_lab_backend.inventory.services.RoomFeignClient
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
-import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -24,7 +23,7 @@ private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIR
 @Service
 class BookingService(
     private val bookingRepository: BookingRepository,
-    private val roomRepository: RoomRepository,
+    private val roomFeignClient: RoomFeignClient,
 ) {
     @Transactional(readOnly = true)
     fun getAllBookings(page: Int = 0, size: Int = 20): List<Booking> =
@@ -45,10 +44,18 @@ class BookingService(
         return bookingRepository.findById(id).orNotFound("booking not found")
     }
 
+    // Room (and its stayId) moved to inventory-service (docs/adr/0002, docs/adr/0010,
+    // Phase 5) — "does this user have a COMPLETED booking for this stay" can no longer
+    // be answered in a single local query. Fetch this user's COMPLETED-booking room
+    // ids locally (still Booking's own data), then resolve those ids' stayIds via a
+    // bulk Feign call and check for a match.
     @Transactional(readOnly = true)
     fun hasCompletedBookingForStay(userId: Int, stayId: Int): Boolean {
         stayId.requirePositive("stayId")
-        return bookingRepository.existsBookingForUserAndStayWithStatus(userId, stayId, BookingStatus.COMPLETED)
+        val roomIds = bookingRepository.findRoomIdsForUserWithStatus(userId, BookingStatus.COMPLETED)
+        if (roomIds.isEmpty()) return false
+        return roomFeignClient.list(ids = roomIds.toList(), stayId = null, stayIds = null, page = 0, size = 0)
+            .any { it.stayId == stayId }
     }
 
     // request.userId is always the JWT-authenticated caller's own id
@@ -76,7 +83,9 @@ class BookingService(
         }
         request.guestsCount.requirePositive("guestsCount")
 
-        val rooms = roomRepository.findAllById(request.roomIds).toList()
+        // Room existence/stayId/price/capacity moved to inventory-service (docs/adr/0002,
+        // Phase 5) — a bulk Feign call instead of a local repository lookup.
+        val rooms = roomFeignClient.list(ids = request.roomIds.toList(), stayId = null, stayIds = null, page = 0, size = 0)
         if (rooms.size != request.roomIds.size) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds contains unknown ids")
         }
@@ -84,8 +93,10 @@ class BookingService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "all rooms must belong to the same stay")
         }
 
-        val conflicting = roomRepository.findConflictingRooms(
-            request.roomIds,
+        // Conflict check stays entirely local: it only needs Booking's own data
+        // (booking + booking_room), no Room attribute is involved (docs/adr/0010).
+        val conflicting = bookingRepository.findConflictingRoomIds(
+            request.roomIds.toList(),
             request.checkInDate,
             request.checkOutDate,
             ACTIVE_STATUSES,
@@ -115,7 +126,7 @@ class BookingService(
                 status = BookingStatus.PENDING,
                 guestsCount = request.guestsCount,
                 totalPrice = totalPrice,
-                rooms = rooms.toMutableSet(),
+                roomIds = request.roomIds.toMutableSet(),
             ),
         )
     }
@@ -134,7 +145,7 @@ class BookingService(
                 guestsCount = existing.guestsCount,
                 createdAt = existing.createdAt,
                 totalPrice = existing.totalPrice,
-                rooms = existing.rooms,
+                roomIds = existing.roomIds,
             ),
         )
     }

@@ -33,6 +33,12 @@ services:
             - POSTGRES_PORT=${POSTGRES_PORT}
             - POSTGRES_DB=${POSTGRES_DB}
             - EUREKA_URL=http://eureka-server:8761/eureka
+            # Interim Phase 5 measure (docs/adr/0010) — Booking isn't extracted until
+            # Phase 6, so the Gateway (which still hosts its code) registers under
+            # "booking-service" in Eureka instead of "gateway", letting
+            # inventory-service's BookingFeignClient resolve to it. See
+            # gateway/application.properties' eureka.instance.appname.
+            - EUREKA_APP_NAME=booking-service
         depends_on:
             project-lab-database:
                 condition: service_healthy
@@ -203,9 +209,54 @@ services:
             retries: 10
             start_period: 10s
 
+    inventory-service:
+        build:
+            context: .
+            dockerfile: inventory-service/Dockerfile
+        container_name: inventory-service
+        ports:
+            - "8082:8082"
+        environment:
+            - INVENTORY_DB_HOST=inventory-database
+            - INVENTORY_DB_PORT=5432
+            - INVENTORY_DB_NAME=${POSTGRES_DB}
+            - INVENTORY_DB_USER=${POSTGRES_USER}
+            - INVENTORY_DB_PASSWORD=${POSTGRES_PASSWORD}
+            - EUREKA_URL=http://eureka-server:8761/eureka
+        depends_on:
+            inventory-database:
+                condition: service_healthy
+            eureka-server:
+                condition: service_healthy
+
+    # Own database (docs/adr/0011) — postgis/postgis, not plain postgres: Stay.location
+    # is a GEOGRAPHY(POINT, 4326) column (mirrors project-lab-database's image choice).
+    inventory-database:
+        image: postgis/postgis:16-3.4
+        container_name: inventory-database
+        ports:
+            - "5436:5432"
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        volumes:
+            - inventory_pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+                ]
+            interval: 2s
+            timeout: 10s
+            retries: 10
+            start_period: 10s
+
 volumes:
     pgdata:
     review_pgdata:
     media_pgdata:
     identity_pgdata:
+    inventory_pgdata:
     uploads:
