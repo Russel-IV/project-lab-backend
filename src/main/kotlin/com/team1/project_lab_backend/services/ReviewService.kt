@@ -14,6 +14,7 @@ import com.team1.project_lab_backend.util.requireExistsById
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -37,6 +38,12 @@ class ReviewService(
         stayId.requirePositive("stayId")
         stayRepository.requireExistsById(stayId, "stay not found")
         return reviewRepository.findByStayId(stayId, PageRequest.of(page, size))
+    }
+
+    @Transactional(readOnly = true)
+    fun getMyReviews(userId: Int, page: Int = 0, size: Int = 20): List<Review> {
+        userId.requirePositive("userId")
+        return reviewRepository.findByUserId(userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")))
     }
 
     @Transactional(readOnly = true)

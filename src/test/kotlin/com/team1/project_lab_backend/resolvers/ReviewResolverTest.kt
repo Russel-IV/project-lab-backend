@@ -87,6 +87,23 @@ class ReviewResolverTest {
         assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
     }
 
+    @Test
+    fun myReviewsDelegatesToService() {
+        authenticateAs(authenticatedUser)
+        Mockito.`when`(reviewService.getMyReviews(1, 0, 2)).thenReturn(listOf(sampleReview(1), sampleReview(2)))
+
+        val result = resolver.myReviews(page = 0, size = 2)
+
+        assertEquals(listOf(1, 2), result.map { it.id })
+        Mockito.verify(reviewService).getMyReviews(1, 0, 2)
+    }
+
+    @Test
+    fun myReviewsRequiresAuthentication() {
+        val ex = assertThrows(ResponseStatusException::class.java) { resolver.myReviews(null, null) }
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+    }
+
     // ---- mutations ----
 
     @Test

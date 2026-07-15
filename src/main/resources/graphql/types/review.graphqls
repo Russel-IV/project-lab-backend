@@ -11,6 +11,8 @@ type Review {
     user: User!
     "ID of the stay being reviewed."
     stayId: Int!
+    "The stay this review was written for."
+    stay: Stay!
 }
 
 "Rating distribution and average for a stay's full review set."

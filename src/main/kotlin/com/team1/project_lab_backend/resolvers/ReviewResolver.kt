@@ -35,6 +35,12 @@ class ReviewResolver(private val reviewService: ReviewService) {
         return reviewService.getMyReviewForStay(currentUser.id, stayId)
     }
 
+    @QueryMapping
+    fun myReviews(@Argument page: Int?, @Argument size: Int?): List<Review> {
+        val currentUser = requireAuthenticated()
+        return reviewService.getMyReviews(currentUser.id, page ?: 0, size ?: 20)
+    }
+
     @MutationMapping
     fun createReview(@Argument input: CreateReviewInput): Review {
         val currentUser = requireAuthenticated()

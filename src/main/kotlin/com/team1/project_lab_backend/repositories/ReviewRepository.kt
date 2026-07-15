@@ -9,6 +9,8 @@ interface ReviewRepository : JpaRepository<Review, Int> {
 
     fun findByStayId(stayId: Int, pageable: Pageable): List<Review>
 
+    fun findByUserId(userId: Int, pageable: Pageable): List<Review>
+
     fun existsByUserIdAndStayId(userId: Int, stayId: Int): Boolean
 
     fun findByUserIdAndStayId(userId: Int, stayId: Int): Review?

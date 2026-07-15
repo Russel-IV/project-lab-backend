@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.util.Optional
 
+@Suppress("UNCHECKED_CAST")
+private fun <T> anyArg(): T { Mockito.any<T>(); return null as T }
+
 class ReviewServiceTest {
     private val reviewRepository = Mockito.mock(ReviewRepository::class.java)
     private val userRepository = Mockito.mock(UserRepository::class.java)
@@ -185,6 +188,16 @@ class ReviewServiceTest {
         assertEquals("Updated text", result.text)
         assertEquals(1, result.userId)
         assertEquals(5, result.rating)
+    }
+
+    @Test
+    fun getMyReviewsDelegatesToRepositoryWithPaging() {
+        val reviews = listOf(Review(id = 5, text = "Great stay", userId = 1, stayId = 2, rating = 4))
+        Mockito.`when`(reviewRepository.findByUserId(Mockito.eq(1), anyArg())).thenReturn(reviews)
+
+        val result = reviewService.getMyReviews(1, page = 0, size = 5)
+
+        assertEquals(listOf(5), result.map { it.id })
     }
 
     @Test

@@ -51,6 +51,8 @@ type Query {
     reviewSummary(stayId: Int!): ReviewSummary!
     "Returns the authenticated user's existing review for a given stay, or null if none exists. Requires authentication."
     myReviewForStay(stayId: Int!): Review
+    "Returns a paginated list of the authenticated user's own reviews, most recent first. Requires authentication."
+    myReviews(page: Int = 0, size: Int = 20): [Review!]!
 
     "Returns all available amenities."
     amenities: [Amenity!]!
