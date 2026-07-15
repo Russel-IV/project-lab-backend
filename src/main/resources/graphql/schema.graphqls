@@ -38,6 +38,8 @@ type Query {
     bookings(page: Int = 0, size: Int = 20): [Booking!]!
     "Returns a single booking by ID."
     booking(id: Int!): Booking
+    "Returns a paginated list of the authenticated user's own bookings, most recent check-in first. Requires authentication."
+    myBookings(page: Int = 0, size: Int = 20): [Booking!]!
     "Returns whether the authenticated user has a completed booking for a given stay. Requires authentication."
     myBookingStatusForStay(stayId: Int!): BookingStatusForStay!
 

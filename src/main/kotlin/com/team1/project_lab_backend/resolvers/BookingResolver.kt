@@ -36,6 +36,15 @@ class BookingResolver(private val bookingService: BookingService) {
     fun booking(@Argument id: Int): Booking = bookingService.getBookingById(id)
 
     @QueryMapping
+    fun myBookings(
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<Booking> {
+        val currentUser = requireAuthenticated()
+        return bookingService.getBookingsByUser(currentUser.id, page ?: 0, size ?: 20)
+    }
+
+    @QueryMapping
     fun myBookingStatusForStay(@Argument stayId: Int): BookingStatusForStay {
         val currentUser = requireAuthenticated()
         return BookingStatusForStay(bookingService.hasCompletedBookingForStay(currentUser.id, stayId))

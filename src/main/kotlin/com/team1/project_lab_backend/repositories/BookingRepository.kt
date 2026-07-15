@@ -2,10 +2,13 @@ package com.team1.project_lab_backend.repositories
 
 import com.team1.project_lab_backend.models.Booking
 import com.team1.project_lab_backend.models.BookingStatus
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface BookingRepository : JpaRepository<Booking, Int> {
+
+    fun findByUserId(userId: Int, pageable: Pageable): List<Booking>
 
     @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.user WHERE b.id IN :ids")
     fun findByIdInWithUser(ids: List<Int>): List<Booking>

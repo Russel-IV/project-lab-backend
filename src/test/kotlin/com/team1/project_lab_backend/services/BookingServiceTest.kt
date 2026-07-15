@@ -203,6 +203,25 @@ class BookingServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
+    // ---- getBookingsByUser ----
+
+    @Test
+    fun getBookingsByUserDelegatesToRepositoryWithPaging() {
+        val u = user()
+        val bookings = listOf(
+            Booking(
+                id = 1, user = u, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
+                status = BookingStatus.CONFIRMED, guestsCount = 1,
+                totalPrice = BigDecimal("100.00"), rooms = mutableSetOf(),
+            ),
+        )
+        Mockito.`when`(bookingRepository.findByUserId(Mockito.eq(1), anyArg())).thenReturn(bookings)
+
+        val result = bookingService.getBookingsByUser(1, page = 0, size = 5)
+
+        assertEquals(listOf(1), result.map { it.id })
+    }
+
     // ---- hasCompletedBookingForStay ----
 
     @Test

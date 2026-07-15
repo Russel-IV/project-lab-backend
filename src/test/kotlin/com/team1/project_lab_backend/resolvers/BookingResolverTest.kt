@@ -84,6 +84,24 @@ class BookingResolverTest {
     }
 
     @Test
+    fun myBookingsDelegatesToService() {
+        authenticateAs(authenticatedUser)
+        val page = listOf(sampleBooking(1), sampleBooking(2))
+        Mockito.`when`(bookingService.getBookingsByUser(1, 0, 2)).thenReturn(page)
+
+        val result = resolver.myBookings(page = 0, size = 2)
+
+        assertEquals(listOf(1, 2), result.map { it.id })
+        Mockito.verify(bookingService).getBookingsByUser(1, 0, 2)
+    }
+
+    @Test
+    fun myBookingsRequiresAuthentication() {
+        val ex = assertThrows(ResponseStatusException::class.java) { resolver.myBookings(null, null) }
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+    }
+
+    @Test
     fun myBookingStatusForStayDelegatesToService() {
         authenticateAs(authenticatedUser)
         Mockito.`when`(bookingService.hasCompletedBookingForStay(1, 2)).thenReturn(true)
