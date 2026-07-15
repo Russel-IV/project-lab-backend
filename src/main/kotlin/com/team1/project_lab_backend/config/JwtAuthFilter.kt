@@ -1,7 +1,8 @@
 package com.team1.project_lab_backend.config
 
-import com.team1.project_lab_backend.repositories.UserRepository
-import com.team1.project_lab_backend.services.JwtService
+import com.team1.project_lab_backend.identity.repositories.UserRepository
+import com.team1.project_lab_backend.identity.services.JwtService
+import com.team1.project_lab_backend.util.AuthenticatedPrincipal
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -30,7 +31,7 @@ class JwtAuthFilter(
                 userRepository.findById(userId)
                     .filter { it.deletedAt == null }
                     .ifPresent { user ->
-                        val auth = UsernamePasswordAuthenticationToken(user, null, emptyList())
+                        val auth = UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(user.id), null, emptyList())
                         auth.details = WebAuthenticationDetailsSource().buildDetails(request)
                         SecurityContextHolder.getContext().authentication = auth
                     }
