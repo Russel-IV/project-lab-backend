@@ -4,20 +4,16 @@ import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
-import com.team1.project_lab_backend.booking.repositories.BookingRepository
-import com.team1.project_lab_backend.inventory.models.Room
-import com.team1.project_lab_backend.inventory.services.RoomFeignClient
+import feign.FeignException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Optional
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> anyArg(): T {
@@ -26,219 +22,57 @@ private fun <T> anyArg(): T {
 }
 
 class BookingServiceTest {
-    private val bookingRepository = Mockito.mock(BookingRepository::class.java)
-    private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
-
-    private val bookingService = BookingService(bookingRepository, roomFeignClient)
+    private val bookingFeignClient = Mockito.mock(BookingFeignClient::class.java)
+    private val bookingService = BookingService(bookingFeignClient)
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
 
-    private fun room(
-        id: Int,
-        stayId: Int = 1,
-        sleeps: Int = 2,
-    ): Room =
-        Room(
+    private fun sampleBooking(id: Int = 1, userId: Int = 1) =
+        Booking(
             id = id,
-            stayId = stayId,
-            name = "Room $id",
-            price = BigDecimal("100.00"),
-            sleeps = sleeps,
-            bedroomAmount = 1,
-            bathrooms = BigDecimal("1.0"),
-            size = null,
+            userId = userId,
+            checkInDate = tomorrow,
+            checkOutDate = dayAfterTomorrow,
+            status = BookingStatus.PENDING,
+            guestsCount = 2,
+            createdAt = LocalDateTime.now(),
+            totalPrice = BigDecimal("200.00"),
+            roomIds = setOf(5),
         )
 
-    private fun baseRequest(
-        userId: Int = 1,
-        roomIds: Set<Int> = setOf(10),
-        checkIn: LocalDate = tomorrow,
-        checkOut: LocalDate = dayAfterTomorrow,
-        guests: Int = 1,
-    ) = BookingRequest(
-        userId = userId,
-        checkInDate = checkIn,
-        checkOutDate = checkOut,
-        guestsCount = guests,
-        roomIds = roomIds,
-    )
-
-    private fun stubHappyPath(
-        roomIds: Set<Int> = setOf(10),
-        sleeps: Int = 2,
-    ): Booking {
-        val rooms = roomIds.map { room(it, sleeps = sleeps) }
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(rooms)
-        Mockito.`when`(
-            bookingRepository.findConflictingRoomIds(anyArg(), anyArg(), anyArg(), anyArg()),
-        ).thenReturn(emptySet())
-        val saved =
-            Booking(
-                id = 99,
-                userId = 1,
-                checkInDate = tomorrow,
-                checkOutDate = dayAfterTomorrow,
-                status = BookingStatus.PENDING,
-                guestsCount = 1,
-                totalPrice = BigDecimal("100.00"),
-                roomIds = roomIds.toMutableSet(),
-            )
-        Mockito.`when`(bookingRepository.save(Mockito.any(Booking::class.java))).thenReturn(saved)
-        return saved
-    }
-
-    // ---- createBooking ----
-
     @Test
-    fun createBookingReturnsPersistedBooking() {
-        stubHappyPath()
+    fun getAllBookingsDelegatesToFeignClient() {
+        val page = listOf(sampleBooking(1), sampleBooking(2))
+        Mockito.`when`(bookingFeignClient.list(null, null, 0, 2)).thenReturn(page)
 
-        val result = bookingService.createBooking(baseRequest())
+        val result = bookingService.getAllBookings(0, 2)
 
-        assertEquals(99, result.id)
-        assertEquals(BookingStatus.PENDING, result.status)
-        assertEquals(tomorrow, result.checkInDate)
+        assertEquals(listOf(1, 2), result.map { it.id })
     }
 
     @Test
-    fun createBookingCapturesTotalPrice() {
-        stubHappyPath() // 1 room at $100, tomorrow → dayAfterTomorrow = 1 night
-        val captor = ArgumentCaptor.forClass(Booking::class.java)
+    fun getBookingByIdReturnsNotFoundWhenMissing() {
+        Mockito.`when`(bookingFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
 
-        bookingService.createBooking(baseRequest())
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.getBookingById(99) }
 
-        Mockito.verify(bookingRepository).save(captor.capture())
-        assertEquals(BigDecimal("100.00"), captor.value.totalPrice)
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
-    fun createBookingRejectsCheckInInPast() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(checkIn = LocalDate.now().minusDays(1)))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsCheckInMoreThanSixMonthsAway() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(
-                    baseRequest(checkIn = LocalDate.now().plusMonths(7)),
-                )
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsCheckOutNotAfterCheckIn() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(checkIn = tomorrow, checkOut = tomorrow))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsEmptyRoomIds() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(roomIds = emptySet()))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsZeroGuestsCount() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(guests = 0))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsUnknownRoomIds() {
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(emptyList())
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest())
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsRoomsFromDifferentStays() {
-        val mixedStayRooms = listOf(room(10, stayId = 1), room(11, stayId = 2))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(mixedStayRooms)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(roomIds = setOf(10, 11)))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsConflictingRooms() {
-        val rooms = listOf(room(10))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(rooms)
-        Mockito.`when`(
-            bookingRepository.findConflictingRoomIds(anyArg(), anyArg(), anyArg(), anyArg()),
-        ).thenReturn(setOf(10))
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest())
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun createBookingRejectsGuestsExceedingCapacity() {
-        // Room sleeps 1, requesting 5 guests
-        stubHappyPath(sleeps = 1)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(guests = 5))
-            }
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    // ---- getBookingsByUser ----
-
-    @Test
-    fun getBookingsByUserDelegatesToRepositoryWithPaging() {
-        val bookings =
-            listOf(
-                Booking(
-                    id = 1,
-                    userId = 1,
-                    checkInDate = tomorrow,
-                    checkOutDate = dayAfterTomorrow,
-                    status = BookingStatus.CONFIRMED,
-                    guestsCount = 1,
-                    totalPrice = BigDecimal("100.00"),
-                    roomIds = mutableSetOf(),
-                ),
-            )
-        Mockito.`when`(bookingRepository.findByUserId(Mockito.eq(1), anyArg())).thenReturn(bookings)
+    fun getBookingsByUserDelegatesToFeignClient() {
+        val page = listOf(sampleBooking(1))
+        Mockito.`when`(bookingFeignClient.list(null, 1, 0, 5)).thenReturn(page)
 
         val result = bookingService.getBookingsByUser(1, page = 0, size = 5)
 
         assertEquals(listOf(1), result.map { it.id })
     }
 
-    // ---- hasCompletedBookingForStay ----
-
     @Test
-    fun hasCompletedBookingForStayReturnsTrueWhenCompletedBookingExists() {
-        Mockito.`when`(bookingRepository.findRoomIdsForUserWithStatus(1, BookingStatus.COMPLETED)).thenReturn(setOf(10))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(listOf(room(10, stayId = 2)))
+    fun hasCompletedBookingForStayDelegatesToFeignClient() {
+        Mockito.`when`(bookingFeignClient.hasCompletedBookingForStay(1, 2)).thenReturn(true)
 
         val result = bookingService.hasCompletedBookingForStay(1, 2)
 
@@ -246,91 +80,78 @@ class BookingServiceTest {
     }
 
     @Test
-    fun hasCompletedBookingForStayReturnsFalseWhenNoneExists() {
-        Mockito.`when`(bookingRepository.findRoomIdsForUserWithStatus(1, BookingStatus.COMPLETED)).thenReturn(emptySet())
+    fun createBookingDelegatesToFeignClient() {
+        val saved = sampleBooking(99)
+        Mockito.`when`(bookingFeignClient.create(anyArg())).thenReturn(saved)
 
-        val result = bookingService.hasCompletedBookingForStay(1, 2)
-
-        assertEquals(false, result)
-    }
-
-    @Test
-    fun hasCompletedBookingForStayReturnsFalseWhenRoomsBelongToOtherStays() {
-        Mockito.`when`(bookingRepository.findRoomIdsForUserWithStatus(1, BookingStatus.COMPLETED)).thenReturn(setOf(10))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(listOf(room(10, stayId = 3)))
-
-        val result = bookingService.hasCompletedBookingForStay(1, 2)
-
-        assertEquals(false, result)
-    }
-
-    // ---- updateBookingStatus ----
-
-    @Test
-    fun updateBookingStatusReturnsUpdatedBooking() {
-        val existing =
-            Booking(
-                id = 5, userId = 1, checkInDate = tomorrow, checkOutDate = dayAfterTomorrow,
-                status = BookingStatus.PENDING, guestsCount = 1,
-                createdAt = LocalDateTime.now(), totalPrice = BigDecimal("200.00"), roomIds = mutableSetOf(),
+        val result =
+            bookingService.createBooking(
+                BookingRequest(
+                    userId = 1,
+                    checkInDate = tomorrow,
+                    checkOutDate = dayAfterTomorrow,
+                    guestsCount = 2,
+                    roomIds = setOf(5),
+                ),
             )
-        Mockito.`when`(bookingRepository.findById(5)).thenReturn(Optional.of(existing))
-        val updated = existing.copy(status = BookingStatus.CONFIRMED)
-        Mockito.`when`(bookingRepository.save(Mockito.any(Booking::class.java))).thenReturn(updated)
 
-        val result = bookingService.updateBookingStatus(5, BookingStatusRequest(BookingStatus.CONFIRMED))
+        assertEquals(99, result.id)
+    }
 
-        assertEquals(BookingStatus.CONFIRMED, result.status)
+    @Test
+    fun createBookingTranslatesBadRequestFromBookingService() {
+        Mockito.`when`(bookingFeignClient.create(anyArg())).thenThrow(FeignException.BadRequest::class.java)
+
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                bookingService.createBooking(
+                    BookingRequest(
+                        userId = 1,
+                        checkInDate = tomorrow,
+                        checkOutDate = dayAfterTomorrow,
+                        guestsCount = 2,
+                        roomIds = setOf(5),
+                    ),
+                )
+            }
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun updateBookingStatusReturnsNotFoundWhenMissing() {
-        Mockito.`when`(bookingRepository.findById(99)).thenReturn(Optional.empty())
+        Mockito.`when`(bookingFeignClient.updateStatus(Mockito.eq(99), anyArg())).thenThrow(FeignException.NotFound::class.java)
 
         val ex =
             assertThrows(ResponseStatusException::class.java) {
                 bookingService.updateBookingStatus(99, BookingStatusRequest(BookingStatus.CANCELLED))
             }
+
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
-
-    // ---- deleteBooking ----
 
     @Test
     fun deleteBookingReturnsNotFoundWhenMissing() {
-        Mockito.`when`(bookingRepository.findById(99)).thenReturn(Optional.empty())
+        Mockito.doThrow(FeignException.NotFound::class.java).`when`(bookingFeignClient).delete(99, 1)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.deleteBooking(99, 1)
-            }
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.deleteBooking(99, 1) }
+
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
-    fun deleteBookingInvokesRepository() {
-        val booking =
-            Booking(
-                id = 5,
-                userId = 1,
-                checkInDate = tomorrow,
-                checkOutDate = dayAfterTomorrow,
-                status = BookingStatus.PENDING,
-                guestsCount = 1,
-                totalPrice = BigDecimal("100.00"),
-                roomIds = mutableSetOf(),
-            )
-        Mockito.`when`(bookingRepository.findById(5)).thenReturn(Optional.of(booking))
+    fun deleteBookingReturnsForbiddenWhenNotOwner() {
+        Mockito.doThrow(FeignException.Forbidden::class.java).`when`(bookingFeignClient).delete(5, 2)
 
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.deleteBooking(5, 2) }
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+    }
+
+    @Test
+    fun deleteBookingInvokesFeignClient() {
         bookingService.deleteBooking(5, 1)
 
-        Mockito.verify(bookingRepository).deleteById(5)
+        Mockito.verify(bookingFeignClient).delete(5, 1)
     }
 }
-
-// Booking is a data class — copy is available
-private fun Booking.copy(status: BookingStatus) =
-    Booking(
-        id = id, userId = userId, checkInDate = checkInDate, checkOutDate = checkOutDate,
-        status = status, guestsCount = guestsCount, createdAt = createdAt, totalPrice = totalPrice, roomIds = roomIds,
-    )

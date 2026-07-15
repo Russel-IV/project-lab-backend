@@ -14,12 +14,11 @@ interface BookingRepository : JpaRepository<Booking, Int> {
     @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.roomIds WHERE b.id IN :ids")
     fun findByIdInWithRoomIds(ids: List<Int>): List<Booking>
 
-    // Pure booking_room + booking data (docs/adr/0010, Phase 5) — Room itself moved to
-    // inventory-service, so this can no longer join to it; it doesn't need to, since
-    // only room ids (not any Room attribute) are required to answer "which of these
-    // rooms conflict with this date range". Backs both booking-service's own
-    // createBooking check and the interim /internal/bookings/conflicting-room-ids
-    // endpoint inventory-service calls (BookingConflictController).
+    // Pure booking_room + booking data — only room ids (not any Room attribute) are
+    // required to answer "which of these rooms conflict with this date range".
+    // Backs both this service's own createBooking check and the
+    // /internal/bookings/conflicting-room-ids endpoint inventory-service calls
+    // (BookingConflictController).
     @Query(
         """
         SELECT DISTINCT ri FROM Booking b JOIN b.roomIds ri
@@ -36,10 +35,10 @@ interface BookingRepository : JpaRepository<Booking, Int> {
         activeStatuses: List<BookingStatus>,
     ): Set<Int>
 
-    // Used by hasCompletedBookingForStay (BookingService) — returns every room id the
-    // user has a booking with the given status against, so the caller can resolve
-    // those ids to stayIds via inventory-service and check for a match. Room's own
-    // stayId column isn't reachable from here anymore (docs/adr/0010, Phase 5).
+    // Used by hasCompletedBookingForStay — returns every room id the user has a
+    // booking with the given status against, so the caller can resolve those ids to
+    // stayIds via inventory-service and check for a match. Room's own stayId column
+    // isn't reachable from here.
     @Query("SELECT DISTINCT ri FROM Booking b JOIN b.roomIds ri WHERE b.userId = :userId AND b.status = :status")
     fun findRoomIdsForUserWithStatus(userId: Int, status: BookingStatus): Set<Int>
 }

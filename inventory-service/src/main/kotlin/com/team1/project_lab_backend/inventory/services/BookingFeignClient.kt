@@ -6,11 +6,11 @@ import org.springframework.web.bind.annotation.RequestParam
 import java.time.LocalDate
 
 /**
- * Resolves via Eureka to booking-service's internal REST API (docs/adr/0010). Booking
- * itself isn't extracted until Phase 6 — until then this name resolves to the Gateway,
- * which registers under it via EUREKA_APP_NAME (docker-compose.yml) since it still
- * hosts Booking's code locally. Phase 6 cuts the registration over to the real,
- * extracted booking-service with no change needed here.
+ * Resolves via Eureka to the real booking-service's internal REST API (docs/adr/0010).
+ * Through Phase 5 this name resolved to the Gateway (which registered under it via
+ * EUREKA_APP_NAME while still hosting Booking's code locally); Phase 6 extracted
+ * Booking into its own service and cut the registration over, with no change needed
+ * to this client at all.
  */
 @FeignClient(name = "booking-service")
 interface BookingFeignClient {
