@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam
  * controller are two halves of one contract that must be kept in sync by hand, since
  * there's no shared library between the two modules.
  */
-@FeignClient(name = "review-service")
+@FeignClient(name = "review-service", contextId = "reviewFeignClient")
 interface ReviewFeignClient {
     @GetMapping("/internal/reviews")
     fun list(

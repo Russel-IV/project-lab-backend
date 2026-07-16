@@ -54,6 +54,9 @@ type Query {
     "Returns a paginated list of the authenticated user's own reviews, most recent first. Requires authentication."
     myReviews(page: Int = 0, size: Int = 20): [Review!]!
 
+    "Returns the stay ids the authenticated user has favorited, in one round trip. Requires authentication."
+    myFavoriteStayIds: [Int!]!
+
     "Returns all available amenities."
     amenities: [Amenity!]!
     "Returns a single amenity by ID."
@@ -130,6 +133,11 @@ type Mutation {
     updateReview(id: Int!, input: UpdateReviewInput!): Review!
     "Deletes a review by ID. Requires authentication."
     deleteReview(id: Int!): Boolean!
+
+    "Adds a stay to the authenticated user's favorites. Idempotent — succeeds whether or not it was already favorited. Requires authentication."
+    addFavorite(stayId: Int!): Boolean!
+    "Removes a stay from the authenticated user's favorites. Idempotent — succeeds whether or not it was favorited. Requires authentication."
+    removeFavorite(stayId: Int!): Boolean!
 
     "Updates metadata (caption, display order, primary flag) for a stay picture. Requires authentication."
     updateStayPicture(stayId: Int!, id: Int!, input: UpdateStayPictureInput!): StayPicture!
