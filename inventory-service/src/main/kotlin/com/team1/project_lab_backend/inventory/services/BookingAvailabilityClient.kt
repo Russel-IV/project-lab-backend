@@ -14,12 +14,18 @@ import java.time.LocalDate
  */
 @Component
 class BookingAvailabilityClient(private val bookingFeignClient: BookingFeignClient) {
-
     @CircuitBreaker(name = "bookingConflictCheck", fallbackMethod = "conflictCheckFallback")
-    fun getConflictingRoomIds(roomIds: List<Int>?, checkIn: LocalDate, checkOut: LocalDate): Set<Int> =
-        bookingFeignClient.getConflictingRoomIds(roomIds, checkIn, checkOut)
+    fun getConflictingRoomIds(
+        roomIds: List<Int>?,
+        checkIn: LocalDate,
+        checkOut: LocalDate,
+    ): Set<Int> = bookingFeignClient.getConflictingRoomIds(roomIds, checkIn, checkOut)
 
     @Suppress("UNUSED_PARAMETER")
-    private fun conflictCheckFallback(roomIds: List<Int>?, checkIn: LocalDate, checkOut: LocalDate, ex: Throwable): Set<Int> =
-        emptySet()
+    private fun conflictCheckFallback(
+        roomIds: List<Int>?,
+        checkIn: LocalDate,
+        checkOut: LocalDate,
+        ex: Throwable,
+    ): Set<Int> = emptySet()
 }

@@ -17,8 +17,11 @@ import java.time.LocalDate
  */
 @Service
 class RoomService(private val roomFeignClient: RoomFeignClient) {
-
-    fun getRoomsForStay(stayId: Int, page: Int = 0, size: Int = 20): List<Room> =
+    fun getRoomsForStay(
+        stayId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Room> =
         try {
             roomFeignClient.list(ids = null, stayId = stayId, stayIds = null, page = page, size = size)
         } catch (e: FeignException.NotFound) {
@@ -32,14 +35,23 @@ class RoomService(private val roomFeignClient: RoomFeignClient) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "room not found")
         }
 
-    fun getAvailableRooms(stayId: Int, checkIn: LocalDate, checkOut: LocalDate, guests: Int? = null): List<Room> =
+    fun getAvailableRooms(
+        stayId: Int,
+        checkIn: LocalDate,
+        checkOut: LocalDate,
+        guests: Int? = null,
+    ): List<Room> =
         try {
             roomFeignClient.available(stayId, checkIn, checkOut, guests)
         } catch (e: FeignException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid availability request")
         }
 
-    fun createRoom(stayId: Int, request: RoomRequest, requestingUserId: Int): Room =
+    fun createRoom(
+        stayId: Int,
+        request: RoomRequest,
+        requestingUserId: Int,
+    ): Room =
         try {
             roomFeignClient.create(stayId, request, requestingUserId)
         } catch (e: FeignException.NotFound) {
@@ -50,7 +62,11 @@ class RoomService(private val roomFeignClient: RoomFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid room")
         }
 
-    fun updateRoom(id: Int, request: RoomRequest, requestingUserId: Int): Room =
+    fun updateRoom(
+        id: Int,
+        request: RoomRequest,
+        requestingUserId: Int,
+    ): Room =
         try {
             roomFeignClient.update(id, request, requestingUserId)
         } catch (e: FeignException.NotFound) {
@@ -61,7 +77,10 @@ class RoomService(private val roomFeignClient: RoomFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid room")
         }
 
-    fun deleteRoom(id: Int, requestingUserId: Int) {
+    fun deleteRoom(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         try {
             roomFeignClient.delete(id, requestingUserId)
         } catch (e: FeignException.NotFound) {

@@ -24,6 +24,5 @@ class FeignConfig {
         loadBalancerClient: LoadBalancerClient,
         loadBalancerClientFactory: LoadBalancerClientFactory,
         transformers: List<LoadBalancerFeignRequestTransformer>,
-    ): Client =
-        FeignBlockingLoadBalancerClient(FeignOkHttpClient(), loadBalancerClient, loadBalancerClientFactory, transformers)
+    ): Client = FeignBlockingLoadBalancerClient(FeignOkHttpClient(), loadBalancerClient, loadBalancerClientFactory, transformers)
 }

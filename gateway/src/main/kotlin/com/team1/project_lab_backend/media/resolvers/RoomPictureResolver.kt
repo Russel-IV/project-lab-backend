@@ -10,10 +10,10 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class RoomPictureResolver(private val roomPictureService: RoomPictureService) {
-
     @QueryMapping
-    fun roomPictures(@Argument roomId: Int): List<RoomPicture> =
-        roomPictureService.getPicturesForRoomAsEntities(roomId)
+    fun roomPictures(
+        @Argument roomId: Int,
+    ): List<RoomPicture> = roomPictureService.getPicturesForRoomAsEntities(roomId)
 
     @MutationMapping
     fun updateRoomPicture(
@@ -33,7 +33,10 @@ class RoomPictureResolver(private val roomPictureService: RoomPictureService) {
     }
 
     @MutationMapping
-    fun deleteRoomPicture(@Argument roomId: Int, @Argument id: Int): Boolean {
+    fun deleteRoomPicture(
+        @Argument roomId: Int,
+        @Argument id: Int,
+    ): Boolean {
         val currentUser = requireAuthenticated()
         roomPictureService.deletePicture(roomId, id, currentUser.id)
         return true

@@ -24,12 +24,16 @@ class MediaService(
     private val storageService: StorageService,
 ) {
     @Transactional(readOnly = true)
-    fun listForOwner(ownerType: MediaOwnerType, ownerId: Int): List<MediaResponse> =
-        mediaRepository.findByOwnerTypeAndOwnerId(ownerType, ownerId).map { it.toResponse() }
+    fun listForOwner(
+        ownerType: MediaOwnerType,
+        ownerId: Int,
+    ): List<MediaResponse> = mediaRepository.findByOwnerTypeAndOwnerId(ownerType, ownerId).map { it.toResponse() }
 
     @Transactional(readOnly = true)
-    fun listForOwners(ownerType: MediaOwnerType, ownerIds: Collection<Int>): List<MediaResponse> =
-        mediaRepository.findByOwnerTypeAndOwnerIdIn(ownerType, ownerIds).map { it.toResponse() }
+    fun listForOwners(
+        ownerType: MediaOwnerType,
+        ownerIds: Collection<Int>,
+    ): List<MediaResponse> = mediaRepository.findByOwnerTypeAndOwnerIdIn(ownerType, ownerIds).map { it.toResponse() }
 
     @Transactional
     fun addMedia(
@@ -46,10 +50,15 @@ class MediaService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this ${ownerType.folderNoun()}")
         }
         val key = storageService.save(file, "${ownerType.folderNoun()}s/$ownerId")
-        val media = Media(
-            ownerType = ownerType, ownerId = ownerId, url = key,
-            caption = caption, isPrimary = isPrimary, displayOrder = displayOrder,
-        )
+        val media =
+            Media(
+                ownerType = ownerType,
+                ownerId = ownerId,
+                url = key,
+                caption = caption,
+                isPrimary = isPrimary,
+                displayOrder = displayOrder,
+            )
         try {
             return mediaRepository.save(media).toResponse()
         } catch (e: Exception) {
@@ -59,10 +68,16 @@ class MediaService(
     }
 
     @Transactional
-    fun updateMedia(ownerType: MediaOwnerType, ownerId: Int, id: Int, request: UpdateMediaRequest): MediaResponse {
+    fun updateMedia(
+        ownerType: MediaOwnerType,
+        ownerId: Int,
+        id: Int,
+        request: UpdateMediaRequest,
+    ): MediaResponse {
         if (request.displayOrder < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "displayOrder must be >= 0")
-        val existing = mediaRepository.findByOwnerTypeAndOwnerIdAndId(ownerType, ownerId, id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
+        val existing =
+            mediaRepository.findByOwnerTypeAndOwnerIdAndId(ownerType, ownerId, id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         if (request.isPrimary && !existing.isPrimary &&
             mediaRepository.existsByOwnerTypeAndOwnerIdAndIsPrimary(ownerType, ownerId, true)
         ) {
@@ -74,9 +89,14 @@ class MediaService(
     }
 
     @Transactional
-    fun deleteMedia(ownerType: MediaOwnerType, ownerId: Int, id: Int) {
-        val existing = mediaRepository.findByOwnerTypeAndOwnerIdAndId(ownerType, ownerId, id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
+    fun deleteMedia(
+        ownerType: MediaOwnerType,
+        ownerId: Int,
+        id: Int,
+    ) {
+        val existing =
+            mediaRepository.findByOwnerTypeAndOwnerIdAndId(ownerType, ownerId, id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         mediaRepository.deleteById(id)
         storageService.delete(existing.url)
     }
@@ -95,15 +115,16 @@ class MediaService(
 
     private fun MediaOwnerType.folderNoun(): String = name.lowercase()
 
-    private fun Media.toResponse() = MediaResponse(
-        id = id,
-        ownerType = ownerType.name,
-        ownerId = ownerId,
-        url = storageService.toUrl(url),
-        caption = caption,
-        isPrimary = isPrimary,
-        displayOrder = displayOrder,
-    )
+    private fun Media.toResponse() =
+        MediaResponse(
+            id = id,
+            ownerType = ownerType.name,
+            ownerId = ownerId,
+            url = storageService.toUrl(url),
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 
     companion object {
         private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp", "avif")

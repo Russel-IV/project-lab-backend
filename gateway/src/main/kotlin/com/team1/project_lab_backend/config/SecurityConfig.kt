@@ -35,9 +35,11 @@ class SecurityConfig(
     private val jwtProperties: JwtProperties,
     @Value("\${app.cors.allowed-origins}") private val corsAllowedOrigins: String,
 ) {
-
     @Bean
-    fun securityFilterChain(http: HttpSecurity, jwtDecoder: JwtDecoder): SecurityFilterChain {
+    fun securityFilterChain(
+        http: HttpSecurity,
+        jwtDecoder: JwtDecoder,
+    ): SecurityFilterChain {
         http
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
             .csrf { csrf -> csrf.disable() }
@@ -72,7 +74,7 @@ class SecurityConfig(
 
     /**
      * All routes are permitAll() — auth is enforced downstream by requireAuthenticated()
-     * (util/AuthContext.kt), not by this filter chain. Spring Security's resource server
+     * (util/AuthenticatedPrincipal.kt), not by this filter chain. Spring Security's resource server
      * otherwise rejects a request with a 401 the moment it sees an invalid/expired Bearer
      * token, even on a permitAll route, which is a real behavior change from the previous
      * hand-written JwtAuthFilter (which just left such requests unauthenticated). This
@@ -101,8 +103,9 @@ class SecurityConfig(
     @Bean
     fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
         Converter { jwt ->
-            val id = jwt.subject.toIntOrNull()
-                ?: throw BadCredentialsException("invalid subject claim")
+            val id =
+                jwt.subject.toIntOrNull()
+                    ?: throw BadCredentialsException("invalid subject claim")
             UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(id), jwt.tokenValue, emptyList())
         }
 

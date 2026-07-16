@@ -1,7 +1,10 @@
 package com.team1.project_lab_backend.review.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.configureFor
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -11,23 +14,20 @@ import com.github.tomakehurst.wiremock.client.WireMock.patch
 import com.github.tomakehurst.wiremock.client.WireMock.patchRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.configureFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.verify
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import feign.Feign
 import feign.FeignException
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.okhttp.OkHttpClient
-import org.springframework.cloud.openfeign.support.SpringMvcContract
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.cloud.openfeign.support.SpringMvcContract
 
 /**
  * Exercises the real ReviewFeignClient interface (request paths/params/bodies, response
@@ -42,7 +42,6 @@ import org.junit.jupiter.api.Test
  * way, since Spring Cloud OpenFeign just wraps the same underlying Feign proxy.
  */
 class ReviewFeignClientTest {
-
     private lateinit var wireMock: WireMockServer
     private lateinit var client: ReviewFeignClient
 
@@ -53,12 +52,13 @@ class ReviewFeignClientTest {
         configureFor("localhost", wireMock.port())
 
         val mapper = ObjectMapper().registerKotlinModule()
-        client = Feign.builder()
-            .client(OkHttpClient())
-            .contract(SpringMvcContract())
-            .encoder(JacksonEncoder(mapper))
-            .decoder(JacksonDecoder(mapper))
-            .target(ReviewFeignClient::class.java, "http://localhost:${wireMock.port()}")
+        client =
+            Feign.builder()
+                .client(OkHttpClient())
+                .contract(SpringMvcContract())
+                .encoder(JacksonEncoder(mapper))
+                .decoder(JacksonDecoder(mapper))
+                .target(ReviewFeignClient::class.java, "http://localhost:${wireMock.port()}")
     }
 
     @AfterEach

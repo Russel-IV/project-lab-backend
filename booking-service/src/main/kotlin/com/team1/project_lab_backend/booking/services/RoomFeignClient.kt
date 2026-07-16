@@ -15,7 +15,6 @@ import java.math.BigDecimal
  */
 @FeignClient(name = "inventory-service", contextId = "bookingRoomFeignClient")
 interface RoomFeignClient {
-
     @GetMapping("/internal/rooms")
     fun list(
         @RequestParam(required = false) ids: List<Int>?,

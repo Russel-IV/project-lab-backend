@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class ViewService(private val viewFeignClient: ViewFeignClient) {
-
     fun getAllViews(): List<View> = viewFeignClient.list(ids = null)
 
     fun createView(request: ViewRequest): View =
@@ -24,7 +23,10 @@ class ViewService(private val viewFeignClient: ViewFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid view")
         }
 
-    fun updateView(id: Int, request: ViewRequest): View =
+    fun updateView(
+        id: Int,
+        request: ViewRequest,
+    ): View =
         try {
             viewFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

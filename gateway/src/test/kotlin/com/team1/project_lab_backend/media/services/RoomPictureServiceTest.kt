@@ -31,33 +31,57 @@ class RoomPictureServiceTest {
         roomId: Int = 20,
         isPrimary: Boolean = false,
     ) = MediaResponse(
-        id = id, ownerType = "ROOM", ownerId = roomId,
+        id = id,
+        ownerType = "ROOM",
+        ownerId = roomId,
         url = "http://localhost:8080/uploads/rooms/$roomId/photo.jpg",
-        caption = null, isPrimary = isPrimary, displayOrder = 0,
+        caption = null,
+        isPrimary = isPrimary,
+        displayOrder = 0,
     )
 
     private fun imageFile(name: String = "photo.jpg") = MockMultipartFile("file", name, "image/jpeg", ByteArray(8) { 0 })
 
-    private fun sampleRoom(roomId: Int = 20, stayId: Int = 10) = Room(
-        id = roomId, stayId = stayId, name = "Deluxe Suite",
-        price = BigDecimal("150.00"), sleeps = 2, bedroomAmount = 1, bathrooms = BigDecimal("1.0"),
+    private fun sampleRoom(
+        roomId: Int = 20,
+        stayId: Int = 10,
+    ) = Room(
+        id = roomId,
+        stayId = stayId,
+        name = "Deluxe Suite",
+        price = BigDecimal("150.00"),
+        sleeps = 2,
+        bedroomAmount = 1,
+        bathrooms = BigDecimal("1.0"),
     )
 
-    private fun sampleStay(stayId: Int = 10, hostId: Int = 1) = Stay(
-        id = stayId, name = "Test Stay", propertyType = PropertyType.HOME,
+    private fun sampleStay(
+        stayId: Int = 10,
+        hostId: Int = 1,
+    ) = Stay(
+        id = stayId,
+        name = "Test Stay",
+        propertyType = PropertyType.HOME,
         hostId = hostId,
         address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
     )
 
-    private fun stubRoomAndStay(roomId: Int = 20, stayId: Int = 10, hostId: Int = 1) {
+    private fun stubRoomAndStay(
+        roomId: Int = 20,
+        stayId: Int = 10,
+        hostId: Int = 1,
+    ) {
         Mockito.`when`(roomFeignClient.get(roomId)).thenReturn(sampleRoom(roomId, stayId))
         Mockito.`when`(stayFeignClient.get(stayId)).thenReturn(sampleStay(stayId, hostId))
     }
 
-    private fun feignBadRequest(body: String) = FeignException.BadRequest(
-        "bad request", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignBadRequest(body: String) =
+        FeignException.BadRequest(
+            "bad request",
+            Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
     // ---- addPicture ----
 
@@ -65,9 +89,10 @@ class RoomPictureServiceTest {
     fun addPictureRejectsRoomNotFound() {
         Mockito.`when`(roomFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(99, imageFile(), null, false, 0, 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addPicture(99, imageFile(), null, false, 0, 1)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -75,9 +100,10 @@ class RoomPictureServiceTest {
     fun addPictureRejectsForbiddenWhenNotHost() {
         stubRoomAndStay(hostId = 1)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(20, imageFile(), null, false, 0, requestingUserId = 2)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addPicture(20, imageFile(), null, false, 0, requestingUserId = 2)
+            }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 
@@ -85,9 +111,10 @@ class RoomPictureServiceTest {
     fun addPictureRejectsNegativeDisplayOrder() {
         stubRoomAndStay()
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(20, imageFile(), null, false, displayOrder = -1, requestingUserId = 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addPicture(20, imageFile(), null, false, displayOrder = -1, requestingUserId = 1)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -98,9 +125,10 @@ class RoomPictureServiceTest {
         Mockito.`when`(mediaFeignClient.upload("ROOM", 20, file, null, isPrimary = true, displayOrder = 0))
             .thenThrow(feignBadRequest("""{"message":"a primary picture already exists for this room"}"""))
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addPicture(20, file, null, isPrimary = true, displayOrder = 0, requestingUserId = 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addPicture(20, file, null, isPrimary = true, displayOrder = 0, requestingUserId = 1)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
         assertEquals("a primary picture already exists for this room", ex.reason)
     }
@@ -137,9 +165,10 @@ class RoomPictureServiceTest {
         Mockito.`when`(mediaFeignClient.update("ROOM", 20, 99, UpdateMediaRequest(null, false, 0)))
             .thenThrow(FeignException.NotFound::class.java)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updatePictureMetadata(20, 99, null, false, 0, 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updatePictureMetadata(20, 99, null, false, 0, 1)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -147,9 +176,10 @@ class RoomPictureServiceTest {
     fun updatePictureMetadataRejectsForbiddenWhenNotHost() {
         stubRoomAndStay(hostId = 1)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updatePictureMetadata(20, 1, null, false, 0, requestingUserId = 2)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updatePictureMetadata(20, 1, null, false, 0, requestingUserId = 2)
+            }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 
@@ -160,9 +190,10 @@ class RoomPictureServiceTest {
         stubRoomAndStay()
         Mockito.`when`(mediaFeignClient.delete("ROOM", 20, 99)).thenThrow(FeignException.NotFound::class.java)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.deletePicture(20, 99, 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.deletePicture(20, 99, 1)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 

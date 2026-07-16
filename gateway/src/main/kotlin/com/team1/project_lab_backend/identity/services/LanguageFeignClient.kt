@@ -11,18 +11,24 @@ import org.springframework.web.bind.annotation.RequestBody
 
 @FeignClient(name = "identity-service", contextId = "languageFeignClient")
 interface LanguageFeignClient {
-
     @GetMapping("/internal/languages")
     fun list(): List<Language>
 
     @PostMapping("/internal/languages")
-    fun create(@RequestBody request: LanguageUpsertRequest): Language
+    fun create(
+        @RequestBody request: LanguageUpsertRequest,
+    ): Language
 
     @PatchMapping("/internal/languages/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: LanguageUpsertRequest): Language
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: LanguageUpsertRequest,
+    ): Language
 
     @DeleteMapping("/internal/languages/{id}")
-    fun delete(@PathVariable id: Int)
+    fun delete(
+        @PathVariable id: Int,
+    )
 }
 
 data class LanguageUpsertRequest(val languageName: String)

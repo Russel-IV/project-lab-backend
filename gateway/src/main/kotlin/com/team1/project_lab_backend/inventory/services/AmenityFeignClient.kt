@@ -13,19 +13,29 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "inventory-service", contextId = "amenityFeignClient")
 interface AmenityFeignClient {
-
     @GetMapping("/internal/amenities")
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<Amenity>
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<Amenity>
 
     @GetMapping("/internal/amenities/{id}")
-    fun get(@PathVariable id: Int): Amenity
+    fun get(
+        @PathVariable id: Int,
+    ): Amenity
 
     @PostMapping("/internal/amenities")
-    fun create(@RequestBody request: AmenityRequest): Amenity
+    fun create(
+        @RequestBody request: AmenityRequest,
+    ): Amenity
 
     @PatchMapping("/internal/amenities/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: AmenityRequest): Amenity
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: AmenityRequest,
+    ): Amenity
 
     @DeleteMapping("/internal/amenities/{id}")
-    fun delete(@PathVariable id: Int)
+    fun delete(
+        @PathVariable id: Int,
+    )
 }

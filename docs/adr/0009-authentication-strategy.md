@@ -46,7 +46,7 @@ token translation step is introduced.
 - The shared signing secret must be distributed to every service that validates
   tokens — via the existing `JWT_SECRET` env var convention
   ([ADR-0007](0007-configuration-management.md)), not a new mechanism.
-- `requireAuthenticated()` (`util/AuthContext.kt`) keeps its current shape —
+- `requireAuthenticated()` (`util/AuthenticatedPrincipal.kt`) keeps its current shape —
   reading `SecurityContextHolder` — regardless of which filter populated it.
 - Downstream services *can* independently re-validate the JWT (defense in depth)
   at zero extra network cost, since validation is local.

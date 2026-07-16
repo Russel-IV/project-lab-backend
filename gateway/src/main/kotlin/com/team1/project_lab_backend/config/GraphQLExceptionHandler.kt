@@ -13,28 +13,33 @@ import org.springframework.web.server.ResponseStatusException
 
 @Component
 class GraphQLExceptionHandler : DataFetcherExceptionResolverAdapter() {
-
-    override fun resolveToSingleError(ex: Throwable, env: DataFetchingEnvironment): GraphQLError? {
+    override fun resolveToSingleError(
+        ex: Throwable,
+        env: DataFetchingEnvironment,
+    ): GraphQLError? {
         return when (ex) {
-            is GraphQLBusinessException -> GraphqlErrorBuilder.newError(env)
-                .message(ex.reason ?: ex.message ?: "An error occurred")
-                .errorType(ex.statusCode.toErrorType())
-                .extensions(mapOf("code" to ex.code))
-                .build()
-            is ResponseStatusException -> GraphqlErrorBuilder.newError(env)
-                .message(ex.reason ?: ex.message ?: "An error occurred")
-                .errorType(ex.statusCode.toErrorType())
-                .build()
+            is GraphQLBusinessException ->
+                GraphqlErrorBuilder.newError(env)
+                    .message(ex.reason ?: ex.message ?: "An error occurred")
+                    .errorType(ex.statusCode.toErrorType())
+                    .extensions(mapOf("code" to ex.code))
+                    .build()
+            is ResponseStatusException ->
+                GraphqlErrorBuilder.newError(env)
+                    .message(ex.reason ?: ex.message ?: "An error occurred")
+                    .errorType(ex.statusCode.toErrorType())
+                    .build()
             else -> null
         }
     }
 
-    private fun HttpStatusCode.toErrorType(): ErrorType = when {
-        this == HttpStatus.NOT_FOUND -> ErrorType.NOT_FOUND
-        this == HttpStatus.BAD_REQUEST -> ErrorType.BAD_REQUEST
-        this == HttpStatus.CONFLICT -> ErrorType.BAD_REQUEST
-        this == HttpStatus.FORBIDDEN -> ErrorType.FORBIDDEN
-        this == HttpStatus.UNAUTHORIZED -> ErrorType.UNAUTHORIZED
-        else -> ErrorType.INTERNAL_ERROR
-    }
+    private fun HttpStatusCode.toErrorType(): ErrorType =
+        when {
+            this == HttpStatus.NOT_FOUND -> ErrorType.NOT_FOUND
+            this == HttpStatus.BAD_REQUEST -> ErrorType.BAD_REQUEST
+            this == HttpStatus.CONFLICT -> ErrorType.BAD_REQUEST
+            this == HttpStatus.FORBIDDEN -> ErrorType.FORBIDDEN
+            this == HttpStatus.UNAUTHORIZED -> ErrorType.UNAUTHORIZED
+            else -> ErrorType.INTERNAL_ERROR
+        }
 }

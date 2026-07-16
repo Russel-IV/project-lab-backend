@@ -36,14 +36,18 @@ class PaymentMethodController(
     }
 
     @PatchMapping("/{id}/default")
-    fun setDefaultPaymentMethod(@PathVariable id: Int): ResponseEntity<Void> {
+    fun setDefaultPaymentMethod(
+        @PathVariable id: Int,
+    ): ResponseEntity<Void> {
         val currentUser = requireAuthenticated()
         paymentMethodService.setDefaultPaymentMethod(currentUser.id, id)
         return ResponseEntity.noContent().build()
     }
 
     @DeleteMapping("/{id}")
-    fun deletePaymentMethod(@PathVariable id: Int): ResponseEntity<Void> {
+    fun deletePaymentMethod(
+        @PathVariable id: Int,
+    ): ResponseEntity<Void> {
         val currentUser = requireAuthenticated()
         paymentMethodService.deletePaymentMethod(currentUser.id, id)
         return ResponseEntity.noContent().build()

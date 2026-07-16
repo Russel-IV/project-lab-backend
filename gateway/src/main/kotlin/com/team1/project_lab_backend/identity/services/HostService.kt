@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class HostService(private val hostFeignClient: HostFeignClient) {
-
     fun getAllHosts(): List<Host> = hostFeignClient.list(ids = null)
 
     fun getHostById(id: Int): Host =
@@ -33,7 +32,10 @@ class HostService(private val hostFeignClient: HostFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid host")
         }
 
-    fun updateHost(id: Int, request: HostRequest): Host =
+    fun updateHost(
+        id: Int,
+        request: HostRequest,
+    ): Host =
         try {
             hostFeignClient.update(id, request.toUpsertRequest())
         } catch (e: FeignException.NotFound) {
@@ -50,11 +52,12 @@ class HostService(private val hostFeignClient: HostFeignClient) {
         }
     }
 
-    private fun HostRequest.toUpsertRequest() = HostUpsertRequest(
-        id = id,
-        communicationRating = communicationRating,
-        checkinProcessRating = checkinProcessRating,
-        cancellationRate = cancellationRate,
-        languageIds = languageIds,
-    )
+    private fun HostRequest.toUpsertRequest() =
+        HostUpsertRequest(
+            id = id,
+            communicationRating = communicationRating,
+            checkinProcessRating = checkinProcessRating,
+            cancellationRate = cancellationRate,
+            languageIds = languageIds,
+        )
 }

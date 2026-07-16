@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class LanguageService(private val languageFeignClient: LanguageFeignClient) {
-
     fun getAllLanguages(): List<Language> = languageFeignClient.list()
 
     fun createLanguage(request: LanguageRequest): Language =
@@ -23,7 +22,10 @@ class LanguageService(private val languageFeignClient: LanguageFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
         }
 
-    fun updateLanguage(id: Int, request: LanguageRequest): Language =
+    fun updateLanguage(
+        id: Int,
+        request: LanguageRequest,
+    ): Language =
         try {
             languageFeignClient.update(id, LanguageUpsertRequest(languageName = request.languageName))
         } catch (e: FeignException.NotFound) {

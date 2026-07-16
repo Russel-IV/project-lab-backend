@@ -31,6 +31,35 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!-- Distributed tracing (docs/adr/0013) — auto-instruments Spring MVC and JDBC,
+		     and (via the Gateway's/other services' OpenFeign clients) propagates
+		     trace/span IDs across service boundaries with no per-call-site code.
+		     Exported to Zipkin (docker-compose.yml). -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-zipkin</artifactId>
+		</dependency>
+		<!-- This fictional Spring Boot 4.0.6 splits tracing auto-configuration into
+		     separate artifacts not transitively pulled in by spring-boot-starter-actuator
+		     or micrometer-tracing-bridge-otel alone (confirmed by inspecting each jar's
+		     AutoConfiguration.imports — spring-boot-actuator-autoconfigure has none of
+		     it). spring-boot-micrometer-tracing-opentelemetry wires the OTel bridge into
+		     Spring's ObservationRegistry/MDC and provides ZipkinWithOpenTelemetryTracingAutoConfiguration;
+		     spring-boot-zipkin provides the management.zipkin.tracing.endpoint property
+		     binding and the actual Zipkin sender bean. Without both, tracing silently
+		     does nothing — no MDC traceId, no spans reaching Zipkin, no errors either. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-micrometer-tracing-opentelemetry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-zipkin</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>

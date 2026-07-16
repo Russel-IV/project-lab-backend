@@ -6,14 +6,25 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface ReviewRepository : JpaRepository<Review, Int> {
+    fun findByStayId(
+        stayId: Int,
+        pageable: Pageable,
+    ): List<Review>
 
-    fun findByStayId(stayId: Int, pageable: Pageable): List<Review>
+    fun findByUserId(
+        userId: Int,
+        pageable: Pageable,
+    ): List<Review>
 
-    fun findByUserId(userId: Int, pageable: Pageable): List<Review>
+    fun existsByUserIdAndStayId(
+        userId: Int,
+        stayId: Int,
+    ): Boolean
 
-    fun existsByUserIdAndStayId(userId: Int, stayId: Int): Boolean
-
-    fun findByUserIdAndStayId(userId: Int, stayId: Int): Review?
+    fun findByUserIdAndStayId(
+        userId: Int,
+        stayId: Int,
+    ): Review?
 
     @Query("SELECT r.rating AS rating, COUNT(r) AS count FROM Review r WHERE r.stayId = :stayId GROUP BY r.rating")
     fun countByRatingForStay(stayId: Int): List<RatingCount>

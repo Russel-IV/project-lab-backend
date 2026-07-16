@@ -1,5 +1,9 @@
 package com.team1.project_lab_backend.booking.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.configureFor
@@ -15,21 +19,17 @@ import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.verify
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import feign.Feign
 import feign.FeignException
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.okhttp.OkHttpClient
-import org.springframework.cloud.openfeign.support.SpringMvcContract
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.cloud.openfeign.support.SpringMvcContract
 
 /**
  * Exercises the real BookingFeignClient interface (request paths/params/bodies,
@@ -39,7 +39,6 @@ import org.junit.jupiter.api.Test
  * BookingController is the one thing unit tests on either side, alone, wouldn't catch.
  */
 class BookingFeignClientTest {
-
     private lateinit var wireMock: WireMockServer
     private lateinit var client: BookingFeignClient
 
@@ -52,12 +51,13 @@ class BookingFeignClientTest {
         val mapper =
             ObjectMapper().registerKotlinModule().registerModule(JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        client = Feign.builder()
-            .client(OkHttpClient())
-            .contract(SpringMvcContract())
-            .encoder(JacksonEncoder(mapper))
-            .decoder(JacksonDecoder(mapper))
-            .target(BookingFeignClient::class.java, "http://localhost:${wireMock.port()}")
+        client =
+            Feign.builder()
+                .client(OkHttpClient())
+                .contract(SpringMvcContract())
+                .encoder(JacksonEncoder(mapper))
+                .decoder(JacksonDecoder(mapper))
+                .target(BookingFeignClient::class.java, "http://localhost:${wireMock.port()}")
     }
 
     @AfterEach
@@ -137,7 +137,11 @@ class BookingFeignClientTest {
                 ),
         )
 
-        val result = client.updateStatus(9, BookingStatusUpdateRequest(com.team1.project_lab_backend.booking.models.BookingStatus.CONFIRMED))
+        val result =
+            client.updateStatus(
+                9,
+                BookingStatusUpdateRequest(com.team1.project_lab_backend.booking.models.BookingStatus.CONFIRMED),
+            )
 
         assertEquals(com.team1.project_lab_backend.booking.models.BookingStatus.CONFIRMED, result.status)
         verify(patchRequestedFor(urlPathEqualTo("/internal/bookings/9/status")))

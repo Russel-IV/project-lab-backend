@@ -12,21 +12,33 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "identity-service", contextId = "userFeignClient")
 interface UserFeignClient {
-
     @GetMapping("/internal/users")
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<User>
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<User>
 
     @GetMapping("/internal/users/{id}")
-    fun get(@PathVariable id: Int): User
+    fun get(
+        @PathVariable id: Int,
+    ): User
 
     @PostMapping("/internal/users")
-    fun create(@RequestBody request: UserUpsertRequest): User
+    fun create(
+        @RequestBody request: UserUpsertRequest,
+    ): User
 
     @PatchMapping("/internal/users/{id}")
-    fun update(@PathVariable id: Int, @RequestParam requestingUserId: Int, @RequestBody request: UserUpsertRequest): User
+    fun update(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+        @RequestBody request: UserUpsertRequest,
+    ): User
 
     @DeleteMapping("/internal/users/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    )
 }
 
 data class UserUpsertRequest(val name: String)

@@ -10,10 +10,10 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class StayPictureResolver(private val stayPictureService: StayPictureService) {
-
     @QueryMapping
-    fun stayPictures(@Argument stayId: Int): List<StayPicture> =
-        stayPictureService.getPicturesForStayAsEntities(stayId)
+    fun stayPictures(
+        @Argument stayId: Int,
+    ): List<StayPicture> = stayPictureService.getPicturesForStayAsEntities(stayId)
 
     @MutationMapping
     fun updateStayPicture(
@@ -33,7 +33,10 @@ class StayPictureResolver(private val stayPictureService: StayPictureService) {
     }
 
     @MutationMapping
-    fun deleteStayPicture(@Argument stayId: Int, @Argument id: Int): Boolean {
+    fun deleteStayPicture(
+        @Argument stayId: Int,
+        @Argument id: Int,
+    ): Boolean {
         val currentUser = requireAuthenticated()
         stayPictureService.deletePicture(stayId, id, currentUser.id)
         return true

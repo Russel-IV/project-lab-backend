@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class AmenityService(private val amenityFeignClient: AmenityFeignClient) {
-
     fun getAllAmenities(): List<Amenity> = amenityFeignClient.list(ids = null)
 
     fun getAmenityById(id: Int): Amenity =
@@ -31,7 +30,10 @@ class AmenityService(private val amenityFeignClient: AmenityFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid amenity")
         }
 
-    fun updateAmenity(id: Int, request: AmenityRequest): Amenity =
+    fun updateAmenity(
+        id: Int,
+        request: AmenityRequest,
+    ): Amenity =
         try {
             amenityFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

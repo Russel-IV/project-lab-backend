@@ -21,7 +21,6 @@ import java.time.LocalDate
  */
 @FeignClient(name = "booking-service", contextId = "bookingFeignClient")
 interface BookingFeignClient {
-
     @GetMapping("/internal/bookings")
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
@@ -31,19 +30,32 @@ interface BookingFeignClient {
     ): List<Booking>
 
     @GetMapping("/internal/bookings/{id}")
-    fun get(@PathVariable id: Int): Booking
+    fun get(
+        @PathVariable id: Int,
+    ): Booking
 
     @GetMapping("/internal/bookings/completed-for-stay")
-    fun hasCompletedBookingForStay(@RequestParam userId: Int, @RequestParam stayId: Int): Boolean
+    fun hasCompletedBookingForStay(
+        @RequestParam userId: Int,
+        @RequestParam stayId: Int,
+    ): Boolean
 
     @PostMapping("/internal/bookings")
-    fun create(@RequestBody request: CreateBookingRequest): Booking
+    fun create(
+        @RequestBody request: CreateBookingRequest,
+    ): Booking
 
     @PatchMapping("/internal/bookings/{id}/status")
-    fun updateStatus(@PathVariable id: Int, @RequestBody request: BookingStatusUpdateRequest): Booking
+    fun updateStatus(
+        @PathVariable id: Int,
+        @RequestBody request: BookingStatusUpdateRequest,
+    ): Booking
 
     @DeleteMapping("/internal/bookings/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    )
 }
 
 data class CreateBookingRequest(

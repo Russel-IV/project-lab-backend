@@ -18,24 +18,33 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/users")
 class UserController(private val userService: UserService) {
-
     @GetMapping
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<User> =
-        if (ids != null) userService.getUsersByIds(ids) else userService.getAllUsers()
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<User> = if (ids != null) userService.getUsersByIds(ids) else userService.getAllUsers()
 
     @GetMapping("/{id}")
-    fun get(@PathVariable id: Int): User = userService.getUserById(id)
+    fun get(
+        @PathVariable id: Int,
+    ): User = userService.getUserById(id)
 
     @PostMapping
-    fun create(@RequestBody request: UserRequest): ResponseEntity<User> =
-        ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request))
+    fun create(
+        @RequestBody request: UserRequest,
+    ): ResponseEntity<User> = ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request))
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: Int, @RequestParam requestingUserId: Int, @RequestBody request: UserRequest): User =
-        userService.updateUser(id, request, requestingUserId)
+    fun update(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+        @RequestBody request: UserRequest,
+    ): User = userService.updateUser(id, request, requestingUserId)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int) {
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    ) {
         userService.deleteUser(id, requestingUserId)
     }
 }

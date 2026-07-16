@@ -29,9 +29,13 @@ class ProfileService(
             .toProfileResponse()
 
     @Transactional
-    fun updateProfile(userId: Int, request: UpdateProfileRequest): ProfileResponse {
-        val existing = userRepository.findById(userId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+    fun updateProfile(
+        userId: Int,
+        request: UpdateProfileRequest,
+    ): ProfileResponse {
+        val existing =
+            userRepository.findById(userId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
 
         val errors = mutableMapOf<String, String>()
         if (request.name.isBlank()) {
@@ -61,9 +65,13 @@ class ProfileService(
     }
 
     @Transactional
-    fun updateProfilePictureUrl(userId: Int, url: String): ProfileResponse {
-        val existing = userRepository.findById(userId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+    fun updateProfilePictureUrl(
+        userId: Int,
+        url: String,
+    ): ProfileResponse {
+        val existing =
+            userRepository.findById(userId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
         return userRepository.save(
             User(
                 id = userId,
@@ -77,9 +85,13 @@ class ProfileService(
     }
 
     @Transactional
-    fun changePassword(userId: Int, request: ChangePasswordRequest) {
-        val existing = userRepository.findById(userId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+    fun changePassword(
+        userId: Int,
+        request: ChangePasswordRequest,
+    ) {
+        val existing =
+            userRepository.findById(userId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
 
         val errors = mutableMapOf<String, String>()
         if (!passwordEncoder.matches(request.currentPassword, existing.passwordHash)) {
@@ -104,8 +116,9 @@ class ProfileService(
 
     @Transactional
     fun deleteAccount(userId: Int) {
-        val existing = userRepository.findById(userId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+        val existing =
+            userRepository.findById(userId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
         userRepository.save(
             User(
                 id = userId,

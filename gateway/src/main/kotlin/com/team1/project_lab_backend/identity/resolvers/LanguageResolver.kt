@@ -13,24 +13,30 @@ import org.springframework.stereotype.Controller
 class LanguageResolver(
     private val languageService: LanguageService,
 ) {
-
     @QueryMapping
     fun languages(): List<Language> = languageService.getAllLanguages()
 
     @MutationMapping
-    fun createLanguage(@Argument input: CreateLanguageInput): Language {
+    fun createLanguage(
+        @Argument input: CreateLanguageInput,
+    ): Language {
         requireAuthenticated()
         return languageService.createLanguage(LanguageRequest(languageName = input.languageName))
     }
 
     @MutationMapping
-    fun updateLanguage(@Argument id: Int, @Argument input: UpdateLanguageInput): Language {
+    fun updateLanguage(
+        @Argument id: Int,
+        @Argument input: UpdateLanguageInput,
+    ): Language {
         requireAuthenticated()
         return languageService.updateLanguage(id, LanguageRequest(languageName = input.languageName))
     }
 
     @MutationMapping
-    fun deleteLanguage(@Argument id: Int): Boolean {
+    fun deleteLanguage(
+        @Argument id: Int,
+    ): Boolean {
         requireAuthenticated()
         languageService.deleteLanguage(id)
         return true
@@ -38,4 +44,5 @@ class LanguageResolver(
 }
 
 data class CreateLanguageInput(val languageName: String)
+
 data class UpdateLanguageInput(val languageName: String)

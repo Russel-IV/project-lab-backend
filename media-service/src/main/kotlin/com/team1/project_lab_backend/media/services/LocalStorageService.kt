@@ -20,8 +20,10 @@ class LocalStorageService(
     @Value("\${app.upload.dir}") private val uploadDir: String,
     @Value("\${app.public-url}") private val publicUrl: String,
 ) : StorageService {
-
-    override fun save(file: MultipartFile, folder: String): String {
+    override fun save(
+        file: MultipartFile,
+        folder: String,
+    ): String {
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
         val filename = "${UUID.randomUUID()}.$ext"
         val key = "$folder/$filename"
@@ -34,7 +36,8 @@ class LocalStorageService(
     override fun delete(key: String) {
         try {
             Files.deleteIfExists(Path.of(uploadDir).toAbsolutePath().resolve(key))
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
     }
 
     override fun toUrl(key: String): String = "${publicUrl.trimEnd('/')}/uploads/$key"

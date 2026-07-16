@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class UserService(private val userFeignClient: UserFeignClient) {
-
     fun getAllUsers(): List<User> = userFeignClient.list(ids = null)
 
     fun getUserById(id: Int): User =
@@ -30,7 +29,11 @@ class UserService(private val userFeignClient: UserFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
         }
 
-    fun updateUser(id: Int, request: UserRequest, requestingUserId: Int): User =
+    fun updateUser(
+        id: Int,
+        request: UserRequest,
+        requestingUserId: Int,
+    ): User =
         try {
             userFeignClient.update(id, requestingUserId, UserUpsertRequest(name = request.name))
         } catch (e: FeignException.Forbidden) {
@@ -39,7 +42,10 @@ class UserService(private val userFeignClient: UserFeignClient) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
 
-    fun deleteUser(id: Int, requestingUserId: Int) {
+    fun deleteUser(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         try {
             userFeignClient.delete(id, requestingUserId)
         } catch (e: FeignException.Forbidden) {

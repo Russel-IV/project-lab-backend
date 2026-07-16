@@ -62,25 +62,28 @@ class ReviewServiceTest {
 
     @Test
     fun createReviewRejectsBlankText() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.createReview(CreateReviewRequest(text = "  ", userId = 1, stayId = 1, rating = 3))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                reviewService.createReview(CreateReviewRequest(text = "  ", userId = 1, stayId = 1, rating = 3))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createReviewRejectsInvalidRating() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.createReview(CreateReviewRequest(text = "Nice", userId = 1, stayId = 1, rating = 6))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                reviewService.createReview(CreateReviewRequest(text = "Nice", userId = 1, stayId = 1, rating = 6))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createReviewRejectsZeroRating() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.createReview(CreateReviewRequest(text = "Nice", userId = 1, stayId = 1, rating = 0))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                reviewService.createReview(CreateReviewRequest(text = "Nice", userId = 1, stayId = 1, rating = 0))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -90,9 +93,10 @@ class ReviewServiceTest {
     fun updateReviewReturnsNotFoundWhenMissing() {
         Mockito.`when`(reviewRepository.findById(99)).thenReturn(Optional.empty())
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.updateReview(99, UpdateReviewRequest(text = "Updated", stayId = 1, rating = 4, requestingUserId = 1))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                reviewService.updateReview(99, UpdateReviewRequest(text = "Updated", stayId = 1, rating = 4, requestingUserId = 1))
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -101,9 +105,10 @@ class ReviewServiceTest {
         val existing = Review(id = 5, text = "Original", userId = 1, stayId = 2, rating = 3)
         Mockito.`when`(reviewRepository.findById(5)).thenReturn(Optional.of(existing))
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            reviewService.updateReview(5, UpdateReviewRequest(text = "Updated", stayId = 2, rating = 4, requestingUserId = 99))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                reviewService.updateReview(5, UpdateReviewRequest(text = "Updated", stayId = 2, rating = 4, requestingUserId = 99))
+            }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 
@@ -180,7 +185,11 @@ class ReviewServiceTest {
 
     @Test
     fun findByIdsDelegatesToRepository() {
-        val reviews = listOf(Review(id = 1, text = "A", userId = 1, stayId = 1, rating = 5), Review(id = 2, text = "B", userId = 2, stayId = 1, rating = 3))
+        val reviews =
+            listOf(
+                Review(id = 1, text = "A", userId = 1, stayId = 1, rating = 5),
+                Review(id = 2, text = "B", userId = 2, stayId = 1, rating = 3),
+            )
         Mockito.`when`(reviewRepository.findAllById(listOf(1, 2))).thenReturn(reviews)
 
         val result = reviewService.findByIds(listOf(1, 2))

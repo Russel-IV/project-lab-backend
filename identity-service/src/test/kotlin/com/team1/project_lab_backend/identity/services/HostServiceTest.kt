@@ -21,27 +21,30 @@ class HostServiceTest {
 
     @Test
     fun createHostRequiresId() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createHost(HostRequest(id = null))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createHost(HostRequest(id = null))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createHostRejectsWhenAlreadyExists() {
         Mockito.`when`(hostRepository.existsById(1)).thenReturn(true)
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createHost(HostRequest(id = 1))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createHost(HostRequest(id = 1))
+            }
         assertEquals(HttpStatus.CONFLICT, ex.statusCode)
     }
 
     @Test
     fun createHostRejectsRatingOutOfRange() {
         Mockito.`when`(hostRepository.existsById(1)).thenReturn(false)
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createHost(HostRequest(id = 1, communicationRating = BigDecimal("150")))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createHost(HostRequest(id = 1, communicationRating = BigDecimal("150")))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -49,9 +52,10 @@ class HostServiceTest {
     fun createHostRejectsUnknownLanguageIds() {
         Mockito.`when`(hostRepository.existsById(1)).thenReturn(false)
         Mockito.`when`(languageRepository.findAllById(setOf(5, 6))).thenReturn(listOf(Language(id = 5, languageName = "English")))
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createHost(HostRequest(id = 1, languageIds = setOf(5, 6)))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createHost(HostRequest(id = 1, languageIds = setOf(5, 6)))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -65,18 +69,20 @@ class HostServiceTest {
 
     @Test
     fun updateHostRejectsIdMismatch() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateHost(1, HostRequest(id = 2))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateHost(1, HostRequest(id = 2))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun updateHostRejectsUnknownHost() {
         Mockito.`when`(hostRepository.existsById(1)).thenReturn(false)
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateHost(1, HostRequest())
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateHost(1, HostRequest())
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 

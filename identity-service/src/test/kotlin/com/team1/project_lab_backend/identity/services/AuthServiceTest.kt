@@ -22,9 +22,10 @@ class AuthServiceTest {
         Mockito.`when`(userRepository.findByEmailAndDeletedAtIsNull("ada@example.com"))
             .thenReturn(Optional.of(User(id = 1, name = "Ada", email = "ada@example.com")))
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.signup("Ada", "ada@example.com", "password123")
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.signup("Ada", "ada@example.com", "password123")
+            }
         assertEquals(HttpStatus.CONFLICT, ex.statusCode)
     }
 
@@ -47,9 +48,10 @@ class AuthServiceTest {
     fun loginRejectsUnknownEmail() {
         Mockito.`when`(userRepository.findByEmailAndDeletedAtIsNull("nobody@example.com")).thenReturn(Optional.empty())
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.login("nobody@example.com", "password123")
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.login("nobody@example.com", "password123")
+            }
         assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
     }
 
@@ -59,9 +61,10 @@ class AuthServiceTest {
         Mockito.`when`(userRepository.findByEmailAndDeletedAtIsNull("ada@example.com")).thenReturn(Optional.of(user))
         Mockito.`when`(passwordEncoder.matches("wrong", "hashed")).thenReturn(false)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.login("ada@example.com", "wrong")
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.login("ada@example.com", "wrong")
+            }
         assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
     }
 

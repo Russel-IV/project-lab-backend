@@ -15,10 +15,12 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PaymentMethodService(private val paymentMethodFeignClient: PaymentMethodFeignClient) {
-
     fun getPaymentMethods(userId: Int): List<PaymentMethodResponse> = paymentMethodFeignClient.list(userId)
 
-    fun createPaymentMethod(userId: Int, request: CreatePaymentMethodRequest): PaymentMethodResponse =
+    fun createPaymentMethod(
+        userId: Int,
+        request: CreatePaymentMethodRequest,
+    ): PaymentMethodResponse =
         try {
             paymentMethodFeignClient.create(
                 userId,
@@ -34,7 +36,10 @@ class PaymentMethodService(private val paymentMethodFeignClient: PaymentMethodFe
             throw FieldValidationException(feignFieldErrors(e) ?: emptyMap())
         }
 
-    fun setDefaultPaymentMethod(userId: Int, id: Int) {
+    fun setDefaultPaymentMethod(
+        userId: Int,
+        id: Int,
+    ) {
         try {
             paymentMethodFeignClient.setDefault(id, userId)
         } catch (e: FeignException.NotFound) {
@@ -42,7 +47,10 @@ class PaymentMethodService(private val paymentMethodFeignClient: PaymentMethodFe
         }
     }
 
-    fun deletePaymentMethod(userId: Int, id: Int) {
+    fun deletePaymentMethod(
+        userId: Int,
+        id: Int,
+    ) {
         try {
             paymentMethodFeignClient.delete(id, userId)
         } catch (e: FeignException.NotFound) {

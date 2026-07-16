@@ -20,10 +20,13 @@ class AmenityServiceTest {
 
     private fun amenity(id: Int = 1) = Amenity(id = id, name = "Wi-Fi", type = AmenityType.ROOM_AMENITY)
 
-    private fun feignBadRequest(body: String) = FeignException.BadRequest(
-        "bad request", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignBadRequest(body: String) =
+        FeignException.BadRequest(
+            "bad request",
+            Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
     // ---- createAmenity ----
 
@@ -76,7 +79,9 @@ class AmenityServiceTest {
     @Test
     fun updateAmenityReturnsUpdatedAmenity() {
         val request = AmenityRequest(name = "Pool", type = AmenityType.PROPERTY_AMENITY)
-        Mockito.`when`(amenityFeignClient.update(1, request)).thenReturn(Amenity(id = 1, name = "Pool", type = AmenityType.PROPERTY_AMENITY))
+        Mockito.`when`(
+            amenityFeignClient.update(1, request),
+        ).thenReturn(Amenity(id = 1, name = "Pool", type = AmenityType.PROPERTY_AMENITY))
 
         val result = amenityService.updateAmenity(1, request)
 

@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class AccessibilityService(private val accessibilityFeignClient: AccessibilityFeignClient) {
-
     fun getAllAccessibility(): List<Accessibility> = accessibilityFeignClient.list(ids = null)
 
     fun createAccessibility(request: AccessibilityRequest): Accessibility =
@@ -24,7 +23,10 @@ class AccessibilityService(private val accessibilityFeignClient: AccessibilityFe
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid accessibility")
         }
 
-    fun updateAccessibility(id: Int, request: AccessibilityRequest): Accessibility =
+    fun updateAccessibility(
+        id: Int,
+        request: AccessibilityRequest,
+    ): Accessibility =
         try {
             accessibilityFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

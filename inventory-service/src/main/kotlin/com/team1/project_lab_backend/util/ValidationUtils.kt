@@ -26,17 +26,22 @@ fun BigDecimal.requireNonNegative(field: String) {
     if (this.compareTo(BigDecimal.ZERO) < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$field must be >= 0")
 }
 
-fun BigDecimal.requireInRange(min: BigDecimal, max: BigDecimal, field: String) {
+fun BigDecimal.requireInRange(
+    min: BigDecimal,
+    max: BigDecimal,
+    field: String,
+) {
     if (this.compareTo(min) < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$field must be >= $min")
     if (this.compareTo(max) > 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$field must be <= $max")
 }
 
-fun <T> Optional<T>.orNotFound(message: String): T =
-    orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, message) }
+fun <T> Optional<T>.orNotFound(message: String): T = orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, message) }
 
-fun <T> Optional<T>.orBadRequest(message: String): T =
-    orElseThrow { ResponseStatusException(HttpStatus.BAD_REQUEST, message) }
+fun <T> Optional<T>.orBadRequest(message: String): T = orElseThrow { ResponseStatusException(HttpStatus.BAD_REQUEST, message) }
 
-fun <T : Any, ID : Any> CrudRepository<T, ID>.requireExistsById(id: ID, message: String) {
+fun <T : Any, ID : Any> CrudRepository<T, ID>.requireExistsById(
+    id: ID,
+    message: String,
+) {
     if (!existsById(id)) throw ResponseStatusException(HttpStatus.NOT_FOUND, message)
 }

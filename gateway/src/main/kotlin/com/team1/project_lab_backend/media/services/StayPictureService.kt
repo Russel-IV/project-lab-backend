@@ -76,7 +76,11 @@ class StayPictureService(
         }
     }
 
-    fun deletePicture(stayId: Int, id: Int, requestingUserId: Int) {
+    fun deletePicture(
+        stayId: Int,
+        id: Int,
+        requestingUserId: Int,
+    ) {
         stayId.requirePositive("stayId")
         id.requirePositive()
         requireOwnedByStayHost(stayId, requestingUserId)
@@ -87,7 +91,10 @@ class StayPictureService(
         }
     }
 
-    private fun requireOwnedByStayHost(stayId: Int, requestingUserId: Int) {
+    private fun requireOwnedByStayHost(
+        stayId: Int,
+        requestingUserId: Int,
+    ) {
         val stay =
             try {
                 stayFeignClient.get(stayId)

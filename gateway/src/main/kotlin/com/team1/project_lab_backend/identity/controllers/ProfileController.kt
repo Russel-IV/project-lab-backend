@@ -29,19 +29,25 @@ class ProfileController(
     }
 
     @PatchMapping
-    fun updateProfile(@RequestBody request: UpdateProfileRequest): ProfileResponse {
+    fun updateProfile(
+        @RequestBody request: UpdateProfileRequest,
+    ): ProfileResponse {
         val currentUser = requireAuthenticated()
         return profileService.updateProfile(currentUser.id, request)
     }
 
     @PostMapping("/picture", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun uploadProfilePicture(@RequestPart("file") file: MultipartFile): ProfileResponse {
+    fun uploadProfilePicture(
+        @RequestPart("file") file: MultipartFile,
+    ): ProfileResponse {
         val currentUser = requireAuthenticated()
         return profileService.uploadProfilePicture(currentUser.id, file)
     }
 
     @PatchMapping("/password")
-    fun changePassword(@RequestBody request: ChangePasswordRequest): ResponseEntity<Void> {
+    fun changePassword(
+        @RequestBody request: ChangePasswordRequest,
+    ): ResponseEntity<Void> {
         val currentUser = requireAuthenticated()
         profileService.changePassword(currentUser.id, request)
         return ResponseEntity.noContent().build()

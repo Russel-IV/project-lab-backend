@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class TravelerExperienceService(private val travelerExperienceFeignClient: TravelerExperienceFeignClient) {
-
     fun getAllTravelerExperiences(): List<TravelerExperience> = travelerExperienceFeignClient.list(ids = null)
 
     fun createTravelerExperience(request: TravelerExperienceRequest): TravelerExperience =
@@ -24,7 +23,10 @@ class TravelerExperienceService(private val travelerExperienceFeignClient: Trave
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid traveler experience")
         }
 
-    fun updateTravelerExperience(id: Int, request: TravelerExperienceRequest): TravelerExperience =
+    fun updateTravelerExperience(
+        id: Int,
+        request: TravelerExperienceRequest,
+    ): TravelerExperience =
         try {
             travelerExperienceFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

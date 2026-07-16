@@ -8,8 +8,10 @@ import org.springframework.data.jpa.repository.Query
 import java.time.LocalDate
 
 interface BookingRepository : JpaRepository<Booking, Int> {
-
-    fun findByUserId(userId: Int, pageable: Pageable): List<Booking>
+    fun findByUserId(
+        userId: Int,
+        pageable: Pageable,
+    ): List<Booking>
 
     @Query("SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.roomIds WHERE b.id IN :ids")
     fun findByIdInWithRoomIds(ids: List<Int>): List<Booking>
@@ -40,5 +42,8 @@ interface BookingRepository : JpaRepository<Booking, Int> {
     // stayIds via inventory-service and check for a match. Room's own stayId column
     // isn't reachable from here.
     @Query("SELECT DISTINCT ri FROM Booking b JOIN b.roomIds ri WHERE b.userId = :userId AND b.status = :status")
-    fun findRoomIdsForUserWithStatus(userId: Int, status: BookingStatus): Set<Int>
+    fun findRoomIdsForUserWithStatus(
+        userId: Int,
+        status: BookingStatus,
+    ): Set<Int>
 }

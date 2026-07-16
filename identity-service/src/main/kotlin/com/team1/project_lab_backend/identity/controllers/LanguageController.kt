@@ -17,20 +17,24 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/languages")
 class LanguageController(private val languageService: LanguageService) {
-
     @GetMapping
     fun list(): List<Language> = languageService.getAllLanguages()
 
     @PostMapping
-    fun create(@RequestBody request: LanguageRequest): ResponseEntity<Language> =
-        ResponseEntity.status(HttpStatus.CREATED).body(languageService.createLanguage(request))
+    fun create(
+        @RequestBody request: LanguageRequest,
+    ): ResponseEntity<Language> = ResponseEntity.status(HttpStatus.CREATED).body(languageService.createLanguage(request))
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: LanguageRequest): Language =
-        languageService.updateLanguage(id, request)
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: LanguageRequest,
+    ): Language = languageService.updateLanguage(id, request)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int) {
+    fun delete(
+        @PathVariable id: Int,
+    ) {
         languageService.deleteLanguage(id)
     }
 }

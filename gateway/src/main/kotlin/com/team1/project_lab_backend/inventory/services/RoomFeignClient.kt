@@ -14,7 +14,6 @@ import java.time.LocalDate
 
 @FeignClient(name = "inventory-service", contextId = "roomFeignClient")
 interface RoomFeignClient {
-
     @GetMapping("/internal/rooms")
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
@@ -25,7 +24,9 @@ interface RoomFeignClient {
     ): List<Room>
 
     @GetMapping("/internal/rooms/{id}")
-    fun get(@PathVariable id: Int): Room
+    fun get(
+        @PathVariable id: Int,
+    ): Room
 
     @GetMapping("/internal/rooms/available")
     fun available(
@@ -43,8 +44,15 @@ interface RoomFeignClient {
     ): Room
 
     @PatchMapping("/internal/rooms/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: RoomRequest, @RequestParam requestingUserId: Int): Room
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: RoomRequest,
+        @RequestParam requestingUserId: Int,
+    ): Room
 
     @DeleteMapping("/internal/rooms/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    )
 }

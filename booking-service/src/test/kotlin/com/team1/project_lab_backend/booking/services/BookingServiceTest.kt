@@ -232,7 +232,9 @@ class BookingServiceTest {
     @Test
     fun hasCompletedBookingForStayReturnsTrueWhenCompletedBookingExists() {
         Mockito.`when`(bookingRepository.findRoomIdsForUserWithStatus(1, BookingStatus.COMPLETED)).thenReturn(setOf(10))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(listOf(room(10, stayId = 2)))
+        Mockito.`when`(
+            roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt()),
+        ).thenReturn(listOf(room(10, stayId = 2)))
 
         val result = bookingService.hasCompletedBookingForStay(1, 2)
 
@@ -251,7 +253,9 @@ class BookingServiceTest {
     @Test
     fun hasCompletedBookingForStayReturnsFalseWhenRoomsBelongToOtherStays() {
         Mockito.`when`(bookingRepository.findRoomIdsForUserWithStatus(1, BookingStatus.COMPLETED)).thenReturn(setOf(10))
-        Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(listOf(room(10, stayId = 3)))
+        Mockito.`when`(
+            roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt()),
+        ).thenReturn(listOf(room(10, stayId = 3)))
 
         val result = bookingService.hasCompletedBookingForStay(1, 2)
 

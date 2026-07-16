@@ -22,25 +22,36 @@ class PaymentMethodServiceTest {
 
     private val futureYear = Year.now().value + 5
 
-    private fun baseRequest(cardNumber: String = "4111111111111111") = CreatePaymentMethodRequest(
-        cardholderName = "Ada Lovelace",
-        cardNumber = cardNumber,
-        expiryMonth = 12,
-        expiryYear = futureYear,
-        cvv = "123",
-    )
+    private fun baseRequest(cardNumber: String = "4111111111111111") =
+        CreatePaymentMethodRequest(
+            cardholderName = "Ada Lovelace",
+            cardNumber = cardNumber,
+            expiryMonth = 12,
+            expiryYear = futureYear,
+            cvv = "123",
+        )
 
-    private fun feignUnprocessable(body: String) = FeignException.UnprocessableEntity(
-        "unprocessable", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignUnprocessable(body: String) =
+        FeignException.UnprocessableEntity(
+            "unprocessable",
+            Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
     @Test
     fun getPaymentMethodsReturnsMappedList() {
-        val response = PaymentMethodResponse(
-            id = 1, stripePaymentMethodId = "pm_mock_abc", brand = "visa", lastFour = "1111",
-            type = "credit_card", expiryMonth = 12, expiryYear = futureYear, isDefault = true,
-        )
+        val response =
+            PaymentMethodResponse(
+                id = 1,
+                stripePaymentMethodId = "pm_mock_abc",
+                brand = "visa",
+                lastFour = "1111",
+                type = "credit_card",
+                expiryMonth = 12,
+                expiryYear = futureYear,
+                isDefault = true,
+            )
         Mockito.`when`(paymentMethodFeignClient.list(10)).thenReturn(listOf(response))
 
         val result = service.getPaymentMethods(10)
@@ -55,27 +66,47 @@ class PaymentMethodServiceTest {
         Mockito.`when`(
             paymentMethodFeignClient.create(
                 10,
-                PaymentMethodCreateRequest(request.cardholderName, request.cardNumber, request.expiryMonth, request.expiryYear, request.cvv),
+                PaymentMethodCreateRequest(
+                    request.cardholderName,
+                    request.cardNumber,
+                    request.expiryMonth,
+                    request.expiryYear,
+                    request.cvv,
+                ),
             ),
         ).thenThrow(feignUnprocessable("""{"errors":{"cardNumber":"card number must be 13-19 digits"}}"""))
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.createPaymentMethod(10, request)
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.createPaymentMethod(10, request)
+            }
         assertTrue(ex.errors.containsKey("cardNumber"))
     }
 
     @Test
     fun createPaymentMethodReturnsMappedResponseOnSuccess() {
         val request = baseRequest()
-        val response = PaymentMethodResponse(
-            id = 1, stripePaymentMethodId = "pm_mock_abc", brand = "visa", lastFour = "1111",
-            type = "credit_card", expiryMonth = 12, expiryYear = futureYear, isDefault = true,
-        )
+        val response =
+            PaymentMethodResponse(
+                id = 1,
+                stripePaymentMethodId = "pm_mock_abc",
+                brand = "visa",
+                lastFour = "1111",
+                type = "credit_card",
+                expiryMonth = 12,
+                expiryYear = futureYear,
+                isDefault = true,
+            )
         Mockito.`when`(
             paymentMethodFeignClient.create(
                 10,
-                PaymentMethodCreateRequest(request.cardholderName, request.cardNumber, request.expiryMonth, request.expiryYear, request.cvv),
+                PaymentMethodCreateRequest(
+                    request.cardholderName,
+                    request.cardNumber,
+                    request.expiryMonth,
+                    request.expiryYear,
+                    request.cvv,
+                ),
             ),
         ).thenReturn(response)
 
@@ -88,9 +119,10 @@ class PaymentMethodServiceTest {
     fun setDefaultPaymentMethodReturnsNotFoundWhenMissing() {
         Mockito.`when`(paymentMethodFeignClient.setDefault(99, 10)).thenThrow(FeignException.NotFound::class.java)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.setDefaultPaymentMethod(10, 99)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.setDefaultPaymentMethod(10, 99)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -98,9 +130,10 @@ class PaymentMethodServiceTest {
     fun deletePaymentMethodReturnsNotFoundWhenMissing() {
         Mockito.`when`(paymentMethodFeignClient.delete(99, 10)).thenThrow(FeignException.NotFound::class.java)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.deletePaymentMethod(10, 99)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.deletePaymentMethod(10, 99)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam
  */
 @FeignClient(name = "review-service")
 interface ReviewFeignClient {
-
     @GetMapping("/internal/reviews")
     fun list(
         @RequestParam(required = false) stayId: Int?,
@@ -30,20 +29,34 @@ interface ReviewFeignClient {
     ): List<Review>
 
     @GetMapping("/internal/reviews/summary")
-    fun summary(@RequestParam stayId: Int): ReviewSummary
+    fun summary(
+        @RequestParam stayId: Int,
+    ): ReviewSummary
 
     @GetMapping("/internal/reviews/mine")
-    fun mine(@RequestParam userId: Int, @RequestParam stayId: Int): Review
+    fun mine(
+        @RequestParam userId: Int,
+        @RequestParam stayId: Int,
+    ): Review
 
     @PostMapping("/internal/reviews")
-    fun create(@RequestBody request: CreateReviewRequest): Review
+    fun create(
+        @RequestBody request: CreateReviewRequest,
+    ): Review
 
     @PatchMapping("/internal/reviews/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: UpdateReviewRequest): Review
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: UpdateReviewRequest,
+    ): Review
 
     @DeleteMapping("/internal/reviews/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    )
 }
 
 data class CreateReviewRequest(val text: String, val userId: Int, val stayId: Int, val rating: Int)
+
 data class UpdateReviewRequest(val text: String, val stayId: Int, val rating: Int, val requestingUserId: Int)

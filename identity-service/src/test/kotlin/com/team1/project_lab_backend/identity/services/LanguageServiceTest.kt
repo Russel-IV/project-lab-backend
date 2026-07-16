@@ -16,9 +16,10 @@ class LanguageServiceTest {
 
     @Test
     fun createLanguageRejectsBlankName() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createLanguage(LanguageRequest(languageName = "  "))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createLanguage(LanguageRequest(languageName = "  "))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -32,9 +33,10 @@ class LanguageServiceTest {
     @Test
     fun updateLanguageRejectsUnknown() {
         Mockito.`when`(languageRepository.existsById(99)).thenReturn(false)
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateLanguage(99, LanguageRequest(languageName = "French"))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateLanguage(99, LanguageRequest(languageName = "French"))
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 

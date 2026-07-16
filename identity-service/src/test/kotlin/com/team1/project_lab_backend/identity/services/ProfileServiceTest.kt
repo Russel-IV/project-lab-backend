@@ -20,8 +20,11 @@ class ProfileServiceTest {
     private val passwordEncoder = Mockito.mock(PasswordEncoder::class.java)
     private val service = ProfileService(userRepository, passwordEncoder)
 
-    private fun existingUser(id: Int = 1, email: String? = "ada@example.com", phone: String? = "+1 555 123 4567") =
-        User(id = id, name = "Ada Lovelace", email = email, passwordHash = "hashed-secret", phone = phone)
+    private fun existingUser(
+        id: Int = 1,
+        email: String? = "ada@example.com",
+        phone: String? = "+1 555 123 4567",
+    ) = User(id = id, name = "Ada Lovelace", email = email, passwordHash = "hashed-secret", phone = phone)
 
     private fun baseRequest(
         name: String = "Ada Lovelace",
@@ -63,9 +66,10 @@ class ProfileServiceTest {
         Mockito.`when`(userRepository.findByEmailAndDeletedAtIsNull("taken@example.com"))
             .thenReturn(Optional.of(existingUser(id = 2, email = "taken@example.com")))
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.updateProfile(1, baseRequest(email = "taken@example.com"))
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.updateProfile(1, baseRequest(email = "taken@example.com"))
+            }
         assertEquals("email already in use", ex.errors["email"])
     }
 
@@ -74,9 +78,10 @@ class ProfileServiceTest {
         Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existingUser()))
         Mockito.`when`(userRepository.findByEmailAndDeletedAtIsNull("ada@example.com")).thenReturn(Optional.of(existingUser()))
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.updateProfile(1, baseRequest(phone = "not-a-phone!!"))
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.updateProfile(1, baseRequest(phone = "not-a-phone!!"))
+            }
         assertEquals(true, ex.errors.containsKey("phone"))
     }
 
@@ -95,9 +100,10 @@ class ProfileServiceTest {
         Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existingUser()))
         Mockito.`when`(passwordEncoder.matches("wrong", "hashed-secret")).thenReturn(false)
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.changePassword(1, ChangePasswordRequest(currentPassword = "wrong", newPassword = "new-password"))
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.changePassword(1, ChangePasswordRequest(currentPassword = "wrong", newPassword = "new-password"))
+            }
         assertEquals("current password is incorrect", ex.errors["currentPassword"])
     }
 

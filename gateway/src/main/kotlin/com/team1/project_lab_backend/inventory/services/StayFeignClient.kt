@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "inventory-service", contextId = "stayFeignClient")
 interface StayFeignClient {
-
     @GetMapping("/internal/stays")
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<Stay>
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<Stay>
 
     @GetMapping("/internal/stays/{id}")
-    fun get(@PathVariable id: Int): Stay
+    fun get(
+        @PathVariable id: Int,
+    ): Stay
 
     @PostMapping("/internal/stays/search")
     fun search(
@@ -29,11 +32,21 @@ interface StayFeignClient {
     ): List<Stay>
 
     @PostMapping("/internal/stays")
-    fun create(@RequestBody request: StayRequest, @RequestParam requestingUserId: Int): Stay
+    fun create(
+        @RequestBody request: StayRequest,
+        @RequestParam requestingUserId: Int,
+    ): Stay
 
     @PatchMapping("/internal/stays/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: StayRequest, @RequestParam requestingUserId: Int): Stay
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: StayRequest,
+        @RequestParam requestingUserId: Int,
+    ): Stay
 
     @DeleteMapping("/internal/stays/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    )
 }

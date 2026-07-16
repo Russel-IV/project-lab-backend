@@ -7,5 +7,5 @@ data class HostRequest(
     val communicationRating: BigDecimal? = null,
     val checkinProcessRating: BigDecimal? = null,
     val cancellationRate: BigDecimal? = null,
-    val languageIds: Set<Int> = emptySet()
+    val languageIds: Set<Int> = emptySet(),
 )

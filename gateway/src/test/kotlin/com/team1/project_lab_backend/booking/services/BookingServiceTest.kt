@@ -28,18 +28,20 @@ class BookingServiceTest {
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
 
-    private fun sampleBooking(id: Int = 1, userId: Int = 1) =
-        Booking(
-            id = id,
-            userId = userId,
-            checkInDate = tomorrow,
-            checkOutDate = dayAfterTomorrow,
-            status = BookingStatus.PENDING,
-            guestsCount = 2,
-            createdAt = LocalDateTime.now(),
-            totalPrice = BigDecimal("200.00"),
-            roomIds = setOf(5),
-        )
+    private fun sampleBooking(
+        id: Int = 1,
+        userId: Int = 1,
+    ) = Booking(
+        id = id,
+        userId = userId,
+        checkInDate = tomorrow,
+        checkOutDate = dayAfterTomorrow,
+        status = BookingStatus.PENDING,
+        guestsCount = 2,
+        createdAt = LocalDateTime.now(),
+        totalPrice = BigDecimal("200.00"),
+        roomIds = setOf(5),
+    )
 
     @Test
     fun getAllBookingsDelegatesToFeignClient() {

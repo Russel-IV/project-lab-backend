@@ -1,5 +1,13 @@
 # AWS EC2 & ECR Backend Deployment Documentation
 
+> **Superseded** (docs/adr/0014, migration Phase 7): production hosting moved from
+> AWS EC2/RDS to Oracle Cloud's Always Free Ampere A1 tier — the single-JVM,
+> 1GB-RAM EC2 box this document describes cannot run the microservices topology
+> (docs/adr/0001 and on) at all, regardless of code changes. See
+> [`docs/oracle-cloud-deployment.md`](oracle-cloud-deployment.md) for the current
+> setup. Kept here for historical reference, not as active documentation — do not
+> follow these steps for a new deployment.
+
 This document describes the infrastructure and CI/CD workflow setup for deploying the Kotlin Spring Boot backend application to AWS using Amazon ECR (Elastic Container Registry) and Amazon EC2 (Elastic Compute Cloud).
 
 ---

@@ -1,26 +1,57 @@
+# Production deployment (docs/adr/0014) — Oracle Cloud Ampere A1 Always Free
+# instance, 2 OCPUs / 12GB RAM total. See docs/oracle-cloud-deployment.md for
+# provisioning and CI/CD wiring.
+#
+# This is a standalone file, not a docker-compose.yml override: the seven app
+# services below reference pre-built `image:` tags pushed to GHCR by
+# .github/workflows/deploy.yml, instead of the `build:` blocks docker-compose.yml
+# uses for local development — building on this 12GB/2-OCPU box, on top of running
+# 14 containers, would be slow and memory-hungry for no benefit (ADR-0014's whole
+# premise is that builds are offloaded to CI). Everything else (ports, health
+# checks, `depends_on`, database images/volumes, Zipkin) mirrors docker-compose.yml
+# exactly, so this file needs updating by hand whenever that one changes — same
+# "two hand-synced contracts" discipline this project already uses for Feign
+# clients vs. the controllers they call.
+#
+# Required on the host: a `.env` file (not committed) defining
+# GHCR_NAMESPACE=<owner>/<repo> (lowercased — GHCR requires lowercase image names),
+# IMAGE_TAG (set by the deploy script to the deployed commit SHA), POSTGRES_USER,
+# POSTGRES_PASSWORD, POSTGRES_DB, JWT_SECRET, and CORS_ALLOWED_ORIGINS.
+#
+# Per-container `mem_limit` + `-XX:MaxRAMPercentage` budget (ADR-0014's 12GB total,
+# ~2.25GB left as headroom for the host OS/Docker daemon):
+#   6x Postgres containers  @ 256m  = 1536m
+#   1x Zipkin                @ 512m  =  512m
+#   1x Gateway JVM            @ 1536m (heaviest: GraphQL + JPA + Feign + Resilience4j)
+#   6x domain-service/Eureka JVMs @ 1024m each = 6144m
+#   ------------------------------------------------
+#   total                            = 9728m (~9.75GB of 12GB)
+# `-XX:MaxRAMPercentage=70.0` only means something because `mem_limit` sets a real
+# cgroup memory limit for the JVM to detect — without it, MaxRAMPercentage computes
+# against the host's full 12GB for every container, which defeats the whole point
+# on a box running 7 JVMs at once (unlike the old single-JVM EC2 box, where the
+# host's total memory *was* the right thing to compute a percentage of).
+
 services:
-    # Distributed tracing UI/store (docs/adr/0013) — every service exports spans here
-    # over Zipkin's v2 HTTP API. Not in any service's `depends_on`: trace export is
-    # fire-and-forget, so a slow/absent Zipkin must never block app startup or requests.
     zipkin:
         image: openzipkin/zipkin:latest
         container_name: zipkin
+        mem_limit: 512m
+        restart: unless-stopped
         ports:
             - "9411:9411"
 
     eureka-server:
-        build:
-            context: .
-            dockerfile: eureka-server/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-eureka-server:${IMAGE_TAG}
         container_name: eureka-server
+        mem_limit: 1024m
+        restart: unless-stopped
+        environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
         ports:
             - "8761:8761"
-        environment:
-            - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
         healthcheck:
-            # No curl/wget in the bare eclipse-temurin JRE image — a plain TCP connect
-            # via bash's /dev/tcp is enough to gate dependent services' startup order,
-            # mirroring the Postgres pg_isready healthcheck below.
             test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8761'"]
             interval: 5s
             timeout: 5s
@@ -28,23 +59,26 @@ services:
             start_period: 15s
 
     project-lab-backend:
-        build:
-            context: .
-            dockerfile: gateway/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-gateway:${IMAGE_TAG}
         container_name: project-lab-backend
+        mem_limit: 1536m
+        restart: unless-stopped
         ports:
-            - "${SPRING_PORT}:8080"
+            - "8080:8080"
         volumes:
             - uploads:/app/uploads
         environment:
-            - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - SPRING_PROFILES_ACTIVE=prod
             - POSTGRES_HOST=project-lab-database
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-            - POSTGRES_PORT=${POSTGRES_PORT}
+            - POSTGRES_PORT=5432
             - POSTGRES_DB=${POSTGRES_DB}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            - JWT_SECRET=${JWT_SECRET}
+            - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
         depends_on:
             project-lab-database:
                 condition: service_healthy
@@ -54,34 +88,28 @@ services:
     project-lab-database:
         image: postgis/postgis:16-3.4
         container_name: project-lab-database
-        ports:
-            - "${POSTGRES_PORT}:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
-            - POSTGRES_SSL_MODE=${POSTGRES_SSL_MODE}
         volumes:
             - pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10
             start_period: 10s
 
     review-service:
-        build:
-            context: .
-            dockerfile: review-service/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-review-service:${IMAGE_TAG}
         container_name: review-service
-        ports:
-            - "8084:8084"
+        mem_limit: 1024m
+        restart: unless-stopped
         environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
             - REVIEW_DB_HOST=review-database
             - REVIEW_DB_PORT=5432
             - REVIEW_DB_NAME=${POSTGRES_DB}
@@ -95,14 +123,11 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011) — a separate container/volume from
-    # project-lab-database, not a schema inside it. Plain postgres (no PostGIS):
-    # review has no geo data.
     review-database:
         image: postgres:16
         container_name: review-database
-        ports:
-            - "5433:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -110,29 +135,21 @@ services:
         volumes:
             - review_pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10
             start_period: 10s
 
     media-service:
-        build:
-            context: .
-            dockerfile: media-service/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-media-service:${IMAGE_TAG}
         container_name: media-service
-        ports:
-            - "8085:8085"
-        # Same named volume project-lab-backend mounts — media-service writes files
-        # here, Gateway's existing WebConfig still serves /uploads/** from it
-        # unchanged (see media-service's LocalStorageService kdoc, docs/adr/0003).
+        mem_limit: 1024m
+        restart: unless-stopped
         volumes:
             - uploads:/app/uploads
         environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
             - MEDIA_DB_HOST=media-database
             - MEDIA_DB_PORT=5432
             - MEDIA_DB_NAME=${POSTGRES_DB}
@@ -146,12 +163,11 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): media has no geo data.
     media-database:
         image: postgres:16
         container_name: media-database
-        ports:
-            - "5434:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -159,24 +175,19 @@ services:
         volumes:
             - media_pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10
             start_period: 10s
 
     identity-service:
-        build:
-            context: .
-            dockerfile: identity-service/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-identity-service:${IMAGE_TAG}
         container_name: identity-service
-        ports:
-            - "8081:8081"
+        mem_limit: 1024m
+        restart: unless-stopped
         environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
             - IDENTITY_DB_HOST=identity-database
             - IDENTITY_DB_PORT=5432
             - IDENTITY_DB_NAME=${POSTGRES_DB}
@@ -184,23 +195,18 @@ services:
             - IDENTITY_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # No JWT_SECRET here, matching gateway (docker-compose.yml's gateway
-            # entry doesn't set it either) — .env doesn't define JWT_SECRET in this
-            # lab environment, and Spring's ${JWT_SECRET:default} fallback only
-            # kicks in when the env var is genuinely absent, not empty. Setting
-            # JWT_SECRET= here would pass an empty string and break that fallback.
+            - JWT_SECRET=${JWT_SECRET}
         depends_on:
             identity-database:
                 condition: service_healthy
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): identity has no geo data.
     identity-database:
         image: postgres:16
         container_name: identity-database
-        ports:
-            - "5435:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -208,24 +214,19 @@ services:
         volumes:
             - identity_pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10
             start_period: 10s
 
     inventory-service:
-        build:
-            context: .
-            dockerfile: inventory-service/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-inventory-service:${IMAGE_TAG}
         container_name: inventory-service
-        ports:
-            - "8082:8082"
+        mem_limit: 1024m
+        restart: unless-stopped
         environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
             - INVENTORY_DB_HOST=inventory-database
             - INVENTORY_DB_PORT=5432
             - INVENTORY_DB_NAME=${POSTGRES_DB}
@@ -239,13 +240,11 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011) — postgis/postgis, not plain postgres: Stay.location
-    # is a GEOGRAPHY(POINT, 4326) column (mirrors project-lab-database's image choice).
     inventory-database:
         image: postgis/postgis:16-3.4
         container_name: inventory-database
-        ports:
-            - "5436:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -253,24 +252,19 @@ services:
         volumes:
             - inventory_pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10
             start_period: 10s
 
     booking-service:
-        build:
-            context: .
-            dockerfile: booking-service/Dockerfile
+        image: ghcr.io/${GHCR_NAMESPACE}-booking-service:${IMAGE_TAG}
         container_name: booking-service
-        ports:
-            - "8083:8083"
+        mem_limit: 1024m
+        restart: unless-stopped
         environment:
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
             - BOOKING_DB_HOST=booking-database
             - BOOKING_DB_PORT=5432
             - BOOKING_DB_NAME=${POSTGRES_DB}
@@ -284,12 +278,11 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): booking has no geo data.
     booking-database:
         image: postgres:16
         container_name: booking-database
-        ports:
-            - "5437:5432"
+        mem_limit: 256m
+        restart: unless-stopped
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -297,11 +290,7 @@ services:
         volumes:
             - booking_pgdata:/var/lib/postgresql/data
         healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-                ]
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
             interval: 2s
             timeout: 10s
             retries: 10

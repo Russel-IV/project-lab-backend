@@ -12,27 +12,35 @@ import java.math.BigDecimal
 
 @Controller
 class HostResolver(private val hostService: HostService) {
-
     @QueryMapping
     fun hosts(): List<Host> = hostService.getAllHosts()
 
     @QueryMapping
-    fun host(@Argument id: Int): Host = hostService.getHostById(id)
+    fun host(
+        @Argument id: Int,
+    ): Host = hostService.getHostById(id)
 
     @MutationMapping
-    fun createHost(@Argument input: CreateHostInput): Host {
+    fun createHost(
+        @Argument input: CreateHostInput,
+    ): Host {
         requireAuthenticated()
         return hostService.createHost(input.toRequest())
     }
 
     @MutationMapping
-    fun updateHost(@Argument id: Int, @Argument input: UpdateHostInput): Host {
+    fun updateHost(
+        @Argument id: Int,
+        @Argument input: UpdateHostInput,
+    ): Host {
         requireAuthenticated()
         return hostService.updateHost(id, input.toRequest(id))
     }
 
     @MutationMapping
-    fun deleteHost(@Argument id: Int): Boolean {
+    fun deleteHost(
+        @Argument id: Int,
+    ): Boolean {
         requireAuthenticated()
         hostService.deleteHost(id)
         return true
@@ -46,13 +54,14 @@ data class CreateHostInput(
     val cancellationRate: BigDecimal? = null,
     val languageIds: Set<Int> = emptySet(),
 ) {
-    fun toRequest() = HostRequest(
-        id = id,
-        communicationRating = communicationRating,
-        checkinProcessRating = checkinProcessRating,
-        cancellationRate = cancellationRate,
-        languageIds = languageIds,
-    )
+    fun toRequest() =
+        HostRequest(
+            id = id,
+            communicationRating = communicationRating,
+            checkinProcessRating = checkinProcessRating,
+            cancellationRate = cancellationRate,
+            languageIds = languageIds,
+        )
 }
 
 data class UpdateHostInput(
@@ -61,11 +70,12 @@ data class UpdateHostInput(
     val cancellationRate: BigDecimal? = null,
     val languageIds: Set<Int> = emptySet(),
 ) {
-    fun toRequest(id: Int) = HostRequest(
-        id = id,
-        communicationRating = communicationRating,
-        checkinProcessRating = checkinProcessRating,
-        cancellationRate = cancellationRate,
-        languageIds = languageIds,
-    )
+    fun toRequest(id: Int) =
+        HostRequest(
+            id = id,
+            communicationRating = communicationRating,
+            checkinProcessRating = checkinProcessRating,
+            cancellationRate = cancellationRate,
+            languageIds = languageIds,
+        )
 }

@@ -17,16 +17,16 @@ import javax.crypto.SecretKey
  */
 @Service
 class JwtService(private val jwtProperties: JwtProperties) {
-
     private val key: SecretKey by lazy {
         Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
     }
 
-    fun generateToken(user: User): String = Jwts.builder()
-        .subject(user.id.toString())
-        .claim("email", user.email)
-        .issuedAt(Date())
-        .expiration(Date(System.currentTimeMillis() + jwtProperties.expiryMs))
-        .signWith(key, Jwts.SIG.HS256)
-        .compact()
+    fun generateToken(user: User): String =
+        Jwts.builder()
+            .subject(user.id.toString())
+            .claim("email", user.email)
+            .issuedAt(Date())
+            .expiration(Date(System.currentTimeMillis() + jwtProperties.expiryMs))
+            .signWith(key, Jwts.SIG.HS256)
+            .compact()
 }

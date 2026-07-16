@@ -13,12 +13,13 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class UserResolver(private val userService: UserService) {
-
     @QueryMapping
     fun users(): List<User> = userService.getAllUsers()
 
     @QueryMapping
-    fun user(@Argument id: Int): User = userService.getUserById(id)
+    fun user(
+        @Argument id: Int,
+    ): User = userService.getUserById(id)
 
     @SchemaMapping(typeName = "User", field = "email")
     fun email(user: User): String? {
@@ -27,17 +28,23 @@ class UserResolver(private val userService: UserService) {
     }
 
     @MutationMapping
-    fun createUser(@Argument input: CreateUserInput): User =
-        userService.createUser(UserRequest(name = input.name))
+    fun createUser(
+        @Argument input: CreateUserInput,
+    ): User = userService.createUser(UserRequest(name = input.name))
 
     @MutationMapping
-    fun updateUser(@Argument id: Int, @Argument input: UpdateUserInput): User {
+    fun updateUser(
+        @Argument id: Int,
+        @Argument input: UpdateUserInput,
+    ): User {
         val currentUser = requireAuthenticated()
         return userService.updateUser(id, UserRequest(name = input.name), currentUser.id)
     }
 
     @MutationMapping
-    fun deleteUser(@Argument id: Int): Boolean {
+    fun deleteUser(
+        @Argument id: Int,
+    ): Boolean {
         val currentUser = requireAuthenticated()
         userService.deleteUser(id, currentUser.id)
         return true
@@ -45,4 +52,5 @@ class UserResolver(private val userService: UserService) {
 }
 
 data class CreateUserInput(val name: String)
+
 data class UpdateUserInput(val name: String)

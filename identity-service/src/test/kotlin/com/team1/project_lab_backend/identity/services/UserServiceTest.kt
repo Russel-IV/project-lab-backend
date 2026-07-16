@@ -17,9 +17,10 @@ class UserServiceTest {
 
     @Test
     fun createUserRejectsBlankName() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.createUser(UserRequest(name = "  "))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.createUser(UserRequest(name = "  "))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -39,26 +40,29 @@ class UserServiceTest {
 
     @Test
     fun updateUserRejectsNonOwner() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateUser(1, UserRequest(name = "New"), requestingUserId = 2)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateUser(1, UserRequest(name = "New"), requestingUserId = 2)
+            }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 
     @Test
     fun updateUserRejectsUnknownUser() {
         Mockito.`when`(userRepository.existsById(1)).thenReturn(false)
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateUser(1, UserRequest(name = "New"), requestingUserId = 1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateUser(1, UserRequest(name = "New"), requestingUserId = 1)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deleteUserRejectsNonOwner() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.deleteUser(1, requestingUserId = 2)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.deleteUser(1, requestingUserId = 2)
+            }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 

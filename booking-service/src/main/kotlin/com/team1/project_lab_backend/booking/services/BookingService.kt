@@ -25,14 +25,20 @@ class BookingService(
     private val roomFeignClient: RoomFeignClient,
 ) {
     @Transactional(readOnly = true)
-    fun getAllBookings(page: Int = 0, size: Int = 20): List<Booking> =
-        bookingRepository.findAll(PageRequest.of(page, size)).content
+    fun getAllBookings(
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Booking> = bookingRepository.findAll(PageRequest.of(page, size)).content
 
     @Transactional(readOnly = true)
     fun findByIds(ids: List<Int>): List<Booking> = bookingRepository.findByIdInWithRoomIds(ids)
 
     @Transactional(readOnly = true)
-    fun getBookingsByUser(userId: Int, page: Int = 0, size: Int = 20): List<Booking> {
+    fun getBookingsByUser(
+        userId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Booking> {
         userId.requirePositive("userId")
         return bookingRepository.findByUserId(
             userId,
@@ -52,7 +58,10 @@ class BookingService(
     // (this service's own data), then resolve those ids' stayIds via a bulk Feign call
     // and check for a match.
     @Transactional(readOnly = true)
-    fun hasCompletedBookingForStay(userId: Int, stayId: Int): Boolean {
+    fun hasCompletedBookingForStay(
+        userId: Int,
+        stayId: Int,
+    ): Boolean {
         stayId.requirePositive("stayId")
         val roomIds = bookingRepository.findRoomIdsForUserWithStatus(userId, BookingStatus.COMPLETED)
         if (roomIds.isEmpty()) return false
@@ -96,12 +105,13 @@ class BookingService(
 
         // Conflict check stays entirely local: it only needs this service's own data
         // (booking + booking_room), no Room attribute is involved (docs/adr/0010).
-        val conflicting = bookingRepository.findConflictingRoomIds(
-            request.roomIds.toList(),
-            request.checkInDate,
-            request.checkOutDate,
-            ACTIVE_STATUSES,
-        )
+        val conflicting =
+            bookingRepository.findConflictingRoomIds(
+                request.roomIds.toList(),
+                request.checkInDate,
+                request.checkOutDate,
+                ACTIVE_STATUSES,
+            )
         if (conflicting.isNotEmpty()) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -133,7 +143,10 @@ class BookingService(
     }
 
     @Transactional
-    fun updateBookingStatus(id: Int, request: BookingStatusRequest): Booking {
+    fun updateBookingStatus(
+        id: Int,
+        request: BookingStatusRequest,
+    ): Booking {
         id.requirePositive()
         val existing = bookingRepository.findById(id).orNotFound("booking not found")
         return bookingRepository.save(
@@ -152,11 +165,15 @@ class BookingService(
     }
 
     @Transactional
-    fun deleteBooking(id: Int, requestingUserId: Int) {
+    fun deleteBooking(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         id.requirePositive()
         val booking = bookingRepository.findById(id).orNotFound("booking not found")
-        if (booking.userId != requestingUserId)
+        if (booking.userId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        }
         bookingRepository.deleteById(id)
     }
 }

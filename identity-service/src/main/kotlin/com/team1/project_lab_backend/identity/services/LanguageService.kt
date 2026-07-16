@@ -24,7 +24,10 @@ class LanguageService(
     }
 
     @Transactional
-    fun updateLanguage(id: Int, request: LanguageRequest): Language {
+    fun updateLanguage(
+        id: Int,
+        request: LanguageRequest,
+    ): Language {
         if (request.languageName.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
         }

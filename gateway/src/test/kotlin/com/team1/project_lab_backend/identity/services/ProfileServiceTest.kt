@@ -23,22 +23,36 @@ class ProfileServiceTest {
     private val mediaFeignClient = Mockito.mock(MediaFeignClient::class.java)
     private val service = ProfileService(profileFeignClient, mediaFeignClient)
 
-    private fun profileResponse(id: Int = 1) = ProfileResponse(
-        id = id, name = "Ada Lovelace", email = "ada@example.com", phone = "+1 555 123 4567", profilePictureUrl = null,
-    )
+    private fun profileResponse(id: Int = 1) =
+        ProfileResponse(
+            id = id,
+            name = "Ada Lovelace",
+            email = "ada@example.com",
+            phone = "+1 555 123 4567",
+            profilePictureUrl = null,
+        )
 
-    private fun baseRequest(name: String = "Ada Lovelace", email: String = "ada@example.com", phone: String? = "+1 555 123 4567") =
-        UpdateProfileRequest(name = name, email = email, phone = phone)
+    private fun baseRequest(
+        name: String = "Ada Lovelace",
+        email: String = "ada@example.com",
+        phone: String? = "+1 555 123 4567",
+    ) = UpdateProfileRequest(name = name, email = email, phone = phone)
 
-    private fun feignBadRequest(body: String) = FeignException.BadRequest(
-        "bad request", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignBadRequest(body: String) =
+        FeignException.BadRequest(
+            "bad request",
+            Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
-    private fun feignUnprocessable(body: String) = FeignException.UnprocessableEntity(
-        "unprocessable", Request.create(Request.HttpMethod.PATCH, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignUnprocessable(body: String) =
+        FeignException.UnprocessableEntity(
+            "unprocessable",
+            Request.create(Request.HttpMethod.PATCH, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
     // ---- getProfile ----
 
@@ -78,12 +92,16 @@ class ProfileServiceTest {
     fun updateProfileMapsFeignFieldErrors() {
         val request = baseRequest(email = "taken@example.com")
         Mockito.`when`(
-            profileFeignClient.updateProfile(1, ProfileUpdateRequest(name = "Ada Lovelace", email = "taken@example.com", phone = "+1 555 123 4567")),
+            profileFeignClient.updateProfile(
+                1,
+                ProfileUpdateRequest(name = "Ada Lovelace", email = "taken@example.com", phone = "+1 555 123 4567"),
+            ),
         ).thenThrow(feignUnprocessable("""{"errors":{"email":"email already in use"}}"""))
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.updateProfile(1, request)
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.updateProfile(1, request)
+            }
         assertEquals("email already in use", ex.errors["email"])
     }
 
@@ -95,9 +113,13 @@ class ProfileServiceTest {
         Mockito.`when`(mediaFeignClient.listForOwner("USER", 1)).thenReturn(emptyList())
         Mockito.`when`(mediaFeignClient.upload("USER", 1, file, null, false, 0)).thenReturn(
             MediaResponse(
-                id = 7, ownerType = "USER", ownerId = 1,
+                id = 7,
+                ownerType = "USER",
+                ownerId = 1,
                 url = "http://localhost:8080/uploads/users/1/new-key.png",
-                caption = null, isPrimary = false, displayOrder = 0,
+                caption = null,
+                isPrimary = false,
+                displayOrder = 0,
             ),
         )
         Mockito.`when`(profileFeignClient.updatePictureUrl(1, UpdatePictureUrlRequest("http://localhost:8080/uploads/users/1/new-key.png")))
@@ -114,17 +136,25 @@ class ProfileServiceTest {
         Mockito.`when`(mediaFeignClient.listForOwner("USER", 1)).thenReturn(
             listOf(
                 MediaResponse(
-                    id = 3, ownerType = "USER", ownerId = 1,
+                    id = 3,
+                    ownerType = "USER",
+                    ownerId = 1,
                     url = "http://localhost:8080/uploads/users/1/old-key.png",
-                    caption = null, isPrimary = false, displayOrder = 0,
+                    caption = null,
+                    isPrimary = false,
+                    displayOrder = 0,
                 ),
             ),
         )
         Mockito.`when`(mediaFeignClient.upload("USER", 1, file, null, false, 0)).thenReturn(
             MediaResponse(
-                id = 7, ownerType = "USER", ownerId = 1,
+                id = 7,
+                ownerType = "USER",
+                ownerId = 1,
                 url = "http://localhost:8080/uploads/users/1/new-key.png",
-                caption = null, isPrimary = false, displayOrder = 0,
+                caption = null,
+                isPrimary = false,
+                displayOrder = 0,
             ),
         )
         Mockito.`when`(profileFeignClient.updatePictureUrl(1, UpdatePictureUrlRequest("http://localhost:8080/uploads/users/1/new-key.png")))
@@ -154,9 +184,10 @@ class ProfileServiceTest {
         Mockito.`when`(profileFeignClient.changePassword(1, PasswordChangeRequest("wrong", "new-password")))
             .thenThrow(feignUnprocessable("""{"errors":{"currentPassword":"current password is incorrect"}}"""))
 
-        val ex = assertThrows(FieldValidationException::class.java) {
-            service.changePassword(1, ChangePasswordRequest(currentPassword = "wrong", newPassword = "new-password"))
-        }
+        val ex =
+            assertThrows(FieldValidationException::class.java) {
+                service.changePassword(1, ChangePasswordRequest(currentPassword = "wrong", newPassword = "new-password"))
+            }
         assertEquals("current password is incorrect", ex.errors["currentPassword"])
     }
 

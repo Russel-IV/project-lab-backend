@@ -19,9 +19,10 @@ class UserServiceTest {
         Mockito.`when`(userFeignClient.create(UserUpsertRequest(name = "  ")))
             .thenThrow(FeignException.BadRequest::class.java)
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.createUser(UserRequest(name = "  "))
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                userService.createUser(UserRequest(name = "  "))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
 
@@ -41,9 +42,10 @@ class UserServiceTest {
         Mockito.`when`(userFeignClient.update(42, 42, UserUpsertRequest(name = "Updated")))
             .thenThrow(FeignException.NotFound::class.java)
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.updateUser(42, UserRequest(name = "Updated"), 42)
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                userService.updateUser(42, UserRequest(name = "Updated"), 42)
+            }
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
     }
 
@@ -52,9 +54,10 @@ class UserServiceTest {
         Mockito.`when`(userFeignClient.update(1, 2, UserUpsertRequest(name = "Bob")))
             .thenThrow(FeignException.Forbidden::class.java)
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.updateUser(1, UserRequest(name = "Bob"), 2)
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                userService.updateUser(1, UserRequest(name = "Bob"), 2)
+            }
         assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
     }
 
@@ -73,9 +76,10 @@ class UserServiceTest {
     fun deleteUserReturnsNotFoundWhenMissing() {
         Mockito.`when`(userFeignClient.delete(99, 99)).thenThrow(FeignException.NotFound::class.java)
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            userService.deleteUser(99, 99)
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                userService.deleteUser(99, 99)
+            }
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
     }
 

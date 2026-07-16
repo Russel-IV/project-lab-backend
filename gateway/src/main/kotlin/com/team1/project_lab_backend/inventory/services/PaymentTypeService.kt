@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PaymentTypeService(private val paymentTypeFeignClient: PaymentTypeFeignClient) {
-
     fun getAllPaymentTypes(): List<PaymentType> = paymentTypeFeignClient.list(ids = null)
 
     fun createPaymentType(request: PaymentTypeRequest): PaymentType =
@@ -24,7 +23,10 @@ class PaymentTypeService(private val paymentTypeFeignClient: PaymentTypeFeignCli
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid payment type")
         }
 
-    fun updatePaymentType(id: Int, request: PaymentTypeRequest): PaymentType =
+    fun updatePaymentType(
+        id: Int,
+        request: PaymentTypeRequest,
+    ): PaymentType =
         try {
             paymentTypeFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

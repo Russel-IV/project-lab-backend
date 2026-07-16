@@ -38,10 +38,13 @@ class StayServiceTest {
             address = Address(id = 1, streetAddress = "123 Main", city = "Testville", countryCode = "US"),
         )
 
-    private fun feignBadRequest(body: String) = FeignException.BadRequest(
-        "bad request", Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
-        body.toByteArray(StandardCharsets.UTF_8), emptyMap(),
-    )
+    private fun feignBadRequest(body: String) =
+        FeignException.BadRequest(
+            "bad request",
+            Request.create(Request.HttpMethod.POST, "/", emptyMap(), null, RequestTemplate()),
+            body.toByteArray(StandardCharsets.UTF_8),
+            emptyMap(),
+        )
 
     // ---- searchStays ----
 

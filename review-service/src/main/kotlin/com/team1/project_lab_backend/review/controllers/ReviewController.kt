@@ -26,7 +26,6 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/internal/reviews")
 class ReviewController(private val reviewService: ReviewService) {
-
     @GetMapping
     fun list(
         @RequestParam(required = false) stayId: Int?,
@@ -34,30 +33,43 @@ class ReviewController(private val reviewService: ReviewService) {
         @RequestParam(required = false) ids: List<Int>?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): List<Review> = when {
-        ids != null -> reviewService.findByIds(ids)
-        stayId != null -> reviewService.getReviewsByStay(stayId, page, size)
-        userId != null -> reviewService.getMyReviews(userId, page, size)
-        else -> reviewService.getAllReviews(page, size)
-    }
+    ): List<Review> =
+        when {
+            ids != null -> reviewService.findByIds(ids)
+            stayId != null -> reviewService.getReviewsByStay(stayId, page, size)
+            userId != null -> reviewService.getMyReviews(userId, page, size)
+            else -> reviewService.getAllReviews(page, size)
+        }
 
     @GetMapping("/summary")
-    fun summary(@RequestParam stayId: Int): ReviewSummary = reviewService.getReviewSummary(stayId)
+    fun summary(
+        @RequestParam stayId: Int,
+    ): ReviewSummary = reviewService.getReviewSummary(stayId)
 
     @GetMapping("/mine")
-    fun mine(@RequestParam userId: Int, @RequestParam stayId: Int): Review =
+    fun mine(
+        @RequestParam userId: Int,
+        @RequestParam stayId: Int,
+    ): Review =
         reviewService.getMyReviewForStay(userId, stayId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "no review for this user/stay")
 
     @PostMapping
-    fun create(@RequestBody request: CreateReviewRequest): Review = reviewService.createReview(request)
+    fun create(
+        @RequestBody request: CreateReviewRequest,
+    ): Review = reviewService.createReview(request)
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: UpdateReviewRequest): Review =
-        reviewService.updateReview(id, request)
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: UpdateReviewRequest,
+    ): Review = reviewService.updateReview(id, request)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    ): ResponseEntity<Void> {
         reviewService.deleteReview(id, requestingUserId)
         return ResponseEntity.noContent().build()
     }

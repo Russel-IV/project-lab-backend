@@ -3,7 +3,6 @@ package com.team1.project_lab_backend.inventory.controllers
 import com.team1.project_lab_backend.inventory.dto.RoomRequest
 import com.team1.project_lab_backend.inventory.models.Room
 import com.team1.project_lab_backend.inventory.services.RoomService
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,7 +23,6 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/internal/rooms")
 class RoomController(private val roomService: RoomService) {
-
     @GetMapping
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
@@ -32,15 +30,18 @@ class RoomController(private val roomService: RoomService) {
         @RequestParam(required = false) stayIds: List<Int>?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): List<Room> = when {
-        ids != null -> roomService.getRoomsByIds(ids)
-        stayId != null -> roomService.getRoomsForStay(stayId, page, size)
-        stayIds != null -> roomService.getRoomsByStayIds(stayIds)
-        else -> emptyList()
-    }
+    ): List<Room> =
+        when {
+            ids != null -> roomService.getRoomsByIds(ids)
+            stayId != null -> roomService.getRoomsForStay(stayId, page, size)
+            stayIds != null -> roomService.getRoomsByStayIds(stayIds)
+            else -> emptyList()
+        }
 
     @GetMapping("/{id}")
-    fun get(@PathVariable id: Int): Room = roomService.getRoomById(id)
+    fun get(
+        @PathVariable id: Int,
+    ): Room = roomService.getRoomById(id)
 
     @GetMapping("/available")
     fun available(
@@ -58,11 +59,17 @@ class RoomController(private val roomService: RoomService) {
     ): Room = roomService.createRoom(stayId, request, requestingUserId)
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: RoomRequest, @RequestParam requestingUserId: Int): Room =
-        roomService.updateRoom(id, request, requestingUserId)
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: RoomRequest,
+        @RequestParam requestingUserId: Int,
+    ): Room = roomService.updateRoom(id, request, requestingUserId)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    ): ResponseEntity<Void> {
         roomService.deleteRoom(id, requestingUserId)
         return ResponseEntity.noContent().build()
     }

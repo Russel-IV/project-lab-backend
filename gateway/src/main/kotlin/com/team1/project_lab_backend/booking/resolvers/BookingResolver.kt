@@ -17,14 +17,12 @@ import java.time.ZoneOffset
 
 @Controller
 class BookingResolver(private val bookingService: BookingService) {
-
     // Booking.createdAt is stored as a timezone-less LocalDateTime, but the
     // GraphQL DateTime scalar (ExtendedScalars.DateTime) only serializes
     // OffsetDateTime — without this mapping, createBooking/booking/bookings
     // fail at the createdAt field with a scalar coercion error.
     @SchemaMapping(typeName = "Booking", field = "createdAt")
-    fun createdAt(booking: Booking): OffsetDateTime =
-        booking.createdAt.atOffset(ZoneOffset.UTC)
+    fun createdAt(booking: Booking): OffsetDateTime = booking.createdAt.atOffset(ZoneOffset.UTC)
 
     @QueryMapping
     fun bookings(
@@ -33,7 +31,9 @@ class BookingResolver(private val bookingService: BookingService) {
     ): List<Booking> = bookingService.getAllBookings(page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun booking(@Argument id: Int): Booking = bookingService.getBookingById(id)
+    fun booking(
+        @Argument id: Int,
+    ): Booking = bookingService.getBookingById(id)
 
     @QueryMapping
     fun myBookings(
@@ -45,13 +45,17 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @QueryMapping
-    fun myBookingStatusForStay(@Argument stayId: Int): BookingStatusForStay {
+    fun myBookingStatusForStay(
+        @Argument stayId: Int,
+    ): BookingStatusForStay {
         val currentUser = requireAuthenticated()
         return BookingStatusForStay(bookingService.hasCompletedBookingForStay(currentUser.id, stayId))
     }
 
     @MutationMapping
-    fun createBooking(@Argument input: CreateBookingInput): Booking {
+    fun createBooking(
+        @Argument input: CreateBookingInput,
+    ): Booking {
         val currentUser = requireAuthenticated()
         return bookingService.createBooking(
             BookingRequest(
@@ -65,13 +69,18 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @MutationMapping
-    fun updateBookingStatus(@Argument id: Int, @Argument status: BookingStatus): Booking {
+    fun updateBookingStatus(
+        @Argument id: Int,
+        @Argument status: BookingStatus,
+    ): Booking {
         requireAuthenticated()
         return bookingService.updateBookingStatus(id, BookingStatusRequest(status = status))
     }
 
     @MutationMapping
-    fun deleteBooking(@Argument id: Int): Boolean {
+    fun deleteBooking(
+        @Argument id: Int,
+    ): Boolean {
         val currentUser = requireAuthenticated()
         bookingService.deleteBooking(id, currentUser.id)
         return true

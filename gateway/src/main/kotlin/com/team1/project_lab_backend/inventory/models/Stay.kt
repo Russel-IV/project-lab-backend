@@ -3,7 +3,8 @@ package com.team1.project_lab_backend.inventory.models
 import java.math.BigDecimal
 
 enum class PropertyType {
-    HOTEL, HOME
+    HOTEL,
+    HOME,
 }
 
 /**

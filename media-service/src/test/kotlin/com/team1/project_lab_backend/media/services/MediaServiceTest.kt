@@ -41,9 +41,10 @@ class MediaServiceTest {
     fun addMediaRejectsEmptyFile() {
         val emptyFile = MockMultipartFile("file", "photo.jpg", "image/jpeg", ByteArray(0))
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addMedia(MediaOwnerType.STAY, 10, emptyFile, null, false, 0)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addMedia(MediaOwnerType.STAY, 10, emptyFile, null, false, 0)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -51,9 +52,10 @@ class MediaServiceTest {
     fun addMediaRejectsNonImageContentType() {
         val pdf = MockMultipartFile("file", "doc.pdf", "application/pdf", ByteArray(8) { 0 })
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addMedia(MediaOwnerType.STAY, 10, pdf, null, false, 0)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addMedia(MediaOwnerType.STAY, 10, pdf, null, false, 0)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -61,17 +63,19 @@ class MediaServiceTest {
     fun addMediaRejectsDisallowedExtension() {
         val html = MockMultipartFile("file", "exploit.html", "image/jpeg", ByteArray(8) { 0 })
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addMedia(MediaOwnerType.STAY, 10, html, null, false, 0)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addMedia(MediaOwnerType.STAY, 10, html, null, false, 0)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun addMediaRejectsNegativeDisplayOrder() {
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addMedia(MediaOwnerType.STAY, 10, imageFile(), null, false, -1)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addMedia(MediaOwnerType.STAY, 10, imageFile(), null, false, -1)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -79,9 +83,10 @@ class MediaServiceTest {
     fun addMediaRejectsDuplicatePrimary() {
         Mockito.`when`(mediaRepository.existsByOwnerTypeAndOwnerIdAndIsPrimary(MediaOwnerType.STAY, 10, true)).thenReturn(true)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.addMedia(MediaOwnerType.STAY, 10, imageFile(), null, isPrimary = true, displayOrder = 0)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.addMedia(MediaOwnerType.STAY, 10, imageFile(), null, isPrimary = true, displayOrder = 0)
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -118,9 +123,10 @@ class MediaServiceTest {
     fun updateMediaReturnsNotFoundWhenMissing() {
         Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 10, 99)).thenReturn(null)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateMedia(MediaOwnerType.STAY, 10, 99, UpdateMediaRequest(null, false, 0))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateMedia(MediaOwnerType.STAY, 10, 99, UpdateMediaRequest(null, false, 0))
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -128,9 +134,10 @@ class MediaServiceTest {
     fun updateMediaReturnsNotFoundWhenIdBelongsToDifferentOwner() {
         Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 999, 1)).thenReturn(null)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateMedia(MediaOwnerType.STAY, 999, 1, UpdateMediaRequest(null, false, 0))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateMedia(MediaOwnerType.STAY, 999, 1, UpdateMediaRequest(null, false, 0))
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
@@ -140,9 +147,10 @@ class MediaServiceTest {
         Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 10, 1)).thenReturn(existing)
         Mockito.`when`(mediaRepository.existsByOwnerTypeAndOwnerIdAndIsPrimary(MediaOwnerType.STAY, 10, true)).thenReturn(true)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.updateMedia(MediaOwnerType.STAY, 10, 1, UpdateMediaRequest(null, isPrimary = true, displayOrder = 0))
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.updateMedia(MediaOwnerType.STAY, 10, 1, UpdateMediaRequest(null, isPrimary = true, displayOrder = 0))
+            }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -152,9 +160,10 @@ class MediaServiceTest {
     fun deleteMediaReturnsNotFoundWhenMissing() {
         Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 10, 99)).thenReturn(null)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.deleteMedia(MediaOwnerType.STAY, 10, 99)
-        }
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                service.deleteMedia(MediaOwnerType.STAY, 10, 99)
+            }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 

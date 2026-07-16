@@ -14,12 +14,17 @@ import org.springframework.web.multipart.MultipartFile
 
 @FeignClient(name = "media-service")
 interface MediaFeignClient {
-
     @GetMapping("/api/v1/media")
-    fun listForOwners(@RequestParam ownerType: String, @RequestParam ownerIds: List<Int>): List<MediaResponse>
+    fun listForOwners(
+        @RequestParam ownerType: String,
+        @RequestParam ownerIds: List<Int>,
+    ): List<MediaResponse>
 
     @GetMapping("/api/v1/media/{ownerType}/{ownerId}")
-    fun listForOwner(@PathVariable ownerType: String, @PathVariable ownerId: Int): List<MediaResponse>
+    fun listForOwner(
+        @PathVariable ownerType: String,
+        @PathVariable ownerId: Int,
+    ): List<MediaResponse>
 
     @PostMapping("/api/v1/media/{ownerType}/{ownerId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun upload(
@@ -40,7 +45,11 @@ interface MediaFeignClient {
     ): MediaResponse
 
     @DeleteMapping("/api/v1/media/{ownerType}/{ownerId}/{id}")
-    fun delete(@PathVariable ownerType: String, @PathVariable ownerId: Int, @PathVariable id: Int)
+    fun delete(
+        @PathVariable ownerType: String,
+        @PathVariable ownerId: Int,
+        @PathVariable id: Int,
+    )
 }
 
 data class MediaResponse(

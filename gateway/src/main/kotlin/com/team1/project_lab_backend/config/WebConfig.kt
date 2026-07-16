@@ -15,7 +15,7 @@ import java.nio.file.Path
 
 @Configuration
 class WebConfig(
-    @Value("\${app.upload.dir}") private val uploadDir: String
+    @Value("\${app.upload.dir}") private val uploadDir: String,
 ) : WebMvcConfigurer {
     // This Spring Boot version moved MultipartAutoConfiguration into a separate
     // spring-boot-servlet artifact (transitively present, confirmed via `jar tf` on
@@ -33,13 +33,19 @@ class WebConfig(
     }
 
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(object : HandlerInterceptor {
-            override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
-                if (request.requestURI.startsWith("/uploads/")) {
-                    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+        registry.addInterceptor(
+            object : HandlerInterceptor {
+                override fun preHandle(
+                    request: HttpServletRequest,
+                    response: HttpServletResponse,
+                    handler: Any,
+                ): Boolean {
+                    if (request.requestURI.startsWith("/uploads/")) {
+                        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+                    }
+                    return true
                 }
-                return true
-            }
-        })
+            },
+        )
     }
 }

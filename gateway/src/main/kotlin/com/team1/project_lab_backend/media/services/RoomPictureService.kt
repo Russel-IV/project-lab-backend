@@ -78,7 +78,11 @@ class RoomPictureService(
         }
     }
 
-    fun deletePicture(roomId: Int, id: Int, requestingUserId: Int) {
+    fun deletePicture(
+        roomId: Int,
+        id: Int,
+        requestingUserId: Int,
+    ) {
         roomId.requirePositive("roomId")
         id.requirePositive()
         requireOwnedByRoomHost(roomId, requestingUserId)
@@ -89,7 +93,10 @@ class RoomPictureService(
         }
     }
 
-    private fun requireOwnedByRoomHost(roomId: Int, requestingUserId: Int) {
+    private fun requireOwnedByRoomHost(
+        roomId: Int,
+        requestingUserId: Int,
+    ) {
         val room =
             try {
                 roomFeignClient.get(roomId)

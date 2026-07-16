@@ -17,26 +17,36 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/profile/{userId}")
 class ProfileController(private val profileService: ProfileService) {
-
     @GetMapping
-    fun getProfile(@PathVariable userId: Int): ProfileResponse = profileService.getProfile(userId)
+    fun getProfile(
+        @PathVariable userId: Int,
+    ): ProfileResponse = profileService.getProfile(userId)
 
     @PatchMapping
-    fun updateProfile(@PathVariable userId: Int, @RequestBody request: UpdateProfileRequest): ProfileResponse =
-        profileService.updateProfile(userId, request)
+    fun updateProfile(
+        @PathVariable userId: Int,
+        @RequestBody request: UpdateProfileRequest,
+    ): ProfileResponse = profileService.updateProfile(userId, request)
 
     @PatchMapping("/picture-url")
-    fun updatePictureUrl(@PathVariable userId: Int, @RequestBody request: UpdateProfilePictureUrlRequest): ProfileResponse =
-        profileService.updateProfilePictureUrl(userId, request.url)
+    fun updatePictureUrl(
+        @PathVariable userId: Int,
+        @RequestBody request: UpdateProfilePictureUrlRequest,
+    ): ProfileResponse = profileService.updateProfilePictureUrl(userId, request.url)
 
     @PatchMapping("/password")
-    fun changePassword(@PathVariable userId: Int, @RequestBody request: ChangePasswordRequest): ResponseEntity<Void> {
+    fun changePassword(
+        @PathVariable userId: Int,
+        @RequestBody request: ChangePasswordRequest,
+    ): ResponseEntity<Void> {
         profileService.changePassword(userId, request)
         return ResponseEntity.noContent().build()
     }
 
     @DeleteMapping
-    fun deleteAccount(@PathVariable userId: Int): ResponseEntity<Void> {
+    fun deleteAccount(
+        @PathVariable userId: Int,
+    ): ResponseEntity<Void> {
         profileService.deleteAccount(userId)
         return ResponseEntity.noContent().build()
     }

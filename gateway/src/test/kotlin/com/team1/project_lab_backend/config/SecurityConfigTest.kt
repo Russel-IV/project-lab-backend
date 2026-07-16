@@ -19,12 +19,14 @@ private const val SECRET = "test-secret-key-must-be-at-least-256-bits-long-for-h
  * runtime as every request silently failing to authenticate.
  */
 class SecurityConfigTest {
-
     private val jwtProperties = JwtProperties(secret = SECRET, expiryMs = 60_000)
     private val securityConfig = SecurityConfig(jwtProperties, corsAllowedOrigins = "http://localhost:3000")
     private val decoder = securityConfig.jwtDecoder()
 
-    private fun tokenFor(userId: Int, email: String): String {
+    private fun tokenFor(
+        userId: Int,
+        email: String,
+    ): String {
         val key = Keys.hmacShaKeyFor(SECRET.toByteArray())
         return Jwts.builder()
             .subject(userId.toString())

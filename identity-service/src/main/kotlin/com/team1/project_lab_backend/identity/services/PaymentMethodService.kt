@@ -17,8 +17,7 @@ class PaymentMethodService(
     private val paymentMethodRepository: PaymentMethodRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getPaymentMethods(userId: Int): List<PaymentMethodResponse> =
-        paymentMethodRepository.findByUserId(userId).map { it.toResponse() }
+    fun getPaymentMethods(userId: Int): List<PaymentMethodResponse> = paymentMethodRepository.findByUserId(userId).map { it.toResponse() }
 
     // Accepting a raw cardNumber/cvv over our own API (rather than tokenizing
     // client-side via Stripe Elements) is a real PCI-scope concern; acceptable
@@ -27,7 +26,10 @@ class PaymentMethodService(
     // past this method, and a real Stripe integration should replace this
     // wholesale rather than extend it.
     @Transactional
-    fun createPaymentMethod(userId: Int, request: CreatePaymentMethodRequest): PaymentMethodResponse {
+    fun createPaymentMethod(
+        userId: Int,
+        request: CreatePaymentMethodRequest,
+    ): PaymentMethodResponse {
         val errors = mutableMapOf<String, String>()
         val digits = request.cardNumber.replace(Regex("\\s+"), "")
 
@@ -42,25 +44,30 @@ class PaymentMethodService(
         if (errors.isNotEmpty()) throw FieldValidationException(errors)
 
         val isFirst = paymentMethodRepository.findByUserId(userId).isEmpty()
-        val saved = paymentMethodRepository.save(
-            PaymentMethod(
-                userId = userId,
-                stripePaymentMethodId = "pm_mock_${UUID.randomUUID()}",
-                brand = brandFor(digits),
-                lastFour = digits.takeLast(4),
-                type = "credit_card",
-                expiryMonth = request.expiryMonth,
-                expiryYear = request.expiryYear,
-                isDefault = isFirst,
-            ),
-        )
+        val saved =
+            paymentMethodRepository.save(
+                PaymentMethod(
+                    userId = userId,
+                    stripePaymentMethodId = "pm_mock_${UUID.randomUUID()}",
+                    brand = brandFor(digits),
+                    lastFour = digits.takeLast(4),
+                    type = "credit_card",
+                    expiryMonth = request.expiryMonth,
+                    expiryYear = request.expiryYear,
+                    isDefault = isFirst,
+                ),
+            )
         return saved.toResponse()
     }
 
     @Transactional
-    fun setDefaultPaymentMethod(userId: Int, id: Int) {
-        val target = paymentMethodRepository.findByIdAndUserId(id, userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
+    fun setDefaultPaymentMethod(
+        userId: Int,
+        id: Int,
+    ) {
+        val target =
+            paymentMethodRepository.findByIdAndUserId(id, userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
         if (target.isDefault) return
 
         paymentMethodRepository.findByUserId(userId)
@@ -70,9 +77,13 @@ class PaymentMethodService(
     }
 
     @Transactional
-    fun deletePaymentMethod(userId: Int, id: Int) {
-        val target = paymentMethodRepository.findByIdAndUserId(id, userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
+    fun deletePaymentMethod(
+        userId: Int,
+        id: Int,
+    ) {
+        val target =
+            paymentMethodRepository.findByIdAndUserId(id, userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
         paymentMethodRepository.delete(target)
 
         if (target.isDefault) {
@@ -82,22 +93,24 @@ class PaymentMethodService(
         }
     }
 
-    private fun brandFor(digits: String): String = when {
-        digits.startsWith("4") -> "visa"
-        digits.take(2).toInt() in 51..55 || digits.take(4).toInt() in 2221..2720 -> "mastercard"
-        digits.take(2) in setOf("34", "37") -> "amex"
-        digits.startsWith("6011") || digits.startsWith("65") -> "discover"
-        else -> "unknown"
-    }
+    private fun brandFor(digits: String): String =
+        when {
+            digits.startsWith("4") -> "visa"
+            digits.take(2).toInt() in 51..55 || digits.take(4).toInt() in 2221..2720 -> "mastercard"
+            digits.take(2) in setOf("34", "37") -> "amex"
+            digits.startsWith("6011") || digits.startsWith("65") -> "discover"
+            else -> "unknown"
+        }
 
-    private fun PaymentMethod.toResponse() = PaymentMethodResponse(
-        id = id,
-        stripePaymentMethodId = stripePaymentMethodId,
-        brand = brand,
-        lastFour = lastFour,
-        type = type,
-        expiryMonth = expiryMonth,
-        expiryYear = expiryYear,
-        isDefault = isDefault,
-    )
+    private fun PaymentMethod.toResponse() =
+        PaymentMethodResponse(
+            id = id,
+            stripePaymentMethodId = stripePaymentMethodId,
+            brand = brand,
+            lastFour = lastFour,
+            type = type,
+            expiryMonth = expiryMonth,
+            expiryYear = expiryYear,
+            isDefault = isDefault,
+        )
 }

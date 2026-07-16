@@ -36,16 +36,26 @@ class ReviewService(
     private val stayFeignClient: StayFeignClient,
     private val bookingService: BookingService,
 ) {
-    fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
-        reviewFeignClient.list(stayId = null, userId = null, ids = null, page = page, size = size)
+    fun getAllReviews(
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> = reviewFeignClient.list(stayId = null, userId = null, ids = null, page = page, size = size)
 
-    fun getReviewsByStay(stayId: Int, page: Int = 0, size: Int = 20): List<Review> {
+    fun getReviewsByStay(
+        stayId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> {
         stayId.requirePositive("stayId")
         requireStayExists(stayId)
         return reviewFeignClient.list(stayId = stayId, userId = null, ids = null, page = page, size = size)
     }
 
-    fun getMyReviews(userId: Int, page: Int = 0, size: Int = 20): List<Review> {
+    fun getMyReviews(
+        userId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> {
         userId.requirePositive("userId")
         return reviewFeignClient.list(stayId = null, userId = userId, ids = null, page = page, size = size)
     }
@@ -56,7 +66,10 @@ class ReviewService(
         return reviewFeignClient.summary(stayId)
     }
 
-    fun getMyReviewForStay(userId: Int, stayId: Int): Review? {
+    fun getMyReviewForStay(
+        userId: Int,
+        stayId: Int,
+    ): Review? {
         stayId.requirePositive("stayId")
         return try {
             reviewFeignClient.mine(userId, stayId)
@@ -86,13 +99,22 @@ class ReviewService(
         }
     }
 
-    fun updateReview(id: Int, request: ReviewRequest, requestingUserId: Int): Review {
+    fun updateReview(
+        id: Int,
+        request: ReviewRequest,
+        requestingUserId: Int,
+    ): Review {
         request.stayId.requirePositive("stayId")
         requireStayExists(request.stayId)
         return try {
             reviewFeignClient.update(
                 id,
-                UpdateReviewRequest(text = request.text, stayId = request.stayId, rating = request.rating, requestingUserId = requestingUserId),
+                UpdateReviewRequest(
+                    text = request.text,
+                    stayId = request.stayId,
+                    rating = request.rating,
+                    requestingUserId = requestingUserId,
+                ),
             )
         } catch (e: FeignException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "review not found")
@@ -103,7 +125,10 @@ class ReviewService(
         }
     }
 
-    fun deleteReview(id: Int, requestingUserId: Int) {
+    fun deleteReview(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         try {
             reviewFeignClient.delete(id, requestingUserId)
         } catch (e: FeignException.NotFound) {

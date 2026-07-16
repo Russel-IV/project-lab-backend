@@ -24,29 +24,37 @@ import java.util.Optional
  */
 @Service
 class ReviewService(private val reviewRepository: ReviewRepository) {
+    @Transactional(readOnly = true)
+    fun getAllReviews(
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> = reviewRepository.findAll(PageRequest.of(page, size)).content
 
     @Transactional(readOnly = true)
-    fun getAllReviews(page: Int = 0, size: Int = 20): List<Review> =
-        reviewRepository.findAll(PageRequest.of(page, size)).content
+    fun getReviewsByStay(
+        stayId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> = reviewRepository.findByStayId(stayId, PageRequest.of(page, size))
 
     @Transactional(readOnly = true)
-    fun getReviewsByStay(stayId: Int, page: Int = 0, size: Int = 20): List<Review> =
-        reviewRepository.findByStayId(stayId, PageRequest.of(page, size))
-
-    @Transactional(readOnly = true)
-    fun getMyReviews(userId: Int, page: Int = 0, size: Int = 20): List<Review> =
-        reviewRepository.findByUserId(userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")))
+    fun getMyReviews(
+        userId: Int,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> = reviewRepository.findByUserId(userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")))
 
     @Transactional(readOnly = true)
     fun getReviewSummary(stayId: Int): ReviewSummary {
         val counts = reviewRepository.countByRatingForStay(stayId).associate { it.rating to it.count }
         val total = counts.values.sum()
-        val average = if (total == 0L) {
-            null
-        } else {
-            val weightedSum = counts.entries.sumOf { (rating, count) -> rating.toLong() * count }
-            BigDecimal(weightedSum).divide(BigDecimal(total), 2, RoundingMode.HALF_UP)
-        }
+        val average =
+            if (total == 0L) {
+                null
+            } else {
+                val weightedSum = counts.entries.sumOf { (rating, count) -> rating.toLong() * count }
+                BigDecimal(weightedSum).divide(BigDecimal(total), 2, RoundingMode.HALF_UP)
+            }
         return ReviewSummary(
             count = total.toInt(),
             average = average,
@@ -59,7 +67,10 @@ class ReviewService(private val reviewRepository: ReviewRepository) {
     }
 
     @Transactional(readOnly = true)
-    fun getMyReviewForStay(userId: Int, stayId: Int): Review? = reviewRepository.findByUserIdAndStayId(userId, stayId)
+    fun getMyReviewForStay(
+        userId: Int,
+        stayId: Int,
+    ): Review? = reviewRepository.findByUserIdAndStayId(userId, stayId)
 
     @Transactional(readOnly = true)
     fun findByIds(ids: List<Int>): List<Review> = reviewRepository.findAllById(ids)
@@ -78,7 +89,10 @@ class ReviewService(private val reviewRepository: ReviewRepository) {
     }
 
     @Transactional
-    fun updateReview(id: Int, request: UpdateReviewRequest): Review {
+    fun updateReview(
+        id: Int,
+        request: UpdateReviewRequest,
+    ): Review {
         val text = request.text.trim()
         if (text.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text must not be blank")
         if (request.rating !in 1..5) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5")
@@ -90,7 +104,10 @@ class ReviewService(private val reviewRepository: ReviewRepository) {
     }
 
     @Transactional
-    fun deleteReview(id: Int, requestingUserId: Int) {
+    fun deleteReview(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         val review = orNotFound(reviewRepository.findById(id))
         if (review.userId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         reviewRepository.deleteById(id)

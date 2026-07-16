@@ -12,18 +12,28 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "identity-service", contextId = "paymentMethodFeignClient")
 interface PaymentMethodFeignClient {
-
     @GetMapping("/internal/payment-methods")
-    fun list(@RequestParam userId: Int): List<PaymentMethodResponse>
+    fun list(
+        @RequestParam userId: Int,
+    ): List<PaymentMethodResponse>
 
     @PostMapping("/internal/payment-methods")
-    fun create(@RequestParam userId: Int, @RequestBody request: PaymentMethodCreateRequest): PaymentMethodResponse
+    fun create(
+        @RequestParam userId: Int,
+        @RequestBody request: PaymentMethodCreateRequest,
+    ): PaymentMethodResponse
 
     @PatchMapping("/internal/payment-methods/{id}/default")
-    fun setDefault(@PathVariable id: Int, @RequestParam userId: Int)
+    fun setDefault(
+        @PathVariable id: Int,
+        @RequestParam userId: Int,
+    )
 
     @DeleteMapping("/internal/payment-methods/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam userId: Int)
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam userId: Int,
+    )
 }
 
 data class PaymentMethodCreateRequest(

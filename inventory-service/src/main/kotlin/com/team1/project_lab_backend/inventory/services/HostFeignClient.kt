@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable
 @FeignClient(name = "identity-service", contextId = "inventoryHostFeignClient")
 interface HostFeignClient {
     @GetMapping("/internal/hosts/{id}")
-    fun get(@PathVariable id: Int): HostRef
+    fun get(
+        @PathVariable id: Int,
+    ): HostRef
 }
 
 data class HostRef(val id: Int)

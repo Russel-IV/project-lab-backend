@@ -23,14 +23,17 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/v1/media")
 class MediaController(private val mediaService: MediaService) {
-
     @GetMapping
-    fun listForOwners(@RequestParam ownerType: String, @RequestParam ownerIds: List<Int>): List<MediaResponse> =
-        mediaService.listForOwners(parseOwnerType(ownerType), ownerIds)
+    fun listForOwners(
+        @RequestParam ownerType: String,
+        @RequestParam ownerIds: List<Int>,
+    ): List<MediaResponse> = mediaService.listForOwners(parseOwnerType(ownerType), ownerIds)
 
     @GetMapping("/{ownerType}/{ownerId}")
-    fun listForOwner(@PathVariable ownerType: String, @PathVariable ownerId: Int): List<MediaResponse> =
-        mediaService.listForOwner(parseOwnerType(ownerType), ownerId)
+    fun listForOwner(
+        @PathVariable ownerType: String,
+        @PathVariable ownerId: Int,
+    ): List<MediaResponse> = mediaService.listForOwner(parseOwnerType(ownerType), ownerId)
 
     @PostMapping("/{ownerType}/{ownerId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun upload(
@@ -53,7 +56,11 @@ class MediaController(private val mediaService: MediaService) {
     ): MediaResponse = mediaService.updateMedia(parseOwnerType(ownerType), ownerId, id, request)
 
     @DeleteMapping("/{ownerType}/{ownerId}/{id}")
-    fun delete(@PathVariable ownerType: String, @PathVariable ownerId: Int, @PathVariable id: Int) {
+    fun delete(
+        @PathVariable ownerType: String,
+        @PathVariable ownerId: Int,
+        @PathVariable id: Int,
+    ) {
         mediaService.deleteMedia(parseOwnerType(ownerType), ownerId, id)
     }
 

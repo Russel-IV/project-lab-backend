@@ -12,7 +12,6 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class ReviewResolver(private val reviewService: ReviewService) {
-
     @QueryMapping
     fun reviews(
         @Argument page: Int?,
@@ -27,34 +26,54 @@ class ReviewResolver(private val reviewService: ReviewService) {
     ): List<Review> = reviewService.getReviewsByStay(stayId, page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun reviewSummary(@Argument stayId: Int): ReviewSummary = reviewService.getReviewSummary(stayId)
+    fun reviewSummary(
+        @Argument stayId: Int,
+    ): ReviewSummary = reviewService.getReviewSummary(stayId)
 
     @QueryMapping
-    fun myReviewForStay(@Argument stayId: Int): Review? {
+    fun myReviewForStay(
+        @Argument stayId: Int,
+    ): Review? {
         val currentUser = requireAuthenticated()
         return reviewService.getMyReviewForStay(currentUser.id, stayId)
     }
 
     @QueryMapping
-    fun myReviews(@Argument page: Int?, @Argument size: Int?): List<Review> {
+    fun myReviews(
+        @Argument page: Int?,
+        @Argument size: Int?,
+    ): List<Review> {
         val currentUser = requireAuthenticated()
         return reviewService.getMyReviews(currentUser.id, page ?: 0, size ?: 20)
     }
 
     @MutationMapping
-    fun createReview(@Argument input: CreateReviewInput): Review {
+    fun createReview(
+        @Argument input: CreateReviewInput,
+    ): Review {
         val currentUser = requireAuthenticated()
-        return reviewService.createReview(ReviewRequest(text = input.text, userId = currentUser.id, stayId = input.stayId, rating = input.rating))
+        return reviewService.createReview(
+            ReviewRequest(text = input.text, userId = currentUser.id, stayId = input.stayId, rating = input.rating),
+        )
     }
 
     @MutationMapping
-    fun updateReview(@Argument id: Int, @Argument input: UpdateReviewInput): Review {
+    fun updateReview(
+        @Argument id: Int,
+        @Argument input: UpdateReviewInput,
+    ): Review {
         val currentUser = requireAuthenticated()
-        return reviewService.updateReview(id, ReviewRequest(text = input.text, userId = 0, stayId = input.stayId, rating = input.rating), currentUser.id)
+        return reviewService.updateReview(
+            id,
+            ReviewRequest(text = input.text, userId = 0, stayId = input.stayId, rating = input.rating),
+            currentUser.id,
+        )
     }
 
     @MutationMapping
-    fun deleteReview(@Argument id: Int): Boolean {
+    fun deleteReview(
+        @Argument id: Int,
+    ): Boolean {
         val currentUser = requireAuthenticated()
         reviewService.deleteReview(id, currentUser.id)
         return true
@@ -62,4 +81,5 @@ class ReviewResolver(private val reviewService: ReviewService) {
 }
 
 data class CreateReviewInput(val text: String, val rating: Int, val stayId: Int)
+
 data class UpdateReviewInput(val text: String, val rating: Int, val stayId: Int)

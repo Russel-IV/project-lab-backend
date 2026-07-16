@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class MealPlanService(private val mealPlanFeignClient: MealPlanFeignClient) {
-
     fun getAllMealPlans(): List<MealPlan> = mealPlanFeignClient.list(ids = null)
 
     fun createMealPlan(request: MealPlanRequest): MealPlan =
@@ -24,7 +23,10 @@ class MealPlanService(private val mealPlanFeignClient: MealPlanFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid meal plan")
         }
 
-    fun updateMealPlan(id: Int, request: MealPlanRequest): MealPlan =
+    fun updateMealPlan(
+        id: Int,
+        request: MealPlanRequest,
+    ): MealPlan =
         try {
             mealPlanFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

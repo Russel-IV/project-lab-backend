@@ -29,7 +29,11 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(id: Int, request: UserRequest, requestingUserId: Int): User {
+    fun updateUser(
+        id: Int,
+        request: UserRequest,
+        requestingUserId: Int,
+    ): User {
         if (id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         if (request.name.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
         if (!userRepository.existsById(id)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
@@ -37,7 +41,10 @@ class UserService(
     }
 
     @Transactional
-    fun deleteUser(id: Int, requestingUserId: Int) {
+    fun deleteUser(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         if (id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         if (!userRepository.existsById(id)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         userRepository.deleteById(id)

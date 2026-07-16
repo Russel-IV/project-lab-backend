@@ -11,5 +11,5 @@ import org.springframework.modulith.Modulithic
 class ProjectLabBackendApplication
 
 fun main(args: Array<String>) {
-    runApplication <ProjectLabBackendApplication>(*args)
+    runApplication<ProjectLabBackendApplication>(*args)
 }

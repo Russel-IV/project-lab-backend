@@ -12,21 +12,31 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "identity-service", contextId = "hostFeignClient")
 interface HostFeignClient {
-
     @GetMapping("/internal/hosts")
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<Host>
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<Host>
 
     @GetMapping("/internal/hosts/{id}")
-    fun get(@PathVariable id: Int): Host
+    fun get(
+        @PathVariable id: Int,
+    ): Host
 
     @PostMapping("/internal/hosts")
-    fun create(@RequestBody request: HostUpsertRequest): Host
+    fun create(
+        @RequestBody request: HostUpsertRequest,
+    ): Host
 
     @PatchMapping("/internal/hosts/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: HostUpsertRequest): Host
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: HostUpsertRequest,
+    ): Host
 
     @DeleteMapping("/internal/hosts/{id}")
-    fun delete(@PathVariable id: Int)
+    fun delete(
+        @PathVariable id: Int,
+    )
 }
 
 data class HostUpsertRequest(

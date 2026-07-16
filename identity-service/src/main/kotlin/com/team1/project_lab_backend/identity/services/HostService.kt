@@ -39,7 +39,10 @@ class HostService(
     }
 
     @Transactional
-    fun updateHost(id: Int, request: HostRequest): Host {
+    fun updateHost(
+        id: Int,
+        request: HostRequest,
+    ): Host {
         if (request.id != null && request.id != id) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id mismatch")
         }
@@ -63,22 +66,29 @@ class HostService(
         }
     }
 
-    private fun requireInRange(value: BigDecimal, field: String) {
+    private fun requireInRange(
+        value: BigDecimal,
+        field: String,
+    ) {
         if (value < BigDecimal.ZERO || value > RATING_MAX) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$field must be between 0 and 100")
         }
     }
 
-    private fun buildHost(id: Int, request: HostRequest): Host {
-        val languages = if (request.languageIds.isEmpty()) {
-            mutableSetOf()
-        } else {
-            val found = languageRepository.findAllById(request.languageIds).toList()
-            if (found.size != request.languageIds.size) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageIds contains unknown ids")
+    private fun buildHost(
+        id: Int,
+        request: HostRequest,
+    ): Host {
+        val languages =
+            if (request.languageIds.isEmpty()) {
+                mutableSetOf()
+            } else {
+                val found = languageRepository.findAllById(request.languageIds).toList()
+                if (found.size != request.languageIds.size) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageIds contains unknown ids")
+                }
+                found.toMutableSet()
             }
-            found.toMutableSet()
-        }
         return Host(
             id = id,
             communicationRating = request.communicationRating,

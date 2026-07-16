@@ -21,7 +21,6 @@ private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIR
 @RestController
 @RequestMapping("/internal/bookings")
 class BookingConflictController(private val bookingRepository: BookingRepository) {
-
     @GetMapping("/conflicting-room-ids")
     fun conflictingRoomIds(
         @RequestParam(required = false) roomIds: List<Int>?,

@@ -30,10 +30,11 @@ data class UpdateProfilePictureUrlRequest(
     val url: String,
 )
 
-fun User.toProfileResponse() = ProfileResponse(
-    id = id,
-    name = name,
-    email = email,
-    phone = phone,
-    profilePictureUrl = profilePictureUrl,
-)
+fun User.toProfileResponse() =
+    ProfileResponse(
+        id = id,
+        name = name,
+        email = email,
+        phone = phone,
+        profilePictureUrl = profilePictureUrl,
+    )

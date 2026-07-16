@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PropertyBrandService(private val propertyBrandFeignClient: PropertyBrandFeignClient) {
-
     fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandFeignClient.list(ids = null)
 
     fun getPropertyBrandById(id: Int): PropertyBrand =
@@ -31,7 +30,10 @@ class PropertyBrandService(private val propertyBrandFeignClient: PropertyBrandFe
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid property brand")
         }
 
-    fun updatePropertyBrand(id: Int, request: PropertyBrandRequest): PropertyBrand =
+    fun updatePropertyBrand(
+        id: Int,
+        request: PropertyBrandRequest,
+    ): PropertyBrand =
         try {
             propertyBrandFeignClient.update(id, request)
         } catch (e: FeignException.NotFound) {

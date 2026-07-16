@@ -1,10 +1,10 @@
 package com.team1.project_lab_backend.identity.dto
 
 data class LanguageRequest(
-    val languageName: String
+    val languageName: String,
 )
 
 data class LanguageResponse(
     val id: Int,
-    val languageName: String
+    val languageName: String,
 )

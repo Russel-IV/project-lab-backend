@@ -18,8 +18,11 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class StayService(private val stayFeignClient: StayFeignClient) {
-
-    fun searchStays(filter: StayFilter, page: Int = 0, size: Int = 20): List<Stay> =
+    fun searchStays(
+        filter: StayFilter,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Stay> =
         try {
             stayFeignClient.search(filter, page, size)
         } catch (e: FeignException.BadRequest) {
@@ -33,7 +36,10 @@ class StayService(private val stayFeignClient: StayFeignClient) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }
 
-    fun createStay(request: StayRequest, requestingUserId: Int): Stay =
+    fun createStay(
+        request: StayRequest,
+        requestingUserId: Int,
+    ): Stay =
         try {
             stayFeignClient.create(request, requestingUserId)
         } catch (e: FeignException.Forbidden) {
@@ -42,7 +48,11 @@ class StayService(private val stayFeignClient: StayFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid stay")
         }
 
-    fun updateStay(id: Int, request: StayRequest, requestingUserId: Int): Stay =
+    fun updateStay(
+        id: Int,
+        request: StayRequest,
+        requestingUserId: Int,
+    ): Stay =
         try {
             stayFeignClient.update(id, request, requestingUserId)
         } catch (e: FeignException.NotFound) {
@@ -53,7 +63,10 @@ class StayService(private val stayFeignClient: StayFeignClient) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid stay")
         }
 
-    fun deleteStay(id: Int, requestingUserId: Int) {
+    fun deleteStay(
+        id: Int,
+        requestingUserId: Int,
+    ) {
         try {
             stayFeignClient.delete(id, requestingUserId)
         } catch (e: FeignException.NotFound) {

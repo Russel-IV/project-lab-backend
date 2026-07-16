@@ -18,22 +18,32 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/payment-methods")
 class PaymentMethodController(private val paymentMethodService: PaymentMethodService) {
-
     @GetMapping
-    fun list(@RequestParam userId: Int): List<PaymentMethodResponse> = paymentMethodService.getPaymentMethods(userId)
+    fun list(
+        @RequestParam userId: Int,
+    ): List<PaymentMethodResponse> = paymentMethodService.getPaymentMethods(userId)
 
     @PostMapping
-    fun create(@RequestParam userId: Int, @RequestBody request: CreatePaymentMethodRequest): ResponseEntity<PaymentMethodResponse> =
+    fun create(
+        @RequestParam userId: Int,
+        @RequestBody request: CreatePaymentMethodRequest,
+    ): ResponseEntity<PaymentMethodResponse> =
         ResponseEntity.status(HttpStatus.CREATED).body(paymentMethodService.createPaymentMethod(userId, request))
 
     @PatchMapping("/{id}/default")
-    fun setDefault(@PathVariable id: Int, @RequestParam userId: Int): ResponseEntity<Void> {
+    fun setDefault(
+        @PathVariable id: Int,
+        @RequestParam userId: Int,
+    ): ResponseEntity<Void> {
         paymentMethodService.setDefaultPaymentMethod(userId, id)
         return ResponseEntity.noContent().build()
     }
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam userId: Int): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam userId: Int,
+    ): ResponseEntity<Void> {
         paymentMethodService.deletePaymentMethod(userId, id)
         return ResponseEntity.noContent().build()
     }

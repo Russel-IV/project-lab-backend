@@ -3,7 +3,6 @@ package com.team1.project_lab_backend.inventory.controllers
 import com.team1.project_lab_backend.inventory.dto.MealPlanRequest
 import com.team1.project_lab_backend.inventory.models.MealPlan
 import com.team1.project_lab_backend.inventory.services.MealPlanService
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,23 +21,31 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/meal-plans")
 class MealPlanController(private val mealPlanService: MealPlanService) {
-
     @GetMapping
-    fun list(@RequestParam(required = false) ids: List<Int>?): List<MealPlan> =
-        if (ids != null) mealPlanService.getAllById(ids) else mealPlanService.getAllMealPlans()
+    fun list(
+        @RequestParam(required = false) ids: List<Int>?,
+    ): List<MealPlan> = if (ids != null) mealPlanService.getAllById(ids) else mealPlanService.getAllMealPlans()
 
     @GetMapping("/{id}")
-    fun get(@PathVariable id: Int): MealPlan = mealPlanService.getMealPlanById(id)
+    fun get(
+        @PathVariable id: Int,
+    ): MealPlan = mealPlanService.getMealPlanById(id)
 
     @PostMapping
-    fun create(@RequestBody request: MealPlanRequest): MealPlan = mealPlanService.createMealPlan(request)
+    fun create(
+        @RequestBody request: MealPlanRequest,
+    ): MealPlan = mealPlanService.createMealPlan(request)
 
     @PatchMapping("/{id}")
-    fun update(@PathVariable id: Int, @RequestBody request: MealPlanRequest): MealPlan =
-        mealPlanService.updateMealPlan(id, request)
+    fun update(
+        @PathVariable id: Int,
+        @RequestBody request: MealPlanRequest,
+    ): MealPlan = mealPlanService.updateMealPlan(id, request)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Int,
+    ): ResponseEntity<Void> {
         mealPlanService.deleteMealPlan(id)
         return ResponseEntity.noContent().build()
     }

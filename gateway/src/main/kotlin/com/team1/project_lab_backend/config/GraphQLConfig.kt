@@ -7,7 +7,6 @@ import org.springframework.graphql.execution.RuntimeWiringConfigurer
 
 @Configuration
 class GraphQLConfig {
-
     @Bean
     fun runtimeWiringConfigurer(): RuntimeWiringConfigurer =
         RuntimeWiringConfigurer { builder ->

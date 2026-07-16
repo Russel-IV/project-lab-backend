@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 
 interface StayRepository : JpaRepository<Stay, Int>, JpaSpecificationExecutor<Stay> {
-
     @Query("SELECT DISTINCT s FROM Stay s LEFT JOIN FETCH s.propertyBrand WHERE s.id IN :ids")
     fun findByIdInWithPropertyBrand(ids: List<Int>): List<Stay>
 

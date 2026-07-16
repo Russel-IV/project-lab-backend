@@ -5,7 +5,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 enum class BookingStatus {
-    PENDING, CONFIRMED, CANCELLED, COMPLETED
+    PENDING,
+    CONFIRMED,
+    CANCELLED,
+    COMPLETED,
 }
 
 /**

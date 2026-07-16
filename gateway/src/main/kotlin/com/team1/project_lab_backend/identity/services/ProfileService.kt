@@ -32,7 +32,10 @@ class ProfileService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
 
-    fun updateProfile(userId: Int, request: UpdateProfileRequest): ProfileResponse =
+    fun updateProfile(
+        userId: Int,
+        request: UpdateProfileRequest,
+    ): ProfileResponse =
         try {
             profileFeignClient.updateProfile(
                 userId,
@@ -51,25 +54,33 @@ class ProfileService(
      * never trigger. Upload happens before deleting the old picture (not after) so a
      * failed upload never leaves the user with no picture at all.
      */
-    fun uploadProfilePicture(userId: Int, file: MultipartFile): ProfileResponse {
+    fun uploadProfilePicture(
+        userId: Int,
+        file: MultipartFile,
+    ): ProfileResponse {
         val previous = mediaFeignClient.listForOwner("USER", userId)
 
-        val uploaded = try {
-            mediaFeignClient.upload("USER", userId, file, caption = null, isPrimary = false, displayOrder = 0)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid image")
-        }
+        val uploaded =
+            try {
+                mediaFeignClient.upload("USER", userId, file, caption = null, isPrimary = false, displayOrder = 0)
+            } catch (e: FeignException.BadRequest) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid image")
+            }
 
-        val result = try {
-            profileFeignClient.updatePictureUrl(userId, UpdatePictureUrlRequest(uploaded.url))
-        } catch (e: FeignException.NotFound) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
-        }
+        val result =
+            try {
+                profileFeignClient.updatePictureUrl(userId, UpdatePictureUrlRequest(uploaded.url))
+            } catch (e: FeignException.NotFound) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+            }
         previous.forEach { old -> runCatching { mediaFeignClient.delete("USER", userId, old.id) } }
         return result
     }
 
-    fun changePassword(userId: Int, request: ChangePasswordRequest) {
+    fun changePassword(
+        userId: Int,
+        request: ChangePasswordRequest,
+    ) {
         try {
             profileFeignClient.changePassword(
                 userId,

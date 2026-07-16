@@ -24,35 +24,46 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/internal/bookings")
 class BookingController(private val bookingService: BookingService) {
-
     @GetMapping
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
         @RequestParam(required = false) userId: Int?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): List<Booking> = when {
-        ids != null -> bookingService.findByIds(ids)
-        userId != null -> bookingService.getBookingsByUser(userId, page, size)
-        else -> bookingService.getAllBookings(page, size)
-    }
+    ): List<Booking> =
+        when {
+            ids != null -> bookingService.findByIds(ids)
+            userId != null -> bookingService.getBookingsByUser(userId, page, size)
+            else -> bookingService.getAllBookings(page, size)
+        }
 
     @GetMapping("/{id}")
-    fun get(@PathVariable id: Int): Booking = bookingService.getBookingById(id)
+    fun get(
+        @PathVariable id: Int,
+    ): Booking = bookingService.getBookingById(id)
 
     @GetMapping("/completed-for-stay")
-    fun hasCompletedBookingForStay(@RequestParam userId: Int, @RequestParam stayId: Int): Boolean =
-        bookingService.hasCompletedBookingForStay(userId, stayId)
+    fun hasCompletedBookingForStay(
+        @RequestParam userId: Int,
+        @RequestParam stayId: Int,
+    ): Boolean = bookingService.hasCompletedBookingForStay(userId, stayId)
 
     @PostMapping
-    fun create(@RequestBody request: CreateBookingRequest): Booking = bookingService.createBooking(request)
+    fun create(
+        @RequestBody request: CreateBookingRequest,
+    ): Booking = bookingService.createBooking(request)
 
     @PatchMapping("/{id}/status")
-    fun updateStatus(@PathVariable id: Int, @RequestBody request: BookingStatusRequest): Booking =
-        bookingService.updateBookingStatus(id, request)
+    fun updateStatus(
+        @PathVariable id: Int,
+        @RequestBody request: BookingStatusRequest,
+    ): Booking = bookingService.updateBookingStatus(id, request)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Int, @RequestParam requestingUserId: Int): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Int,
+        @RequestParam requestingUserId: Int,
+    ): ResponseEntity<Void> {
         bookingService.deleteBooking(id, requestingUserId)
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
