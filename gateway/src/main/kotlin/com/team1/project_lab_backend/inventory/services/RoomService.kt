@@ -16,7 +16,10 @@ import java.time.LocalDate
  * StayService.
  */
 @Service
-class RoomService(private val roomFeignClient: RoomFeignClient) {
+class RoomService(
+    private val roomFeignClient: RoomFeignClient,
+    private val stayService: StayService,
+) {
     fun getRoomsForStay(
         stayId: Int,
         page: Int = 0,
@@ -34,6 +37,19 @@ class RoomService(private val roomFeignClient: RoomFeignClient) {
         } catch (e: FeignException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "room not found")
         }
+
+    /**
+     * Cross-domain ownership check (room -> stay -> host), same purpose/rationale as
+     * StayService.requireOwnedByHost — used by inventory.resolvers.RoomPictureResolver.
+     */
+    fun requireOwnedByHost(
+        id: Int,
+        requestingUserId: Int,
+    ): Room {
+        val room = getRoomById(id)
+        stayService.requireOwnedByHost(room.stayId, requestingUserId)
+        return room
+    }
 
     fun getAvailableRooms(
         stayId: Int,

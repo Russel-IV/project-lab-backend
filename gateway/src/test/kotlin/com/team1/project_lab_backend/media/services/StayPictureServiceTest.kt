@@ -1,9 +1,5 @@
 package com.team1.project_lab_backend.media.services
 
-import com.team1.project_lab_backend.inventory.models.Address
-import com.team1.project_lab_backend.inventory.models.PropertyType
-import com.team1.project_lab_backend.inventory.models.Stay
-import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import feign.FeignException
 import feign.Request
 import feign.RequestTemplate
@@ -16,11 +12,15 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.server.ResponseStatusException
 import java.nio.charset.StandardCharsets
 
+/**
+ * Ownership checks (stay not found / non-owner) moved to
+ * inventory.services.StayServiceTest — StayPictureService no longer has a
+ * StayFeignClient dependency to check ownership with; see ModularityTests.kt.
+ */
 class StayPictureServiceTest {
     private val mediaFeignClient = Mockito.mock(MediaFeignClient::class.java)
-    private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
 
-    private val service = StayPictureService(mediaFeignClient, stayFeignClient)
+    private val service = StayPictureService(mediaFeignClient)
 
     private fun mediaResponse(
         id: Int = 1,
@@ -38,24 +38,6 @@ class StayPictureServiceTest {
 
     private fun imageFile(name: String = "photo.jpg") = MockMultipartFile("file", name, "image/jpeg", ByteArray(8) { 0 })
 
-    private fun sampleStay(
-        stayId: Int = 10,
-        hostId: Int = 1,
-    ) = Stay(
-        id = stayId,
-        name = "Test Stay",
-        propertyType = PropertyType.HOME,
-        hostId = hostId,
-        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
-    )
-
-    private fun stubStay(
-        stayId: Int = 10,
-        hostId: Int = 1,
-    ) {
-        Mockito.`when`(stayFeignClient.get(stayId)).thenReturn(sampleStay(stayId, hostId))
-    }
-
     private fun feignBadRequest(body: String) =
         FeignException.BadRequest(
             "bad request",
@@ -67,48 +49,23 @@ class StayPictureServiceTest {
     // ---- addPicture ----
 
     @Test
-    fun addPictureRejectsStayNotFound() {
-        Mockito.`when`(stayFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                service.addPicture(99, imageFile(), null, false, 0, 1)
-            }
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
-    }
-
-    @Test
-    fun addPictureRejectsNonOwner() {
-        stubStay(hostId = 1)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                service.addPicture(10, imageFile(), null, false, 0, 2)
-            }
-        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
-    }
-
-    @Test
     fun addPictureRejectsNegativeDisplayOrder() {
-        stubStay()
-
         val ex =
             assertThrows(ResponseStatusException::class.java) {
-                service.addPicture(10, imageFile(), null, false, displayOrder = -1, requestingUserId = 1)
+                service.addPicture(10, imageFile(), null, false, displayOrder = -1)
             }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun addPictureMapsFeignBadRequestToResponseStatusException() {
-        stubStay()
         val file = imageFile()
         Mockito.`when`(mediaFeignClient.upload("STAY", 10, file, null, false, 0))
             .thenThrow(feignBadRequest("""{"message":"a primary picture already exists for this stay"}"""))
 
         val ex =
             assertThrows(ResponseStatusException::class.java) {
-                service.addPicture(10, file, null, false, 0, 1)
+                service.addPicture(10, file, null, false, 0)
             }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
         assertEquals("a primary picture already exists for this stay", ex.reason)
@@ -116,11 +73,10 @@ class StayPictureServiceTest {
 
     @Test
     fun addPictureReturnsMappedResponseOnSuccess() {
-        stubStay()
         val file = imageFile()
         Mockito.`when`(mediaFeignClient.upload("STAY", 10, file, "caption", false, 0)).thenReturn(mediaResponse())
 
-        val result = service.addPicture(10, file, "caption", false, 0, 1)
+        val result = service.addPicture(10, file, "caption", false, 0)
 
         assertEquals(1, result.id)
         assertEquals(10, result.stayId)
@@ -130,11 +86,10 @@ class StayPictureServiceTest {
 
     @Test
     fun updatePictureMetadataReturnsUpdatedPicture() {
-        stubStay()
         Mockito.`when`(mediaFeignClient.update("STAY", 10, 1, UpdateMediaRequest("New caption", false, 2)))
             .thenReturn(mediaResponse(id = 1).copy(caption = "New caption", displayOrder = 2))
 
-        val result = service.updatePictureMetadata(10, 1, "New caption", false, 2, 1)
+        val result = service.updatePictureMetadata(10, 1, "New caption", false, 2)
 
         assertEquals("New caption", result.caption)
         assertEquals(2, result.displayOrder)
@@ -142,47 +97,32 @@ class StayPictureServiceTest {
 
     @Test
     fun updatePictureMetadataReturnsNotFoundWhenMissing() {
-        stubStay()
         Mockito.`when`(mediaFeignClient.update("STAY", 10, 99, UpdateMediaRequest(null, false, 0)))
             .thenThrow(FeignException.NotFound::class.java)
 
         val ex =
             assertThrows(ResponseStatusException::class.java) {
-                service.updatePictureMetadata(10, 99, null, false, 0, 1)
+                service.updatePictureMetadata(10, 99, null, false, 0)
             }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
-    }
-
-    @Test
-    fun updatePictureMetadataRejectsNonOwner() {
-        stubStay(hostId = 1)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                service.updatePictureMetadata(10, 1, null, false, 0, 2)
-            }
-        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
     }
 
     // ---- deletePicture ----
 
     @Test
     fun deletePictureReturnsNotFoundWhenMissing() {
-        stubStay()
         Mockito.`when`(mediaFeignClient.delete("STAY", 10, 99)).thenThrow(FeignException.NotFound::class.java)
 
         val ex =
             assertThrows(ResponseStatusException::class.java) {
-                service.deletePicture(10, 99, 1)
+                service.deletePicture(10, 99)
             }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
     }
 
     @Test
     fun deletePictureInvokesFeignClient() {
-        stubStay()
-
-        service.deletePicture(10, 1, 1)
+        service.deletePicture(10, 1)
 
         Mockito.verify(mediaFeignClient).delete("STAY", 10, 1)
     }

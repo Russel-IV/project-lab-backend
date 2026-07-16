@@ -36,6 +36,22 @@ class StayService(private val stayFeignClient: StayFeignClient) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }
 
+    /**
+     * Cross-domain ownership check for callers outside inventory's own CRUD (e.g.
+     * inventory.resolvers.StayPictureResolver) that need to authorize against a Stay's
+     * host before delegating to another domain. Lives here rather than in the caller
+     * because inventory owns Stay/host data — see docs/adr/0002, and the
+     * ModularityTests.kt kdoc for why this used to live in media.services instead.
+     */
+    fun requireOwnedByHost(
+        id: Int,
+        requestingUserId: Int,
+    ): Stay {
+        val stay = getStayById(id)
+        if (stay.hostId != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        return stay
+    }
+
     fun createStay(
         request: StayRequest,
         requestingUserId: Int,

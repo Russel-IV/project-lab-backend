@@ -1,7 +1,10 @@
 package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.RoomRequest
+import com.team1.project_lab_backend.inventory.models.Address
+import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Room
+import com.team1.project_lab_backend.inventory.models.Stay
 import feign.FeignException
 import feign.Request
 import feign.RequestTemplate
@@ -17,7 +20,9 @@ import java.time.LocalDate
 
 class RoomServiceTest {
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
-    private val roomService = RoomService(roomFeignClient)
+    private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
+    private val stayService = StayService(stayFeignClient)
+    private val roomService = RoomService(roomFeignClient, stayService)
 
     private fun baseRequest() =
         RoomRequest(
@@ -41,6 +46,17 @@ class RoomServiceTest {
         bedroomAmount = 1,
         bathrooms = BigDecimal("1.0"),
         size = null,
+    )
+
+    private fun sampleStay(
+        stayId: Int = 10,
+        hostId: Int = 1,
+    ) = Stay(
+        id = stayId,
+        name = "Test Stay",
+        propertyType = PropertyType.HOME,
+        hostId = hostId,
+        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
     )
 
     private fun feignBadRequest(body: String) =
@@ -204,5 +220,46 @@ class RoomServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
         assertEquals("checkOut must be after checkIn", ex.reason)
+    }
+
+    // ---- requireOwnedByHost ----
+
+    @Test
+    fun requireOwnedByHostReturnsNotFoundWhenRoomMissing() {
+        Mockito.`when`(roomFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { roomService.requireOwnedByHost(99, 1) }
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun requireOwnedByHostReturnsNotFoundWhenStayMissing() {
+        Mockito.`when`(roomFeignClient.get(1)).thenReturn(savedRoom(id = 1, stayId = 10))
+        Mockito.`when`(stayFeignClient.get(10)).thenThrow(FeignException.NotFound::class.java)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { roomService.requireOwnedByHost(1, 1) }
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun requireOwnedByHostRejectsNonOwner() {
+        Mockito.`when`(roomFeignClient.get(1)).thenReturn(savedRoom(id = 1, stayId = 10))
+        Mockito.`when`(stayFeignClient.get(10)).thenReturn(sampleStay(stayId = 10, hostId = 1))
+
+        val ex = assertThrows(ResponseStatusException::class.java) { roomService.requireOwnedByHost(1, 2) }
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+    }
+
+    @Test
+    fun requireOwnedByHostReturnsRoomForOwner() {
+        Mockito.`when`(roomFeignClient.get(1)).thenReturn(savedRoom(id = 1, stayId = 10))
+        Mockito.`when`(stayFeignClient.get(10)).thenReturn(sampleStay(stayId = 10, hostId = 1))
+
+        val result = roomService.requireOwnedByHost(1, 1)
+
+        assertEquals(1, result.id)
     }
 }

@@ -161,4 +161,33 @@ class StayServiceTest {
 
         Mockito.verify(stayFeignClient).delete(10, 1)
     }
+
+    // ---- requireOwnedByHost ----
+
+    @Test
+    fun requireOwnedByHostReturnsNotFoundWhenMissing() {
+        Mockito.`when`(stayFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { stayService.requireOwnedByHost(99, 1) }
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun requireOwnedByHostRejectsNonOwner() {
+        Mockito.`when`(stayFeignClient.get(10)).thenReturn(sampleStay(id = 10))
+
+        val ex = assertThrows(ResponseStatusException::class.java) { stayService.requireOwnedByHost(10, 2) }
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+    }
+
+    @Test
+    fun requireOwnedByHostReturnsStayForOwner() {
+        Mockito.`when`(stayFeignClient.get(10)).thenReturn(sampleStay(id = 10))
+
+        val result = stayService.requireOwnedByHost(10, 1)
+
+        assertEquals(10, result.id)
+    }
 }
