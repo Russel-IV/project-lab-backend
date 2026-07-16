@@ -1,3 +1,8 @@
+> **Superseded**: this describes the pre-migration monolithic schema. The database
+> is now split one-per-service; see each service's own
+> `src/main/resources/db/migration/` for the current schema
+> (docs/adr/0011-database-per-service.md).
+
 # No normalization
 **STAY_SYSTEM** (stay_price, stay_location, stay_property_amenities, stay_room_amenities, stay_room_views, stay_payment_type, stay_guest_rating, stay_star_rating, stay_property_type, stay_property_brand, stay_traveler_experience, stay_bookings, stay_accessibility, stay_meal_plans_available, stay_beach_access, stay_name, stay_host_name, stay_host_languages, stay_host_communication_rating, stay_host_checkin_process_rating, stay_host_cancellation_rate, stay_is_refundable, stay_is_favorite, stay_reviews, stay_policies_text, stay_cancellation_deadline, stay_about, stay_important_information, stay_pictures, room_name, room_price, room_sleeps, room_bedroom_amount, room_bathrooms, room_size)
 

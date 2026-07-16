@@ -43,6 +43,10 @@
                   <li><a href="#query-hosts">hosts</a></li>
                   <li><a href="#query-languages">languages</a></li>
                   <li><a href="#query-mealPlans">mealPlans</a></li>
+                  <li><a href="#query-myBookingStatusForStay">myBookingStatusForStay</a></li>
+                  <li><a href="#query-myBookings">myBookings</a></li>
+                  <li><a href="#query-myReviewForStay">myReviewForStay</a></li>
+                  <li><a href="#query-myReviews">myReviews</a></li>
                   <li><a href="#query-paymentTypes">paymentTypes</a></li>
                   <li><a href="#query-propertyBrand">propertyBrand</a></li>
                   <li><a href="#query-propertyBrands">propertyBrands</a></li>
@@ -128,6 +132,7 @@
               <li><a href="#definition-BigDecimal">BigDecimal</a></li>
               <li><a href="#definition-Booking">Booking</a></li>
               <li><a href="#definition-BookingStatus">BookingStatus</a></li>
+              <li><a href="#definition-BookingStatusForStay">BookingStatusForStay</a></li>
               <li><a href="#definition-Boolean">Boolean</a></li>
               <li><a href="#definition-CreateAccessibilityInput">CreateAccessibilityInput</a></li>
               <li><a href="#definition-CreateAmenityInput">CreateAmenityInput</a></li>
@@ -310,7 +315,7 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"amenities"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span>
       <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
@@ -388,7 +393,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"amenity"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -499,7 +504,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkIn"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkOut"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"guests"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+  <span class="hljs-attr">"guests"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -510,11 +515,11 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"availableRooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"bathrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"pictures"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">RoomPicture</span><span class="hljs-punctuation">]</span>
@@ -603,12 +608,12 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"booking"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"totalPrice"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03T10:15:30Z"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Room</span><span class="hljs-punctuation">]</span>
@@ -708,7 +713,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"bookings"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
@@ -796,7 +801,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -855,7 +860,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"hosts"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -909,7 +914,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"languages"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
-      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -958,7 +963,371 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"mealPlans"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
-      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="query-myBookingStatusForStay" class="operation operation-query" data-traverse-target="query-myBookingStatusForStay">
+            <div class="operation-group-name">
+              <a href="#group-Operations-Queries">Queries</a>
+            </div>
+            <h2 class="operation-heading ">
+              <code>myBookingStatusForStay</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Returns whether the authenticated user has a completed booking for a given stay. Requires authentication.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p> Returns a <a href="#definition-BookingStatusForStay"><code>BookingStatusForStay!</code></a>
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>stayId</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div class="example-section example-section-is-code operation-query-example">
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> myBookingStatusForStay<span class="hljs-tag">(<span class="hljs-code">$stayId</span>:<span class="hljs-type"> Int!</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">myBookingStatusForStay<span class="hljs-tag">(stayId: <span class="hljs-code">$stayId</span>)</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">hasCompletedBooking</span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-variables-example">
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-response-example">
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"myBookingStatusForStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"hasCompletedBooking"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="query-myBookings" class="operation operation-query" data-traverse-target="query-myBookings">
+            <div class="operation-group-name">
+              <a href="#group-Operations-Queries">Queries</a>
+            </div>
+            <h2 class="operation-heading ">
+              <code>myBookings</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Returns a paginated list of the authenticated user&#39;s own bookings, most recent check-in first. Requires authentication.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p> Returns <a href="#definition-Booking"><code>[Booking!]!</code></a>
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>page</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td> Default = <code>0</code> </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>size</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td> Default = <code>20</code> </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div class="example-section example-section-is-code operation-query-example">
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> myBookings<span class="hljs-tag">(
+  <span class="hljs-code">$page</span>:<span class="hljs-type"> Int,</span>
+  <span class="hljs-code">$size</span>:<span class="hljs-type"> Int
+</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">myBookings<span class="hljs-tag">(
+    page: <span class="hljs-code">$page</span>,
+    size: <span class="hljs-code">$size</span>
+  )</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">id</span>
+    <span class="hljs-symbol">user <span class="hljs-tag">{
+      <span class="hljs-type">...UserFragment</span>
+    }</span></span>
+    <span class="hljs-symbol">checkInDate</span>
+    <span class="hljs-symbol">checkOutDate</span>
+    <span class="hljs-symbol">status</span>
+    <span class="hljs-symbol">guestsCount</span>
+    <span class="hljs-symbol">totalPrice</span>
+    <span class="hljs-symbol">createdAt</span>
+    <span class="hljs-symbol">rooms <span class="hljs-tag">{
+      <span class="hljs-type">...RoomFragment</span>
+    }</span></span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-variables-example">
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"page"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">20</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-response-example">
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"myBookings"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"totalPrice"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03T10:15:30Z"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"rooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Room</span><span class="hljs-punctuation">]</span>
+      <span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="query-myReviewForStay" class="operation operation-query" data-traverse-target="query-myReviewForStay">
+            <div class="operation-group-name">
+              <a href="#group-Operations-Queries">Queries</a>
+            </div>
+            <h2 class="operation-heading ">
+              <code>myReviewForStay</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Returns the authenticated user&#39;s existing review for a given stay, or null if none exists. Requires authentication.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p> Returns a <a href="#definition-Review"><code>Review</code></a>
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>stayId</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div class="example-section example-section-is-code operation-query-example">
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> myReviewForStay<span class="hljs-tag">(<span class="hljs-code">$stayId</span>:<span class="hljs-type"> Int!</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">myReviewForStay<span class="hljs-tag">(stayId: <span class="hljs-code">$stayId</span>)</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">id</span>
+    <span class="hljs-symbol">text</span>
+    <span class="hljs-symbol">rating</span>
+    <span class="hljs-symbol">userId</span>
+    <span class="hljs-symbol">user <span class="hljs-tag">{
+      <span class="hljs-type">...UserFragment</span>
+    }</span></span>
+    <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-variables-example">
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-response-example">
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"myReviewForStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="query-myReviews" class="operation operation-query" data-traverse-target="query-myReviews">
+            <div class="operation-group-name">
+              <a href="#group-Operations-Queries">Queries</a>
+            </div>
+            <h2 class="operation-heading ">
+              <code>myReviews</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Returns a paginated list of the authenticated user&#39;s own reviews, most recent first. Requires authentication.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p> Returns <a href="#definition-Review"><code>[Review!]!</code></a>
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>page</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td> Default = <code>0</code> </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>size</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                        </td>
+                        <td> Default = <code>20</code> </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div class="example-section example-section-is-code operation-query-example">
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> myReviews<span class="hljs-tag">(
+  <span class="hljs-code">$page</span>:<span class="hljs-type"> Int,</span>
+  <span class="hljs-code">$size</span>:<span class="hljs-type"> Int
+</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">myReviews<span class="hljs-tag">(
+    page: <span class="hljs-code">$page</span>,
+    size: <span class="hljs-code">$size</span>
+  )</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">id</span>
+    <span class="hljs-symbol">text</span>
+    <span class="hljs-symbol">rating</span>
+    <span class="hljs-symbol">userId</span>
+    <span class="hljs-symbol">user <span class="hljs-tag">{
+      <span class="hljs-type">...UserFragment</span>
+    }</span></span>
+    <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-variables-example">
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"page"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">20</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div class="example-section example-section-is-code operation-response-example">
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"myReviews"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+      <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
+      <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1007,7 +1376,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"paymentTypes"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
-      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+      <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1073,7 +1442,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1202,7 +1571,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1212,10 +1581,10 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"reviewSummary"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"average"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"oneStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"twoStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"threeStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"fourStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"oneStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"twoStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"threeStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"fourStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"fiveStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -1293,6 +1662,9 @@ http://localhost:8080/graphql
       <span class="hljs-type">...UserFragment</span>
     }</span></span>
     <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre>
@@ -1313,7 +1685,8 @@ http://localhost:8080/graphql
         <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
       <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
@@ -1400,13 +1773,16 @@ http://localhost:8080/graphql
       <span class="hljs-type">...UserFragment</span>
     }</span></span>
     <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"page"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">20</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"page"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">20</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1416,11 +1792,12 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"reviewsByStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
       <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
@@ -1496,7 +1873,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1506,9 +1883,9 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"room"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"bathrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -1582,7 +1959,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1591,10 +1968,10 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"roomPictures"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
       <span class="hljs-punctuation">}</span>
@@ -1701,9 +2078,9 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"rooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
@@ -1829,14 +2206,14 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Host</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"propertyBrand"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PropertyBrand</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
@@ -1919,7 +2296,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -1928,8 +2305,8 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"stayPictures"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
@@ -2074,12 +2451,12 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"stays"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Host</span><span class="hljs-punctuation">,</span>
@@ -2146,7 +2523,7 @@ http://localhost:8080/graphql
     <span class="hljs-attr">"travelerExperiences"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
         <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-        <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+        <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
       <span class="hljs-punctuation">}</span>
     <span class="hljs-punctuation">]</span>
   <span class="hljs-punctuation">}</span>
@@ -2214,7 +2591,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -2222,9 +2599,9 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2275,7 +2652,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"users"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
       <span class="hljs-punctuation">{</span>
-        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
         <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
       <span class="hljs-punctuation">}</span>
@@ -2399,7 +2776,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createAccessibility"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"accessibilityType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -2475,7 +2852,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createAmenity"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span>
     <span class="hljs-punctuation">}</span>
@@ -2562,12 +2939,12 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createBooking"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"totalPrice"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03T10:15:30Z"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Room</span><span class="hljs-punctuation">]</span>
@@ -2728,7 +3105,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createLanguage"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2803,7 +3180,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createMealPlan"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -2877,7 +3254,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createPaymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -2952,8 +3329,8 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createPropertyBrand"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3019,6 +3396,9 @@ http://localhost:8080/graphql
       <span class="hljs-type">...UserFragment</span>
     }</span></span>
     <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre>
@@ -3033,12 +3413,13 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createReview"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3126,7 +3507,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CreateRoomInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">CreateRoomInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -3135,7 +3516,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createRoom"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
@@ -3261,14 +3642,14 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Host</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"propertyBrand"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PropertyBrand</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Address</span><span class="hljs-punctuation">,</span>
@@ -3355,7 +3736,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createTravelerExperience"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -3432,8 +3813,8 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createUser"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3507,8 +3888,8 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"createView"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"viewType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"viewType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -3571,12 +3952,12 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteAccessibility"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteAccessibility"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3641,7 +4022,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteAmenity"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteAmenity"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3706,7 +4087,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteBooking"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteBooking"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3766,12 +4147,12 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteHost"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteHost"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3836,7 +4217,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteLanguage"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteLanguage"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3901,7 +4282,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteMealPlan"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteMealPlan"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -3961,7 +4342,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -4091,12 +4472,12 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteReview"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteReview"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -4156,7 +4537,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -4234,12 +4615,12 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteRoomPicture"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteRoomPicture"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -4304,7 +4685,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -4382,7 +4763,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteStayPicture"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteStayPicture"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -4572,12 +4953,12 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteView"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"deleteView"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -4742,7 +5123,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateAmenityInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateAmenityInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -4750,7 +5131,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateAmenity"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span>
     <span class="hljs-punctuation">}</span>
@@ -4842,7 +5223,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -4850,7 +5231,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateBookingStatus"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
@@ -4942,7 +5323,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateHostInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateHostInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -4950,7 +5331,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateHost"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -5121,7 +5502,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateMealPlanInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateMealPlanInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -5130,7 +5511,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateMealPlan"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -5209,7 +5590,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdatePaymentTypeInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdatePaymentTypeInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -5217,8 +5598,8 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updatePaymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -5297,7 +5678,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdatePropertyBrandInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdatePropertyBrandInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -5385,6 +5766,9 @@ http://localhost:8080/graphql
       <span class="hljs-type">...UserFragment</span>
     }</span></span>
     <span class="hljs-symbol">stayId</span>
+    <span class="hljs-symbol">stay <span class="hljs-tag">{
+      <span class="hljs-type">...StayFragment</span>
+    }</span></span>
   }</span></span>
 }</span></span>
 </code></pre>
@@ -5399,12 +5783,13 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateReview"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -5492,7 +5877,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateRoomInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateRoomInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -5500,11 +5885,11 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateRoom"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"bathrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -5602,7 +5987,7 @@ http://localhost:8080/graphql
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateRoomPictureInput</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -5616,8 +6001,8 @@ http://localhost:8080/graphql
       <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+      <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -5748,11 +6133,11 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateStay"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
@@ -5862,7 +6247,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateStayPictureInput</span>
 <span class="hljs-punctuation">}</span>
@@ -5874,10 +6259,10 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateStayPicture"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
@@ -5957,7 +6342,7 @@ http://localhost:8080/graphql
                 </div>
                 <div class="example-section example-section-is-code operation-variables-example">
                   <h5>Variables</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateTravelerExperienceInput</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UpdateTravelerExperienceInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
                 <div class="example-section example-section-is-code operation-response-example">
@@ -5965,8 +6350,8 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateTravelerExperience"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -6055,8 +6440,8 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">"updateUser"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
       <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+      <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"email"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -6190,7 +6575,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"accessibilityType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"accessibilityType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -6263,9 +6648,9 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"streetAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"extendedAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"streetAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"extendedAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"city"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stateProvince"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"postalCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
@@ -6343,12 +6728,12 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"streetAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"extendedAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"city"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stateProvince"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"postalCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"countryCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"streetAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"extendedAddress"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"city"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stateProvince"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"postalCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"countryCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -6400,7 +6785,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span>
 <span class="hljs-punctuation">}</span>
@@ -6554,7 +6939,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"checkInDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkOutDate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"status"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PENDING"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"guestsCount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"totalPrice"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03T10:15:30Z"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Room</span><span class="hljs-punctuation">]</span>
@@ -6626,6 +7011,46 @@ http://localhost:8080/graphql
               </div>
             </div>
           </section>
+          <section id="definition-BookingStatusForStay" class="definition definition-object" data-traverse-target="definition-BookingStatusForStay">
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">BookingStatusForStay</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Whether the authenticated user has a completed booking for a stay — used to gate review eligibility.</p>
+                </div>
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>hasCompletedBooking</code></span> - <span class="property-type"><a href="#definition-Boolean"><code>Boolean!</code></a></span>
+                        </td>
+                        <td>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"hasCompletedBooking"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
           <section id="definition-Boolean" class="definition definition-scalar" data-traverse-target="definition-Boolean">
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
@@ -6639,11 +7064,6 @@ http://localhost:8080/graphql
                 </div>
               </div>
               <div class="doc-examples">
-                <div class="example-section example-section-is-code">
-                  <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-literal"><span class="hljs-keyword">true</span></span>
-</code></pre>
-                </div>
               </div>
             </div>
           </section>
@@ -6681,7 +7101,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"accessibilityType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"accessibilityType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -6727,7 +7147,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ROOM_AMENITY"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -6855,11 +7275,11 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"languageIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-attr">"languageIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -6980,7 +7400,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7020,7 +7440,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7075,7 +7495,7 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
+  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -7147,7 +7567,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
@@ -7296,23 +7716,23 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">AddressInput</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"hostId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"hostId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"propertyBrandId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"viewIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"viewIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"amenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"accessibilityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"mealPlanIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"mealPlanIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"paymentTypeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"travelerExperienceIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"travelerExperienceIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"location"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">LocationInput</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -7354,7 +7774,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7549,7 +7969,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
@@ -7710,7 +8130,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"latitude"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987.65</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"longitude"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987.65</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"latitude"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987.65</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"longitude"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123.45</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7755,7 +8175,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"mealPlanType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7800,7 +8220,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"paymentType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7845,7 +8265,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -7951,6 +8371,11 @@ http://localhost:8080/graphql
                         </td>
                         <td> ID of the stay being reviewed. </td>
                       </tr>
+                      <tr>
+                        <td data-property-name=""><span class="property-name"><code>stay</code></span> - <span class="property-type"><a href="#definition-Stay"><code>Stay!</code></a></span>
+                        </td>
+                        <td> The stay this review was written for. </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -7959,12 +8384,13 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"userId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">User</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stay"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Stay</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -8035,13 +8461,13 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"average"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"oneStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"twoStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"threeStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"fourStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"fiveStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
+  <span class="hljs-attr">"fiveStar"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -8123,9 +8549,9 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
@@ -8199,10 +8625,10 @@ http://localhost:8080/graphql
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"roomId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -8350,13 +8776,13 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Host</span><span class="hljs-punctuation">,</span>
@@ -8479,18 +8905,18 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"city"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"city"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"countryCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"maxPricePerNight"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"minPricePerNight"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkIn"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkOut"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2007-12-03"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"guests"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"guests"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"starRatings"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"bedrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"propertyAmenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"roomAmenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-attr">"bedrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"propertyAmenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"roomAmenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -8557,11 +8983,11 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -8631,7 +9057,7 @@ http://localhost:8080/graphql
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+  <span class="hljs-attr">"travelerExperienceType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -8780,7 +9206,7 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"communicationRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"checkinProcessRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"cancellationRate"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"languageIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-attr">"languageIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -8821,7 +9247,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"languageName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -8941,7 +9367,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"brandName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -8994,7 +9420,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"rating"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"stayId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
 <span class="hljs-punctuation">}</span>
@@ -9070,8 +9496,8 @@ http://localhost:8080/graphql
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"name"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"price"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"sleeps"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"bedroomAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"bathrooms"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"size"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span>
 <span class="hljs-punctuation">}</span>
@@ -9127,8 +9553,8 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -9277,19 +9703,19 @@ http://localhost:8080/graphql
   <span class="hljs-attr">"about"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"propertyType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HOTEL"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"address"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">AddressInput</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"isRefundable"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"starRating"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">BigDecimal</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"daysFromBookingCancellationDeadline"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"policiesText"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"importantInformation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"hostId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"propertyBrandId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"viewIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"propertyBrandId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"viewIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"amenityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"accessibilityIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"mealPlanIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"paymentTypeIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"travelerExperienceIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">123</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"travelerExperienceIds"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">987</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"location"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">LocationInput</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -9344,7 +9770,7 @@ http://localhost:8080/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"caption"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"isPrimary"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"displayOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span>
 <span class="hljs-punctuation">}</span>
@@ -9566,7 +9992,7 @@ http://localhost:8080/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"viewType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"viewType"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>

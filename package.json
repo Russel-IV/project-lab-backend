@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "docs": "spectaql spectaql.yml --schema-file \"src/main/resources/graphql/schema.graphqls\" --schema-file \"src/main/resources/graphql/types/*.graphqls\" --schema-file \"src/main/resources/graphql/inputs/*.graphqls\""
+    "docs": "spectaql spectaql.yml --schema-file \"gateway/src/main/resources/graphql/schema.graphqls\" --schema-file \"gateway/src/main/resources/graphql/types/*.graphqls\" --schema-file \"gateway/src/main/resources/graphql/inputs/*.graphqls\""
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",
