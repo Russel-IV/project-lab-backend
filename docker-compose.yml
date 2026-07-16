@@ -3,7 +3,7 @@ services:
     # over Zipkin's v2 HTTP API. Not in any service's `depends_on`: trace export is
     # fire-and-forget, so a slow/absent Zipkin must never block app startup or requests.
     zipkin:
-        image: openzipkin/zipkin:latest
+        image: openzipkin/zipkin-slim:latest
         container_name: zipkin
         ports:
             - "9411:9411"
@@ -99,7 +99,7 @@ services:
     # project-lab-database, not a schema inside it. Plain postgres (no PostGIS):
     # review has no geo data.
     review-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: review-database
         ports:
             - "5433:5432"
@@ -148,7 +148,7 @@ services:
 
     # Own database (docs/adr/0011). Plain postgres (no PostGIS): media has no geo data.
     media-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: media-database
         ports:
             - "5434:5432"
@@ -197,7 +197,7 @@ services:
 
     # Own database (docs/adr/0011). Plain postgres (no PostGIS): identity has no geo data.
     identity-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: identity-database
         ports:
             - "5435:5432"
@@ -286,7 +286,7 @@ services:
 
     # Own database (docs/adr/0011). Plain postgres (no PostGIS): booking has no geo data.
     booking-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: booking-database
         ports:
             - "5437:5432"

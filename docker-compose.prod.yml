@@ -34,7 +34,7 @@
 
 services:
     zipkin:
-        image: openzipkin/zipkin:latest
+        image: openzipkin/zipkin-slim:latest
         container_name: zipkin
         mem_limit: 512m
         restart: unless-stopped
@@ -124,7 +124,7 @@ services:
                 condition: service_healthy
 
     review-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: review-database
         mem_limit: 256m
         restart: unless-stopped
@@ -164,7 +164,7 @@ services:
                 condition: service_healthy
 
     media-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: media-database
         mem_limit: 256m
         restart: unless-stopped
@@ -203,7 +203,7 @@ services:
                 condition: service_healthy
 
     identity-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: identity-database
         mem_limit: 256m
         restart: unless-stopped
@@ -279,7 +279,7 @@ services:
                 condition: service_healthy
 
     booking-database:
-        image: postgres:16
+        image: postgres:16-alpine
         container_name: booking-database
         mem_limit: 256m
         restart: unless-stopped

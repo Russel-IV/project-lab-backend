@@ -1,4 +1,4 @@
-FROM maven:3.9.9-eclipse-temurin-24 AS build
+FROM maven:3.9.9-eclipse-temurin-24-alpine AS build
 WORKDIR /app
 
 COPY pom.xml .
@@ -16,7 +16,8 @@ COPY media-service/src media-service/src
 
 RUN mvn -pl media-service package -DskipTests
 
-FROM eclipse-temurin:24-jre
+FROM eclipse-temurin:24-jre-alpine
+RUN apk add --no-cache bash
 WORKDIR /app
 COPY --from=build /app/media-service/target/media-service-*.jar app.jar
 EXPOSE 8085

@@ -4,7 +4,7 @@
 # Multi-module Maven reactor build (docs/adr/0001 and on) — the build context is the
 # repo root, not this directory, so every sibling module's pom.xml must be present for
 # the reactor to resolve, even though only `gateway` gets compiled and packaged here.
-FROM maven:3.9.9-eclipse-temurin-24 AS build
+FROM maven:3.9.9-eclipse-temurin-24-alpine AS build
 WORKDIR /app
 
 COPY pom.xml .
@@ -27,7 +27,8 @@ RUN mvn -pl gateway package -DskipTests
 # ==========================================
 # STAGE 2: Lightweight Runtime Environment
 # ==========================================
-FROM eclipse-temurin:24-jre
+FROM eclipse-temurin:24-jre-alpine
+RUN apk add --no-cache bash
 WORKDIR /app
 COPY --from=build /app/gateway/target/gateway-*.jar app.jar
 EXPOSE 8080
