@@ -1,3 +1,22 @@
+# Per-container `mem_limit` budget (docs/adr/0017) — this box has 7.4GB total,
+# smaller than docker-compose.prod.yml's 12GB, and unlike that file this one had
+# NO memory governance at all: with no cgroup limit, each JVM's default heap
+# sizing is computed against the FULL HOST memory rather than a container
+# budget, so 7 concurrent JVMs had no ceiling stopping their combined growth
+# from exceeding physical RAM + swap. That's what caused a real WSL2 VM OOM
+# (severe enough to kill systemd itself, not just a container) during otherwise
+# idle operation — see ADR-0017.
+#   6x Postgres containers  @ 200m = 1200m
+#   1x Zipkin                @ 300m =  300m
+#   1x Gateway JVM            @ 900m (heaviest: GraphQL + JPA + Feign + Resilience4j)
+#   6x domain-service/Eureka JVMs @ 600m each = 3600m
+#   ------------------------------------------------
+#   total                            = 6000m (~5.86GB of 7.4GB, ~1.5GB headroom
+#                                       for the WSL2 VM/Docker daemon/host OS)
+# `-XX:MaxRAMPercentage=70.0` only means something because `mem_limit` sets a
+# real cgroup limit for the JVM to detect (same reasoning as ADR-0014's prod
+# budget) — without it, a JVM with no cgroup limit still defaults to sizing its
+# heap off the full host, which is exactly the bug this fixes.
 services:
     # Distributed tracing UI/store (docs/adr/0013) — every service exports spans here
     # over Zipkin's v2 HTTP API. Not in any service's `depends_on`: trace export is
@@ -5,6 +24,7 @@ services:
     zipkin:
         image: openzipkin/zipkin-slim:latest
         container_name: zipkin
+        mem_limit: 300m
         ports:
             - "9411:9411"
 
@@ -13,14 +33,16 @@ services:
             context: .
             dockerfile: eureka-server/Dockerfile
         container_name: eureka-server
+        mem_limit: 600m
         ports:
             - "8761:8761"
         environment:
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         healthcheck:
             # No curl/wget in the bare eclipse-temurin JRE image — a plain TCP connect
             # via bash's /dev/tcp is enough to gate dependent services' startup order,
@@ -36,6 +58,7 @@ services:
             context: .
             dockerfile: gateway/Dockerfile
         container_name: project-lab-backend
+        mem_limit: 900m
         ports:
             - "${SPRING_PORT}:8080"
         volumes:
@@ -50,9 +73,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             project-lab-database:
                 condition: service_healthy
@@ -62,6 +86,7 @@ services:
     project-lab-database:
         image: postgis/postgis:16-3.4
         container_name: project-lab-database
+        mem_limit: 200m
         ports:
             - "${POSTGRES_PORT}:5432"
         environment:
@@ -87,6 +112,7 @@ services:
             context: .
             dockerfile: review-service/Dockerfile
         container_name: review-service
+        mem_limit: 600m
         ports:
             - "8084:8084"
         environment:
@@ -98,9 +124,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             review-database:
                 condition: service_healthy
@@ -113,6 +140,7 @@ services:
     review-database:
         image: postgres:16-alpine
         container_name: review-database
+        mem_limit: 200m
         ports:
             - "5433:5432"
         environment:
@@ -137,6 +165,7 @@ services:
             context: .
             dockerfile: media-service/Dockerfile
         container_name: media-service
+        mem_limit: 600m
         ports:
             - "8085:8085"
         # Same named volume project-lab-backend mounts — media-service writes files
@@ -153,9 +182,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             media-database:
                 condition: service_healthy
@@ -166,6 +196,7 @@ services:
     media-database:
         image: postgres:16-alpine
         container_name: media-database
+        mem_limit: 200m
         ports:
             - "5434:5432"
         environment:
@@ -190,6 +221,7 @@ services:
             context: .
             dockerfile: identity-service/Dockerfile
         container_name: identity-service
+        mem_limit: 600m
         ports:
             - "8081:8081"
         environment:
@@ -201,9 +233,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
             # No JWT_SECRET here, matching gateway (docker-compose.yml's gateway
             # entry doesn't set it either) — .env doesn't define JWT_SECRET in this
             # lab environment, and Spring's ${JWT_SECRET:default} fallback only
@@ -219,6 +252,7 @@ services:
     identity-database:
         image: postgres:16-alpine
         container_name: identity-database
+        mem_limit: 200m
         ports:
             - "5435:5432"
         environment:
@@ -243,6 +277,7 @@ services:
             context: .
             dockerfile: inventory-service/Dockerfile
         container_name: inventory-service
+        mem_limit: 600m
         ports:
             - "8082:8082"
         environment:
@@ -254,9 +289,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             inventory-database:
                 condition: service_healthy
@@ -268,6 +304,7 @@ services:
     inventory-database:
         image: postgis/postgis:16-3.4
         container_name: inventory-database
+        mem_limit: 200m
         ports:
             - "5436:5432"
         environment:
@@ -292,6 +329,7 @@ services:
             context: .
             dockerfile: booking-service/Dockerfile
         container_name: booking-service
+        mem_limit: 600m
         ports:
             - "8083:8083"
         environment:
@@ -303,9 +341,10 @@ services:
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
-            # runs all 7 JVMs at once with no per-container mem_limit to spare.
-            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
+            # MaxRAMPercentage only means something because mem_limit above sets a
+            # real cgroup limit for the JVM to detect.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             booking-database:
                 condition: service_healthy
@@ -316,6 +355,7 @@ services:
     booking-database:
         image: postgres:16-alpine
         container_name: booking-database
+        mem_limit: 200m
         ports:
             - "5437:5432"
         environment:
