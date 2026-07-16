@@ -22,7 +22,10 @@
 #   --no-build   skip the sequential image build step (use existing images)
 #
 # Tuning via env vars:
-#   LIFT_STAGGER_SECONDS        pause between starting each app service (default 15)
+#   LIFT_STAGGER_SECONDS        pause between starting each app service (default 5;
+#                               see docs/adr/0017 — safe now that every container
+#                               has a mem_limit bounding its worst case. Raise this
+#                               back up if a future box is tighter on memory/CPU.)
 #   LIFT_HEALTH_TIMEOUT_SECONDS max wait per service before giving up (default 180)
 set -euo pipefail
 
@@ -40,7 +43,7 @@ if [ "${1:-}" = "--no-build" ]; then
     SKIP_BUILD=true
 fi
 
-STAGGER_SECONDS="${LIFT_STAGGER_SECONDS:-15}"
+STAGGER_SECONDS="${LIFT_STAGGER_SECONDS:-5}"
 HEALTH_TIMEOUT_SECONDS="${LIFT_HEALTH_TIMEOUT_SECONDS:-180}"
 
 INFRA_SERVICES=(project-lab-database review-database media-database identity-database inventory-database booking-database zipkin)

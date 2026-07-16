@@ -66,8 +66,15 @@ during local dev.
   development (e.g. debugging a memory-heavy query), raise that specific
   service's `mem_limit` deliberately rather than leaving the whole file
   unbounded again.
-- Doesn't fix build-time slowness on its own — that's a separate, still-open
-  question (sequential builds and staggered startup are deliberate trade-offs
-  documented in `scripts/lift-stack.sh`, not touched here) — but removes a
-  confound that was making the box's actual capacity hard to reason about
-  while investigating it.
+- Doesn't fix build-time slowness on its own — sequential builds remain
+  untouched, a deliberate trade-off documented in `scripts/lift-stack.sh` that
+  this ADR doesn't revisit — but it does remove a confound that was making the
+  box's actual capacity hard to reason about while investigating it.
+- It also unblocked safely shrinking `scripts/lift-stack.sh`'s startup stagger:
+  with every JVM now capped, a live memory sample (`free -m` every 5s) through
+  a full stack bring-up at `LIFT_STAGGER_SECONDS=5` (down from the previous
+  default of 15) showed a smooth, bounded climb — available memory never
+  dropped below ~3.2GB, nothing like the uncontrolled growth that caused the
+  original crash — and cut the startup phase from ~3m47s to ~2m16s. That
+  measurement is what justified making 5s the script's new default rather than
+  just a documented override.
