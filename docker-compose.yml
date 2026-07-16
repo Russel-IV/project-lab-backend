@@ -17,6 +17,10 @@ services:
             - "8761:8761"
         environment:
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         healthcheck:
             # No curl/wget in the bare eclipse-temurin JRE image — a plain TCP connect
             # via bash's /dev/tcp is enough to gate dependent services' startup order,
@@ -45,6 +49,10 @@ services:
             - POSTGRES_DB=${POSTGRES_DB}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         depends_on:
             project-lab-database:
                 condition: service_healthy
@@ -89,6 +97,10 @@ services:
             - REVIEW_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         depends_on:
             review-database:
                 condition: service_healthy
@@ -140,6 +152,10 @@ services:
             - MEDIA_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         depends_on:
             media-database:
                 condition: service_healthy
@@ -184,6 +200,10 @@ services:
             - IDENTITY_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
             # No JWT_SECRET here, matching gateway (docker-compose.yml's gateway
             # entry doesn't set it either) — .env doesn't define JWT_SECRET in this
             # lab environment, and Spring's ${JWT_SECRET:default} fallback only
@@ -233,6 +253,10 @@ services:
             - INVENTORY_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         depends_on:
             inventory-database:
                 condition: service_healthy
@@ -278,6 +302,10 @@ services:
             - BOOKING_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
+            # defaults (G1, full tiered compilation) below ~1GB heaps, and this box
+            # runs all 7 JVMs at once with no per-container mem_limit to spare.
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1
         depends_on:
             booking-database:
                 condition: service_healthy

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM maven:3.9.9-eclipse-temurin-24-alpine AS build
 WORKDIR /app
 
@@ -10,11 +11,11 @@ COPY booking-service/pom.xml booking-service/
 COPY review-service/pom.xml review-service/
 COPY media-service/pom.xml media-service/
 
-RUN mvn -pl media-service dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl media-service dependency:go-offline -B
 
 COPY media-service/src media-service/src
 
-RUN mvn -pl media-service package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl media-service package -DskipTests
 
 FROM eclipse-temurin:24-jre-alpine
 RUN apk add --no-cache bash

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ==========================================
 # STAGE 1: Build the Spring Boot Application
 # ==========================================
@@ -17,12 +18,12 @@ COPY review-service/pom.xml review-service/
 COPY media-service/pom.xml media-service/
 
 # Pre-download dependencies for this module only; cached until gateway/pom.xml changes.
-RUN mvn -pl gateway dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl gateway dependency:go-offline -B
 
 COPY gateway/src gateway/src
 
 # Compile and package just the gateway module.
-RUN mvn -pl gateway package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl gateway package -DskipTests
 
 # ==========================================
 # STAGE 2: Lightweight Runtime Environment

@@ -31,6 +31,15 @@
 # against the host's full 12GB for every container, which defeats the whole point
 # on a box running 7 JVMs at once (unlike the old single-JVM EC2 box, where the
 # host's total memory *was* the right thing to compute a percentage of).
+#
+# `-XX:+UseSerialGC -XX:TieredStopAtLevel=1` (docs/adr/0016) on every JVM: G1
+# (the default collector) is tuned for multi-GB heaps and carries per-region/
+# remembered-set bookkeeping that's pure overhead below ~1GB — SerialGC's single
+# collection thread costs less CPU and memory on heaps this size, which matters
+# when 7 JVMs are contending over only 2 OCPUs. TieredStopAtLevel=1 skips the C2
+# JIT tier entirely, trading peak steady-state throughput (irrelevant at this
+# app's traffic scale) for faster context startup and less CPU spent compiling
+# during the startup burst every one of these services goes through.
 
 services:
     zipkin:
@@ -47,7 +56,7 @@ services:
         mem_limit: 1024m
         restart: unless-stopped
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
         ports:
             - "8761:8761"
@@ -68,7 +77,7 @@ services:
         volumes:
             - uploads:/app/uploads
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - SPRING_PROFILES_ACTIVE=prod
             - POSTGRES_HOST=project-lab-database
             - POSTGRES_USER=${POSTGRES_USER}
@@ -109,7 +118,7 @@ services:
         mem_limit: 1024m
         restart: unless-stopped
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - REVIEW_DB_HOST=review-database
             - REVIEW_DB_PORT=5432
             - REVIEW_DB_NAME=${POSTGRES_DB}
@@ -149,7 +158,7 @@ services:
         volumes:
             - uploads:/app/uploads
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - MEDIA_DB_HOST=media-database
             - MEDIA_DB_PORT=5432
             - MEDIA_DB_NAME=${POSTGRES_DB}
@@ -187,7 +196,7 @@ services:
         mem_limit: 1024m
         restart: unless-stopped
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - IDENTITY_DB_HOST=identity-database
             - IDENTITY_DB_PORT=5432
             - IDENTITY_DB_NAME=${POSTGRES_DB}
@@ -226,7 +235,7 @@ services:
         mem_limit: 1024m
         restart: unless-stopped
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - INVENTORY_DB_HOST=inventory-database
             - INVENTORY_DB_PORT=5432
             - INVENTORY_DB_NAME=${POSTGRES_DB}
@@ -264,7 +273,7 @@ services:
         mem_limit: 1024m
         restart: unless-stopped
         environment:
-            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0
+            - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - BOOKING_DB_HOST=booking-database
             - BOOKING_DB_PORT=5432
             - BOOKING_DB_NAME=${POSTGRES_DB}
