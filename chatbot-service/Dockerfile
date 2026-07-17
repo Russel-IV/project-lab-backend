@@ -12,15 +12,17 @@ COPY review-service/pom.xml review-service/
 COPY media-service/pom.xml media-service/
 COPY chatbot-service/pom.xml chatbot-service/
 
-RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl media-service dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl chatbot-service dependency:go-offline -B
 
-COPY media-service/src media-service/src
+COPY chatbot-service/src chatbot-service/src
+COPY chatbot-service/FRUI-CONTEXT.md chatbot-service/FRUI-CONTEXT.md
 
-RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl media-service package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl chatbot-service package -DskipTests
 
 FROM eclipse-temurin:24-jre-alpine
 RUN apk add --no-cache bash
 WORKDIR /app
-COPY --from=build /app/media-service/target/media-service-*.jar app.jar
-EXPOSE 8085
+COPY --from=build /app/chatbot-service/target/chatbot-service-*.jar app.jar
+COPY --from=build /app/chatbot-service/FRUI-CONTEXT.md FRUI-CONTEXT.md
+EXPOSE 8086
 ENTRYPOINT ["java", "-jar", "app.jar"]

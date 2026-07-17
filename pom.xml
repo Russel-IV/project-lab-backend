@@ -44,6 +44,7 @@
 		<module>booking-service</module>
 		<module>review-service</module>
 		<module>media-service</module>
+		<module>chatbot-service</module>
 	</modules>
 
 	<properties>

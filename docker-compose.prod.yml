@@ -305,6 +305,45 @@ services:
             retries: 10
             start_period: 10s
 
+    oracle-db:
+        image: gvenzl/oracle-free:23-slim-faststart
+        container_name: oracle-db
+        mem_limit: 1500m
+        restart: unless-stopped
+        ports:
+            - "1521:1521"
+        environment:
+            - ORACLE_PASSWORD=oracle_password
+        volumes:
+            - oracle_data:/opt/oracle/oradata
+        healthcheck:
+            test: ["CMD-SHELL", "healthcheck.sh"]
+            interval: 10s
+            timeout: 5s
+            retries: 15
+            start_period: 30s
+
+    chatbot-service:
+        image: ${GHCR_NAMESPACE}/chatbot-service:${IMAGE_TAG}
+        container_name: chatbot-service
+        mem_limit: 1024m
+        restart: unless-stopped
+        ports:
+            - "8086:8086"
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle-db:1521/FREEPDB1
+            - SPRING_DATASOURCE_USERNAME=system
+            - SPRING_DATASOURCE_PASSWORD=oracle_password
+            - SPRING_AI_OPENAI_API_KEY=${SPRING_AI_OPENAI_API_KEY}
+            - EUREKA_URL=http://eureka-server:8761/eureka
+            - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
+        depends_on:
+            oracle-db:
+                condition: service_healthy
+            eureka-server:
+                condition: service_healthy
+
 volumes:
     pgdata:
     review_pgdata:
@@ -313,3 +352,4 @@ volumes:
     inventory_pgdata:
     booking_pgdata:
     uploads:
+    oracle_data:

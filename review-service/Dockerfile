@@ -10,6 +10,7 @@ COPY inventory-service/pom.xml inventory-service/
 COPY booking-service/pom.xml booking-service/
 COPY review-service/pom.xml review-service/
 COPY media-service/pom.xml media-service/
+COPY chatbot-service/pom.xml chatbot-service/
 
 RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl review-service dependency:go-offline -B
 

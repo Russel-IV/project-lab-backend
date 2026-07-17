@@ -16,6 +16,7 @@ COPY inventory-service/pom.xml inventory-service/
 COPY booking-service/pom.xml booking-service/
 COPY review-service/pom.xml review-service/
 COPY media-service/pom.xml media-service/
+COPY chatbot-service/pom.xml chatbot-service/
 
 # Pre-download dependencies for this module only; cached until gateway/pom.xml changes.
 RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl gateway dependency:go-offline -B
