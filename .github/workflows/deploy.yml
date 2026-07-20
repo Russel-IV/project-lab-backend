@@ -1,32 +1,13 @@
-name: CI/CD Pipeline to Oracle Cloud
+name: CI/CD Pipeline to AWS (ECR & EC2)
 
-# Rewritten for the microservices topology (docs/adr/0001 and on) and the Oracle
-# Cloud migration (docs/adr/0014). Previously: one image, built and pushed to ECR,
-# `docker run` on a single AWS EC2 box. Now: one image per module (this repo's
-# seven Maven modules), pushed to GHCR, deployed via `docker compose` on an Oracle
-# Cloud Ampere A1 instance — see docs/oracle-cloud-deployment.md.
-#
-# NOTE ON VERIFICATION: every prior phase of this migration was verified against a
-# real, running `docker compose up --build` stack. This workflow could not be —
-# there is no Oracle Cloud instance or GHCR package provisioned in this environment
-# to deploy to. The YAML has been checked for internal consistency (job
-# dependencies, secret names matching docs/oracle-cloud-deployment.md, image tags
-# matching docker-compose.prod.yml's `${GHCR_NAMESPACE}-<module>` pattern) but has
-# not had a real run.
+# Rewritten for AWS ECR and EC2 topology.
+# Whenever a microservice is edited, only that microservice is built, pushed to ECR,
+# and redeployed on the EC2 host via docker compose.
 
 on:
   push:
     branches: ["main"]
     paths:
-      # Path filters below are repo-root-relative and must match a module's own
-      # subdirectory (e.g. "gateway/src/**"), not "src/**" — the previous version
-      # of this file used "src/**"/"Dockerfile" at the repo root, which stopped
-      # matching anything the moment Phase 1 moved all code into per-module
-      # subdirectories. That meant this workflow's push trigger had been silently
-      # dead since Phase 1 of this migration — every commit since then only ran
-      # CI when someone happened to notice and use workflow_dispatch. Found while
-      # writing this phase, not something Phase 1 could have caught at the time
-      # (the workflow simply wasn't exercised).
       - "**/src/**"
       - "**/pom.xml"
       - "pom.xml"
@@ -36,11 +17,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
+  id-token: write  # Required for AWS OIDC authentication
+  contents: read   # Required for actions/checkout
 
 jobs:
   test:
@@ -59,12 +37,6 @@ jobs:
 
       - name: Run Maven Tests (full reactor)
         run: chmod +x mvnw && ./mvnw test
-      # `spotless:check` deliberately isn't gating CI here: it already fails on
-      # pre-existing files unrelated to this workflow (a wildcard import in
-      # review-service's Review.kt, an over-length line in gateway's
-      # MediaFeignClientTest.kt — see this migration plan's Phase 6 outcome).
-      # Wiring it in now would break every future push for reasons this phase
-      # didn't cause and isn't fixing as a drive-by. Re-add once that's cleaned up.
 
   changes:
     name: Detect changed modules
@@ -72,30 +44,10 @@ jobs:
     outputs:
       modules: ${{ steps.compute.outputs.modules }}
       any: ${{ steps.compute.outputs.any }}
-      namespace: ${{ steps.vars.outputs.namespace }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Compute lowercase image namespace
-        # GHCR requires lowercase image names; github.repository preserves case.
-        # Computed here (not in build-and-push) so it's available even when that
-        # job is skipped entirely because no module changed.
-        id: vars
-        run: echo "namespace=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      # Each push here used to rebuild and cross-arch-push all 7 modules
-      # unconditionally, even for a change to a single service — QEMU-emulated
-      # arm64 builds are slow, so that wasted most of a run's wall-clock on the
-      # 6 modules that hadn't changed. `shared` covers inputs that affect every
-      # module's build (the parent POM's managed dependency versions, and the
-      # workflow file itself, so editing this pipeline always exercises the
-      # full matrix rather than trusting an unverified path); anything else
-      # only rebuilds the module(s) whose own directory changed.
-      # Only meaningful for `push` — dorny/paths-filter needs a base commit to
-      # diff against, which a manual workflow_dispatch run has no natural one
-      # for. Skipped on that trigger; the compute step below falls back to
-      # "build everything" instead of guessing a base ref.
       - name: Filter changed paths
         if: github.event_name == 'push'
         uses: dorny/paths-filter@v3
@@ -119,12 +71,14 @@ jobs:
               - 'review-service/**'
             media-service:
               - 'media-service/**'
+            chatbot-service:
+              - 'chatbot-service/**'
 
       - name: Compute build matrix
         id: compute
         run: |
           if [ "${{ github.event_name }}" != "push" ] || [ "${{ steps.filter.outputs.shared }}" = "true" ]; then
-            modules='["eureka-server","gateway","identity-service","inventory-service","booking-service","review-service","media-service"]'
+            modules='["eureka-server","gateway","identity-service","inventory-service","booking-service","review-service","media-service","chatbot-service"]'
           else
             modules='${{ steps.filter.outputs.changes }}'
           fi
@@ -138,9 +92,6 @@ jobs:
   build-and-push:
     name: Build & Push (${{ matrix.module }})
     needs: [test, changes]
-    # Skipped entirely (not just no-op'd per-module) when nothing under any
-    # module changed — e.g. a docker-compose.prod.yml-only push, which still
-    # needs `deploy` to run but has no new image to build.
     if: needs.test.result == 'success' && needs.changes.outputs.any == 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -150,23 +101,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Cross-arch build: GitHub-hosted runners are amd64, but Oracle Cloud's Ampere
-      # A1 shape (docs/oracle-cloud-deployment.md) is arm64 — QEMU emulation lets
-      # Buildx produce an arm64 image from an amd64 runner. The previous (AWS EC2)
-      # version of this workflow built for linux/amd64 only, matching that x86 box;
-      # copying that platform pin forward unchanged would have silently produced
-      # images the Ampere A1 host can't run at all.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -174,30 +117,20 @@ jobs:
       - name: Build and push ${{ matrix.module }}
         uses: docker/build-push-action@v6
         with:
-          # Build context is the repo root, not the module directory — every
-          # module's Dockerfile expects the full multi-module reactor's pom.xml
-          # files to be present (see e.g. gateway/Dockerfile).
+          # Build context is the repo root, not the module directory
           context: .
           file: ${{ matrix.module }}/Dockerfile
-          platforms: linux/arm64
+          platforms: linux/amd64  # Build for standard x86 EC2 instances. Change to linux/arm64 if using Graviton.
           push: true
-          # Scoped per module so the 7 concurrent matrix jobs don't thrash a
-          # shared cache entry — each module's own dependency/compile layers
-          # persist across runs instead of re-resolving the whole reactor's
-          # dependency tree from Maven Central every time.
           cache-from: type=gha,scope=${{ matrix.module }}
           cache-to: type=gha,mode=max,scope=${{ matrix.module }}
           tags: |
-            ${{ env.REGISTRY }}/${{ needs.changes.outputs.namespace }}-${{ matrix.module }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ needs.changes.outputs.namespace }}-${{ matrix.module }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ matrix.module }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ matrix.module }}:latest
 
   deploy:
-    name: Deploy to Oracle Cloud
+    name: Deploy to AWS EC2
     needs: [test, changes, build-and-push]
-    # build-and-push legitimately shows "skipped" in the no-module-changed case
-    # (docker-compose.prod.yml-only push) — that's still a deploy, just without
-    # a new image, so `always()` plus explicit result checks are required here
-    # rather than relying on the default "all needs succeeded" gate.
     if: |
       always() &&
       needs.test.result == 'success' &&
@@ -207,12 +140,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.prod.yml to the Oracle Cloud host
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Copy docker-compose.prod.yml to the EC2 host
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.prod.yml"
           target: "~/project-lab-backend"
           strip_components: 0
@@ -220,46 +163,64 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          GHCR_NAMESPACE: ${{ needs.changes.outputs.namespace }}
-          # Falls back to `latest` when build-and-push was skipped (no module
-          # changed) — there's no image tagged with this commit's sha in that
-          # case, but each module's `latest` tag still points at the last
-          # commit that did change it.
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ needs.changes.outputs.any == 'true' && github.sha || 'latest' }}
-          GHCR_ACTOR: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          CHANGED_SERVICES: ${{ needs.changes.outputs.modules }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+          SPRING_AI_OPENAI_API_KEY: ${{ secrets.SPRING_AI_OPENAI_API_KEY }}
         with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: GHCR_NAMESPACE,IMAGE_TAG,GHCR_ACTOR,GHCR_TOKEN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY,IMAGE_TAG,AWS_REGION,CHANGED_SERVICES,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS,SPRING_AI_OPENAI_API_KEY
           script: |
             set -e
             cd ~/project-lab-backend
 
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+            # Log in to ECR on the host
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-
-            # Clean up dangling/old images to keep disk usage bounded.
-            docker system prune -af
-
-            # Wait for the Gateway's actuator health endpoint (poll for up to 60s).
-            echo "Waiting for the Gateway to report healthy..."
-            for i in $(seq 1 20); do
-              if curl -sf http://localhost:8080/actuator/health >/dev/null; then
-                echo "Gateway is up and healthy!"
-                exit 0
+            # Map changed modules to docker-compose service names:
+            # - gateway module maps to project-lab-backend service
+            # - chatbot-service module maps to chatbot-service service
+            # - others map 1-to-1
+            services=""
+            for module in $(echo "$CHANGED_SERVICES" | jq -r '.[]'); do
+              if [ "$module" = "gateway" ]; then
+                services="$services project-lab-backend"
+              else
+                services="$services $module"
               fi
-              echo "Still waiting..."
-              sleep 3
             done
-            echo "Gateway failed to report healthy within 60 seconds."
-            docker compose -f docker-compose.prod.yml logs project-lab-backend --tail 100
-            exit 1
+
+            echo "Target services to update: $services"
+
+            # Pull only the updated images
+            docker compose -f docker-compose.prod.yml pull $services
+
+            # Recreate only the updated containers
+            docker compose -f docker-compose.prod.yml up -d $services
+
+            # Clean up dangling/old images
+            docker system prune -f
+
+            # Verify Gateway health if it was redeployed
+            if echo "$services" | grep -q "project-lab-backend"; then
+              echo "Waiting for the Gateway to report healthy..."
+              for i in $(seq 1 20); do
+                if curl -sf http://localhost:8080/actuator/health >/dev/null; then
+                  echo "Gateway is up and healthy!"
+                  exit 0
+                fi
+                echo "Still waiting..."
+                sleep 3
+              done
+              echo "Gateway failed to report healthy within 60 seconds."
+              docker compose -f docker-compose.prod.yml logs project-lab-backend --tail 100
+              exit 1
+            fi
