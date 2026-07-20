@@ -65,6 +65,7 @@ Create an IAM role for GitHub Actions.
 5. Select **Next**.
 6. Select **one** of these options to add permissions:
    - **Option A (Easiest)**: Search for the policy name `AmazonEC2ContainerRegistryPowerUser` (AWS managed policy), check the box next to it, and select **Next**.
+     * *Note: If you want to use the EC2 Control workflow, you must also attach an inline policy with `ec2:StartInstances`, `ec2:StopInstances`, and `ec2:DescribeInstances` permissions.*
    - **Option B (Most secure)**: Select the **Create inline policy** button in the top right corner. Select the **JSON** tab and paste this custom policy:
      ```json
      {
@@ -83,11 +84,20 @@ Create an IAM role for GitHub Actions.
              "ecr:PutImage"
            ],
            "Resource": "*"
+         },
+         {
+           "Effect": "Allow",
+           "Action": [
+             "ec2:StartInstances",
+             "ec2:StopInstances",
+             "ec2:DescribeInstances"
+           ],
+           "Resource": "*"
          }
        ]
      }
      ```
-     Select **Next**, name the policy (for example, `ECRPushPullPolicy`), and select **Create policy**.
+     Select **Next**, name the policy (for example, `ECRPushAndEC2ControlPolicy`), and select **Create policy**.
 7. Name the role `github-actions-ecr-role`.
 8. Copy the Role ARN.
 
@@ -122,6 +132,7 @@ You must add these secrets to your GitHub repository settings. See the [.secrets
 - `EC2_HOST`: The public IP address of your EC2 instance.
 - `EC2_USER`: The SSH username (for example, `ubuntu`).
 - `EC2_SSH_KEY`: The private SSH key for the EC2 instance.
+- `EC2_INSTANCE_ID`: The ID of your EC2 instance (for example, `i-0123456789abcdef0`).
 - `POSTGRES_USER`: The username for the database.
 - `POSTGRES_PASSWORD`: The password for the database.
 - `POSTGRES_DB`: The default database name.
@@ -167,3 +178,17 @@ This job deploys the updated services to the EC2 instance.
    - When you restart a service, Docker Compose does not restart other healthy services.
    - If a service has dependencies that are not running, Docker Compose starts them.
 7. It checks the health of the gateway if you updated the gateway.
+
+## 5. Manual EC2 Instance Control
+
+To save costs, you can turn off your EC2 instance when you do not use it. You can do this directly from GitHub Actions.
+
+1. Go to your GitHub repository.
+2. Select **Actions**.
+3. Select the **EC2 Control (Start/Stop)** workflow on the left menu.
+4. Select **Run workflow**.
+5. Select **start** or **stop** from the dropdown menu.
+6. Select the green **Run workflow** button.
+
+The workflow will send the command to AWS and wait until the instance changes status.
+
