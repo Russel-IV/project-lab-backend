@@ -114,6 +114,32 @@ You must create one ECR repository for each microservice. The current name of th
 - `project-lab/media-service`
 - `project-lab/chatbot-service`
 
+#### ECR Lifecycle Policy
+To save storage costs, you should set up an ECR Lifecycle Policy on each repository to keep only the latest 3 images. 
+
+Use this JSON policy:
+```json
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Keep only the latest 3 images",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "imageCountMoreThan",
+        "countNumber": 3
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+```
+
+You can apply this policy in the AWS Console under **Lifecycle policies** for each repository, or apply it to all repositories using the AWS CLI.
+
+
 ### AWS EC2 Instance
 
 You must set up one EC2 instance with these items installed:
@@ -191,4 +217,18 @@ To save costs, you can turn off your EC2 instance when you do not use it. You ca
 6. Select the green **Run workflow** button.
 
 The workflow will send the command to AWS and wait until the instance changes status.
+
+## 6. Manual Stack Redeployment (No Rebuild)
+
+If you start your EC2 instance after it was turned off, or if you want to pull the latest images from ECR and completely restart all microservices, you can run the redeployment workflow. This does not compile or build code from source, making it very fast.
+
+1. Go to your GitHub repository.
+2. Select **Actions**.
+3. Select the **Redeploy All Services** workflow on the left menu.
+4. Select **Run workflow**.
+5. Enter the image tag you want to deploy (default is `latest`).
+6. Select the green **Run workflow** button.
+
+The workflow will stop all containers on the host, pull the specified image versions from ECR, start the containers, and verify the Gateway health.
+
 

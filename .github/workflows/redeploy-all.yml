@@ -1,0 +1,94 @@
+name: Redeploy All Services
+
+# Manual workflow to stop all services on EC2, pull the latest images from ECR,
+# and start them up again. This does not compile or build images from source.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to pull and deploy'
+        required: true
+        default: 'latest'
+        type: string
+
+permissions:
+  id-token: write  # Required for AWS OIDC authentication
+  contents: read   # Required for actions/checkout
+
+jobs:
+  redeploy:
+    name: Redeploy Stack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Copy docker-compose.prod.yml to the EC2 host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/project-lab-backend"
+          strip_components: 0
+
+      - name: SSH Deploy and Restart
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+          SPRING_AI_OPENAI_API_KEY: ${{ secrets.SPRING_AI_OPENAI_API_KEY }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY,IMAGE_TAG,AWS_REGION,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS,SPRING_AI_OPENAI_API_KEY
+          script: |
+            set -e
+            cd ~/project-lab-backend
+
+            # Log in to ECR on the host
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            echo "Stopping all running containers..."
+            docker compose -f docker-compose.prod.yml down
+
+            echo "Pulling ECR images with tag: $IMAGE_TAG..."
+            docker compose -f docker-compose.prod.yml pull
+
+            echo "Starting all containers..."
+            docker compose -f docker-compose.prod.yml up -d
+
+            echo "Cleaning up old/dangling Docker images..."
+            docker system prune -f
+
+            echo "Waiting for the Gateway to report healthy..."
+            for i in $(seq 1 20); do
+              if curl -sf http://localhost:8080/actuator/health >/dev/null; then
+                echo "Gateway is up and healthy!"
+                exit 0
+              fi
+              echo "Still waiting..."
+              sleep 3
+            done
+            echo "Gateway failed to report healthy within 60 seconds."
+            docker compose -f docker-compose.prod.yml logs project-lab-backend --tail 100
+            exit 1
