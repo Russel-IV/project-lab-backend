@@ -51,7 +51,7 @@ services:
             - "9411:9411"
 
     eureka-server:
-        image: ${ECR_REGISTRY}/eureka-server:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/eureka-server:${IMAGE_TAG}
         container_name: eureka-server
         mem_limit: 1024m
         restart: unless-stopped
@@ -68,7 +68,7 @@ services:
             start_period: 15s
 
     project-lab-backend:
-        image: ${ECR_REGISTRY}/gateway:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/gateway:${IMAGE_TAG}
         container_name: project-lab-backend
         mem_limit: 1536m
         restart: unless-stopped
@@ -113,7 +113,7 @@ services:
             start_period: 10s
 
     review-service:
-        image: ${ECR_REGISTRY}/review-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/review-service:${IMAGE_TAG}
         container_name: review-service
         mem_limit: 1024m
         restart: unless-stopped
@@ -151,7 +151,7 @@ services:
             start_period: 10s
 
     media-service:
-        image: ${ECR_REGISTRY}/media-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/media-service:${IMAGE_TAG}
         container_name: media-service
         mem_limit: 1024m
         restart: unless-stopped
@@ -191,7 +191,7 @@ services:
             start_period: 10s
 
     identity-service:
-        image: ${ECR_REGISTRY}/identity-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/identity-service:${IMAGE_TAG}
         container_name: identity-service
         mem_limit: 1024m
         restart: unless-stopped
@@ -230,7 +230,7 @@ services:
             start_period: 10s
 
     inventory-service:
-        image: ${ECR_REGISTRY}/inventory-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/inventory-service:${IMAGE_TAG}
         container_name: inventory-service
         mem_limit: 1024m
         restart: unless-stopped
@@ -268,7 +268,7 @@ services:
             start_period: 10s
 
     booking-service:
-        image: ${ECR_REGISTRY}/booking-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/booking-service:${IMAGE_TAG}
         container_name: booking-service
         mem_limit: 1024m
         restart: unless-stopped
@@ -324,7 +324,7 @@ services:
             start_period: 30s
 
     chatbot-service:
-        image: ${ECR_REGISTRY}/chatbot-service:${IMAGE_TAG}
+        image: ${ECR_REGISTRY}/project-lab/chatbot-service:${IMAGE_TAG}
         container_name: chatbot-service
         mem_limit: 1024m
         restart: unless-stopped
