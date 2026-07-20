@@ -1,0 +1,51 @@
+name: EC2 Control (Start/Stop)
+
+# Manual workflow to start or stop the EC2 instance to save costs when not in use.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform on the EC2 instance'
+        required: true
+        default: 'start'
+        type: choice
+        options:
+          - start
+          - stop
+
+permissions:
+  id-token: write  # Required for AWS OIDC authentication
+  contents: read   # Required for actions/checkout
+
+jobs:
+  ec2-control:
+    name: EC2 Instance Control
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Control EC2 Instance
+        run: |
+          INSTANCE_ID="${{ secrets.EC2_INSTANCE_ID }}"
+          ACTION="${{ github.event.inputs.action }}"
+          
+          if [ "$ACTION" = "start" ]; then
+            echo "Starting EC2 Instance: $INSTANCE_ID"
+            aws ec2 start-instances --instance-ids "$INSTANCE_ID"
+            
+            echo "Waiting for instance to be running..."
+            aws ec2 wait instance-running --instance-ids "$INSTANCE_ID"
+            echo "EC2 Instance is now running!"
+          elif [ "$ACTION" = "stop" ]; then
+            echo "Stopping EC2 Instance: $INSTANCE_ID"
+            aws ec2 stop-instances --instance-ids "$INSTANCE_ID"
+            
+            echo "Waiting for instance to be stopped..."
+            aws ec2 wait instance-stopped --instance-ids "$INSTANCE_ID"
+            echo "EC2 Instance is now stopped!"
+          fi
