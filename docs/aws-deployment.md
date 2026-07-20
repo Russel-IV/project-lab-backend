@@ -93,16 +93,16 @@ Create an IAM role for GitHub Actions.
 
 ### Amazon ECR Repositories
 
-You must create one ECR repository for each microservice. Name the repositories:
+You must create one ECR repository for each microservice. The current name of the repositories are:
 
-- `eureka-server`
-- `gateway`
-- `identity-service`
-- `inventory-service`
-- `booking-service`
-- `review-service`
-- `media-service`
-- `chatbot-service`
+- `project-lab/eureka-server`
+- `project-lab/gateway`
+- `project-lab/identity-service`
+- `project-lab/inventory-service`
+- `project-lab/booking-service`
+- `project-lab/review-service`
+- `project-lab/media-service`
+- `project-lab/chatbot-service`
 
 ### AWS EC2 Instance
 
