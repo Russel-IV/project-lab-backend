@@ -144,10 +144,50 @@ You can apply this policy in the AWS Console under **Lifecycle policies** for ea
 
 You must set up one EC2 instance with these items installed:
 
-- Docker
-- Docker Compose
+1. **Docker and Docker Compose**:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install -y docker.io
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker ubuntu
+   
+   # Install Docker Compose v2 plugin manually
+   mkdir -p ~/.docker/cli-plugins
+   curl -SL "https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-$(uname -m)" -o ~/.docker/cli-plugins/docker-compose
+   chmod +x ~/.docker/cli-plugins/docker-compose
+   ```
+   *(Note: Log out and log back in to apply the `docker` group membership change).*
+
+2. **AWS CLI** (Required to log in to ECR on the host):
+   * For AMD64 (Standard x86) instance:
+     ```bash
+     sudo apt install -y unzip
+     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+     unzip awscliv2.zip
+     sudo ./aws/install
+     rm -rf awscliv2.zip aws
+     ```
+   * For ARM64 (Graviton) instance:
+     ```bash
+     sudo apt install -y unzip
+     curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+     unzip awscliv2.zip
+     sudo ./aws/install
+     rm -rf awscliv2.zip aws
+     ```
+
+3. **IAM Instance Profile (ECR Pull Permissions)**:
+   You must attach an IAM Role to the EC2 instance so it can authenticate with ECR without static keys:
+   * Go to the **AWS IAM Console** -> **Roles** -> **Create role**.
+   * Select **AWS service** and choose **EC2** as the use case.
+   * Attach the AWS managed policy **`AmazonEC2ContainerRegistryReadOnly`**.
+   * Name the role `ec2-ecr-read-role` and select **Create role**.
+   * Go to the **EC2 Console** -> **Instances**, select your instance, and click **Actions** -> **Security** -> **Modify IAM role**.
+   * Attach `ec2-ecr-read-role` and click **Update IAM role**.
 
 Ensure the working directory `~/project-lab-backend` exists on the host.
+
+
 
 ## 3. GitHub Secrets
 
