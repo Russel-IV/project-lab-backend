@@ -26,6 +26,8 @@ type Query {
     stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): [Stay!]!
     "Returns a single stay by ID."
     stay(id: Int!): Stay
+    "Returns all distinct city/country pairs currently in use by stay addresses."
+    destinations: [Destination!]!
 
     "Returns a paginated list of rooms for a given stay."
     rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!

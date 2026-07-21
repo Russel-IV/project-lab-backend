@@ -10,6 +10,7 @@ import com.team1.project_lab_backend.inventory.dto.ViewRequest
 import com.team1.project_lab_backend.inventory.models.Accessibility
 import com.team1.project_lab_backend.inventory.models.Amenity
 import com.team1.project_lab_backend.inventory.models.AmenityType
+import com.team1.project_lab_backend.inventory.models.Destination
 import com.team1.project_lab_backend.inventory.models.MealPlan
 import com.team1.project_lab_backend.inventory.models.PaymentType
 import com.team1.project_lab_backend.inventory.models.PropertyBrand
@@ -17,6 +18,7 @@ import com.team1.project_lab_backend.inventory.models.TravelerExperience
 import com.team1.project_lab_backend.inventory.models.View
 import com.team1.project_lab_backend.inventory.services.AccessibilityService
 import com.team1.project_lab_backend.inventory.services.AmenityService
+import com.team1.project_lab_backend.inventory.services.DestinationService
 import com.team1.project_lab_backend.inventory.services.MealPlanService
 import com.team1.project_lab_backend.inventory.services.PaymentTypeService
 import com.team1.project_lab_backend.inventory.services.PropertyBrandService
@@ -37,6 +39,7 @@ class LookupResolver(
     private val mealPlanService: MealPlanService,
     private val propertyBrandService: PropertyBrandService,
     private val travelerExperienceService: TravelerExperienceService,
+    private val destinationService: DestinationService,
 ) {
     // ---- Amenity ----
 
@@ -269,6 +272,11 @@ class LookupResolver(
         travelerExperienceService.deleteTravelerExperience(id)
         return true
     }
+
+    // ---- Destination ----
+
+    @QueryMapping
+    fun destinations(): List<Destination> = destinationService.getAllDestinations()
 }
 
 data class CreateAmenityInput(val name: String, val type: AmenityType)

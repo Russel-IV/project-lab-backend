@@ -53,6 +53,13 @@ type Location {
     longitude: Float!
 }
 
+"A distinct city/country pair drawn from existing stay addresses, for destination search."
+type Destination {
+    city: String!
+    "ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB')."
+    countryCode: String!
+}
+
 "Physical address of a stay."
 type Address {
     id: Int!
