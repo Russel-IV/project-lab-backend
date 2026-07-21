@@ -2,8 +2,8 @@
 -- INVENTORY-SERVICE SEED DATA (inventory-database)
 -- ============================================================
 -- Tables: view, amenity, accessibility, meal_plan, payment_type,
--- property_brand, traveler_experience, address, stay, room, plus the
--- six stay-attribute bridge tables.
+-- property_brand, traveler_experience, region, address, stay, room, plus
+-- the six stay-attribute bridge tables.
 -- Safe to run multiple times: all inserts use explicit IDs with
 -- ON CONFLICT DO NOTHING. Sequences are reset after each table.
 --
@@ -106,25 +106,47 @@ SELECT setval(pg_get_serial_sequence('traveler_experience', 'id'), COALESCE(MAX(
 
 
 -- ============================================================
--- 2. ADDRESSES & STAYS
+-- 2. REGIONS, ADDRESSES & STAYS
 -- ============================================================
 
-INSERT INTO address (id, street_address, extended_address, city, state_province, postal_code, country_code) VALUES
-(1,  '123 Ocean Drive',       'Apt 4B',      'Miami',         'Florida',         '33139',    'US'),
-(2,  '4-56 Shinjuku',         'Floor 32',    'Tokyo',         'Tokyo',           '160-0022', 'JP'),
-(3,  '789 Alpine Way',        NULL,          'Valparaíso',    'Valparaíso',      '2340000',  'CL'),
-(4,  '12 Rue de Rivoli',      '3ème étage',  'Paris',         'Île-de-France',   '75001',    'FR'),
-(5,  'Jl. Monkey Forest 88',  NULL,          'Ubud',          'Bali',            '80571',    'ID'),
-(6,  'Oia Cliffside Path',    NULL,          'Oia',           'South Aegean',    '84702',    'GR'),
-(7,  '350 5th Avenue',        'Suite 2100',  'New York',      'New York',        '10118',    'US'),
-(8,  'Uig Road',              NULL,          'Isle of Skye',  'Highland',        'IV51 9XY', 'GB'),
-(9,  'Derb El Hammam 12',     NULL,          'Marrakech',     'Marrakech-Safi',  '40000',    'MA'),
-(10, 'Bahnhofstrasse 25',     NULL,          'Zermatt',       'Valais',          '3920',     'CH'),
-(11, 'Passeig de Gràcia 45',  '2º 1ª',       'Barcelona',     'Catalonia',       '08007',    'ES'),
-(12, 'Victoria Road',         NULL,          'Cape Town',     'Western Cape',    '8005',     'ZA'),
-(13, '61 Macquarie Street',   NULL,          'Sydney',        'New South Wales', '2000',     'AU'),
-(14, 'Laugavegur 7',          NULL,          'Reykjavik',     'Capital Region',  '101',      'IS'),
-(15, 'Prinsengracht 263',     NULL,          'Amsterdam',     'North Holland',   '1016 GV',  'NL')
+-- One row per distinct (city, country_code) below (docs/adr/0018) — id N here
+-- always matches address id N, since this seed set has no two addresses
+-- sharing a city/country pair.
+INSERT INTO region (id, city, country_code, state_province) VALUES
+(1,  'Miami',         'US', 'Florida'),
+(2,  'Tokyo',         'JP', 'Tokyo'),
+(3,  'Valparaíso',    'CL', 'Valparaíso'),
+(4,  'Paris',         'FR', 'Île-de-France'),
+(5,  'Ubud',          'ID', 'Bali'),
+(6,  'Oia',           'GR', 'South Aegean'),
+(7,  'New York',      'US', 'New York'),
+(8,  'Isle of Skye',  'GB', 'Highland'),
+(9,  'Marrakech',     'MA', 'Marrakech-Safi'),
+(10, 'Zermatt',       'CH', 'Valais'),
+(11, 'Barcelona',     'ES', 'Catalonia'),
+(12, 'Cape Town',     'ZA', 'Western Cape'),
+(13, 'Sydney',        'AU', 'New South Wales'),
+(14, 'Reykjavik',     'IS', 'Capital Region'),
+(15, 'Amsterdam',     'NL', 'North Holland')
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('region', 'id'), COALESCE(MAX(id), 1)) FROM region;
+
+INSERT INTO address (id, street_address, extended_address, city, state_province, postal_code, country_code, region_id) VALUES
+(1,  '123 Ocean Drive',       'Apt 4B',      'Miami',         'Florida',         '33139',    'US', 1),
+(2,  '4-56 Shinjuku',         'Floor 32',    'Tokyo',         'Tokyo',           '160-0022', 'JP', 2),
+(3,  '789 Alpine Way',        NULL,          'Valparaíso',    'Valparaíso',      '2340000',  'CL', 3),
+(4,  '12 Rue de Rivoli',      '3ème étage',  'Paris',         'Île-de-France',   '75001',    'FR', 4),
+(5,  'Jl. Monkey Forest 88',  NULL,          'Ubud',          'Bali',            '80571',    'ID', 5),
+(6,  'Oia Cliffside Path',    NULL,          'Oia',           'South Aegean',    '84702',    'GR', 6),
+(7,  '350 5th Avenue',        'Suite 2100',  'New York',      'New York',        '10118',    'US', 7),
+(8,  'Uig Road',              NULL,          'Isle of Skye',  'Highland',        'IV51 9XY', 'GB', 8),
+(9,  'Derb El Hammam 12',     NULL,          'Marrakech',     'Marrakech-Safi',  '40000',    'MA', 9),
+(10, 'Bahnhofstrasse 25',     NULL,          'Zermatt',       'Valais',          '3920',     'CH', 10),
+(11, 'Passeig de Gràcia 45',  '2º 1ª',       'Barcelona',     'Catalonia',       '08007',    'ES', 11),
+(12, 'Victoria Road',         NULL,          'Cape Town',     'Western Cape',    '8005',     'ZA', 12),
+(13, '61 Macquarie Street',   NULL,          'Sydney',        'New South Wales', '2000',     'AU', 13),
+(14, 'Laugavegur 7',          NULL,          'Reykjavik',     'Capital Region',  '101',      'IS', 14),
+(15, 'Prinsengracht 263',     NULL,          'Amsterdam',     'North Holland',   '1016 GV',  'NL', 15)
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('address', 'id'), COALESCE(MAX(id), 1)) FROM address;
 
