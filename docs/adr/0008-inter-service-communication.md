@@ -4,7 +4,11 @@ Date: 2026-07-02
 
 ## Status
 
-Accepted
+Accepted, with a scoped exception for the Gateway's outbound calls — see
+[ADR-0025](0025-reactive-gateway-webflux-migration.md). Everything below still
+applies to every service other than the Gateway, and to the Gateway's own
+inbound side; only the Gateway's outbound client (Feign → reactive `WebClient`)
+changed.
 
 ## Context
 
