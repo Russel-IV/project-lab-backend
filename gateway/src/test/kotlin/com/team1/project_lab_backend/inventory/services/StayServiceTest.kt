@@ -33,7 +33,7 @@ class StayServiceTest {
             name = "Test Stay",
             propertyType = PropertyType.HOME,
             hostId = 1,
-            address = Address(id = 1, streetAddress = "123 Main", city = "Testville", countryCode = "US", regionId = 1),
+            address = Address(id = 1, streetAddress = "123 Main", city = "Testville", countryCode = "US"),
         )
 
     // ---- searchStays ----

@@ -5,6 +5,9 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ClientHttpConnector
+import org.springframework.cloud.client.loadbalancer.LoadBalanced
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
 
 /**
@@ -51,6 +54,9 @@ class WebClientConfig {
         WebClient.builder()
             .clientConnector(connector)
             .observationRegistry(observationRegistry)
+    @Bean
+    @LoadBalanced
+    fun loadBalancedWebClientBuilder(): WebClient.Builder = WebClient.builder()
 
     @Bean("inventoryServiceWebClient")
     fun inventoryServiceWebClient(builder: WebClient.Builder): WebClient = builder.baseUrl("http://inventory-service").build()
