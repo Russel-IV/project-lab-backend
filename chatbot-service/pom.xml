@@ -11,7 +11,7 @@
 	<artifactId>chatbot-service</artifactId>
 	<name>chatbot-service</name>
 	<description>
-		Chatbot microservice utilizing Spring AI, OpenAI (GPT-4o), and Oracle Vector Store for RAG-based travel inquiries.
+		Chatbot microservice utilizing Spring AI, an OpenAI model, and Postgres Vector Store for RAG-based travel inquiries.
 	</description>
 
 	<properties>
@@ -27,6 +27,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
@@ -45,8 +50,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-vector-store-oracle</artifactId>
+			<artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-vector-store-advisor</artifactId>
