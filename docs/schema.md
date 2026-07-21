@@ -131,7 +131,7 @@ erDiagram
     STAY }o--o{ TRAVELER_EXPERIENCE : "stay_traveler_experience"
 ```
 
-`STAY.host_id` has no FK — resolved via Feign to identity-service's `Host`/`User`. `amenity.type` is a plain `VARCHAR`, not the `amenity_type` enum (kept as free-form string for `ROOM_AMENITY`/`PROPERTY_AMENITY` values). `location` is GIST-indexed for geo search.
+`STAY.host_id` has no FK — resolved via Feign to identity-service's `Host`/`User`. `amenity.type` is a plain `VARCHAR`, not the `amenity_type` enum (kept as free-form string for `ROOM_AMENITY`/`PROPERTY_AMENITY` values). `location` is GIST-indexed for geo search. `ADDRESS.city` is GIN-indexed on `lower(city)` with `pg_trgm` (`idx_address_city_trgm`, docs/adr/0019) to accelerate substring/fuzzy destination search; the `pg_trgm` and `unaccent` extensions are enabled for this purpose.
 
 ## booking-service (`booking-database`)
 
