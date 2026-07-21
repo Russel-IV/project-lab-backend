@@ -4,9 +4,10 @@ import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
-import feign.FeignException
+import com.team1.project_lab_backend.util.assertThrowsSuspend
+import com.team1.project_lab_backend.util.webClientException
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
@@ -44,68 +45,54 @@ class BookingServiceTest {
     )
 
     @Test
-    fun getAllBookingsDelegatesToFeignClient() {
-        val page = listOf(sampleBooking(1), sampleBooking(2))
-        Mockito.`when`(bookingFeignClient.list(null, null, 0, 2)).thenReturn(page)
+    fun getAllBookingsDelegatesToFeignClient() =
+        runTest {
+            val page = listOf(sampleBooking(1), sampleBooking(2))
+            Mockito.`when`(bookingFeignClient.list(null, null, 0, 2)).thenReturn(page)
 
-        val result = bookingService.getAllBookings(0, 2)
+            val result = bookingService.getAllBookings(0, 2)
 
-        assertEquals(listOf(1, 2), result.map { it.id })
-    }
-
-    @Test
-    fun getBookingByIdReturnsNotFoundWhenMissing() {
-        Mockito.`when`(bookingFeignClient.get(99)).thenThrow(FeignException.NotFound::class.java)
-
-        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.getBookingById(99) }
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
-    }
+            assertEquals(listOf(1, 2), result.map { it.id })
+        }
 
     @Test
-    fun getBookingsByUserDelegatesToFeignClient() {
-        val page = listOf(sampleBooking(1))
-        Mockito.`when`(bookingFeignClient.list(null, 1, 0, 5)).thenReturn(page)
+    fun getBookingByIdReturnsNotFoundWhenMissing() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.get(99)).thenThrow(webClientException(404))
 
-        val result = bookingService.getBookingsByUser(1, page = 0, size = 5)
+            val ex = assertThrowsSuspend<ResponseStatusException> { bookingService.getBookingById(99) }
 
-        assertEquals(listOf(1), result.map { it.id })
-    }
-
-    @Test
-    fun hasCompletedBookingForStayDelegatesToFeignClient() {
-        Mockito.`when`(bookingFeignClient.hasCompletedBookingForStay(1, 2)).thenReturn(true)
-
-        val result = bookingService.hasCompletedBookingForStay(1, 2)
-
-        assertEquals(true, result)
-    }
+            assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        }
 
     @Test
-    fun createBookingDelegatesToFeignClient() {
-        val saved = sampleBooking(99)
-        Mockito.`when`(bookingFeignClient.create(anyArg())).thenReturn(saved)
+    fun getBookingsByUserDelegatesToFeignClient() =
+        runTest {
+            val page = listOf(sampleBooking(1))
+            Mockito.`when`(bookingFeignClient.list(null, 1, 0, 5)).thenReturn(page)
 
-        val result =
-            bookingService.createBooking(
-                BookingRequest(
-                    userId = 1,
-                    checkInDate = tomorrow,
-                    checkOutDate = dayAfterTomorrow,
-                    guestsCount = 2,
-                    roomIds = setOf(5),
-                ),
-            )
+            val result = bookingService.getBookingsByUser(1, page = 0, size = 5)
 
-        assertEquals(99, result.id)
-    }
+            assertEquals(listOf(1), result.map { it.id })
+        }
 
     @Test
-    fun createBookingTranslatesBadRequestFromBookingService() {
-        Mockito.`when`(bookingFeignClient.create(anyArg())).thenThrow(FeignException.BadRequest::class.java)
+    fun hasCompletedBookingForStayDelegatesToFeignClient() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.hasCompletedBookingForStay(1, 2)).thenReturn(true)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
+            val result = bookingService.hasCompletedBookingForStay(1, 2)
+
+            assertEquals(true, result)
+        }
+
+    @Test
+    fun createBookingDelegatesToFeignClient() =
+        runTest {
+            val saved = sampleBooking(99)
+            Mockito.`when`(bookingFeignClient.create(anyArg())).thenReturn(saved)
+
+            val result =
                 bookingService.createBooking(
                     BookingRequest(
                         userId = 1,
@@ -115,45 +102,69 @@ class BookingServiceTest {
                         roomIds = setOf(5),
                     ),
                 )
-            }
 
-        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
-    }
-
-    @Test
-    fun updateBookingStatusReturnsNotFoundWhenMissing() {
-        Mockito.`when`(bookingFeignClient.updateStatus(Mockito.eq(99), anyArg())).thenThrow(FeignException.NotFound::class.java)
-
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.updateBookingStatus(99, BookingStatusRequest(BookingStatus.CANCELLED))
-            }
-
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
-    }
+            assertEquals(99, result.id)
+        }
 
     @Test
-    fun deleteBookingReturnsNotFoundWhenMissing() {
-        Mockito.doThrow(FeignException.NotFound::class.java).`when`(bookingFeignClient).delete(99, 1)
+    fun createBookingTranslatesBadRequestFromBookingService() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.create(anyArg())).thenThrow(webClientException(400))
 
-        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.deleteBooking(99, 1) }
+            val ex =
+                assertThrowsSuspend<ResponseStatusException> {
+                    bookingService.createBooking(
+                        BookingRequest(
+                            userId = 1,
+                            checkInDate = tomorrow,
+                            checkOutDate = dayAfterTomorrow,
+                            guestsCount = 2,
+                            roomIds = setOf(5),
+                        ),
+                    )
+                }
 
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
-    }
+            assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+        }
 
     @Test
-    fun deleteBookingReturnsForbiddenWhenNotOwner() {
-        Mockito.doThrow(FeignException.Forbidden::class.java).`when`(bookingFeignClient).delete(5, 2)
+    fun updateBookingStatusReturnsNotFoundWhenMissing() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.updateStatus(Mockito.eq(99), anyArg())).thenThrow(webClientException(404))
 
-        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.deleteBooking(5, 2) }
+            val ex =
+                assertThrowsSuspend<ResponseStatusException> {
+                    bookingService.updateBookingStatus(99, BookingStatusRequest(BookingStatus.CANCELLED))
+                }
 
-        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
-    }
+            assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        }
 
     @Test
-    fun deleteBookingInvokesFeignClient() {
-        bookingService.deleteBooking(5, 1)
+    fun deleteBookingReturnsNotFoundWhenMissing() =
+        runTest {
+            Mockito.doThrow(webClientException(404)).`when`(bookingFeignClient).delete(99, 1)
 
-        Mockito.verify(bookingFeignClient).delete(5, 1)
-    }
+            val ex = assertThrowsSuspend<ResponseStatusException> { bookingService.deleteBooking(99, 1) }
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        }
+
+    @Test
+    fun deleteBookingReturnsForbiddenWhenNotOwner() =
+        runTest {
+            Mockito.doThrow(webClientException(403)).`when`(bookingFeignClient).delete(5, 2)
+
+            val ex = assertThrowsSuspend<ResponseStatusException> { bookingService.deleteBooking(5, 2) }
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+        }
+
+    @Test
+    fun deleteBookingInvokesFeignClient() =
+        runTest {
+            bookingService.deleteBooking(5, 1)
+
+            Mockito.verify(bookingFeignClient).delete(5, 1)
+        }
 }

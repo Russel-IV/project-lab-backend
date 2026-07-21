@@ -2,13 +2,13 @@ package com.team1.project_lab_backend.media.services
 
 import com.team1.project_lab_backend.media.dto.StayPictureResponse
 import com.team1.project_lab_backend.media.models.StayPicture
-import com.team1.project_lab_backend.util.feignErrorMessage
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
-import feign.FeignException
 import org.springframework.http.HttpStatus
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Service
-import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -24,22 +24,22 @@ import org.springframework.web.server.ResponseStatusException
 class StayPictureService(
     private val mediaFeignClient: MediaFeignClient,
 ) {
-    fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
+    suspend fun getPicturesForStay(stayId: Int): List<StayPictureResponse> {
         stayId.requirePositive("stayId")
         return mediaFeignClient.listForOwner("STAY", stayId).map { it.toStayPictureResponse() }
     }
 
-    fun getPicturesForStayAsEntities(stayId: Int): List<StayPicture> {
+    suspend fun getPicturesForStayAsEntities(stayId: Int): List<StayPicture> {
         stayId.requirePositive("stayId")
         return mediaFeignClient.listForOwner("STAY", stayId).map { it.toStayPicture() }
     }
 
-    fun getPicturesForStays(stayIds: List<Int>): Map<Int, List<StayPicture>> =
+    suspend fun getPicturesForStays(stayIds: List<Int>): Map<Int, List<StayPicture>> =
         mediaFeignClient.listForOwners("STAY", stayIds).map { it.toStayPicture() }.groupBy { it.stayId }
 
-    fun addPicture(
+    suspend fun addPicture(
         stayId: Int,
-        file: MultipartFile,
+        file: FilePart,
         caption: String?,
         isPrimary: Boolean,
         displayOrder: Int,
@@ -48,12 +48,12 @@ class StayPictureService(
         displayOrder.requireNonNegative("displayOrder")
         return try {
             mediaFeignClient.upload("STAY", stayId, file, caption, isPrimary, displayOrder).toStayPictureResponse()
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid picture")
         }
     }
 
-    fun updatePictureMetadata(
+    suspend fun updatePictureMetadata(
         stayId: Int,
         id: Int,
         caption: String?,
@@ -65,14 +65,14 @@ class StayPictureService(
         displayOrder.requireNonNegative("displayOrder")
         return try {
             mediaFeignClient.update("STAY", stayId, id, UpdateMediaRequest(caption, isPrimary, displayOrder)).toStayPicture()
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid picture")
         }
     }
 
-    fun deletePicture(
+    suspend fun deletePicture(
         stayId: Int,
         id: Int,
     ) {
@@ -80,7 +80,7 @@ class StayPictureService(
         id.requirePositive()
         try {
             mediaFeignClient.delete("STAY", stayId, id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         }
     }

@@ -3,10 +3,10 @@ package com.team1.project_lab_backend.booking.services
 import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.models.Booking
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -16,34 +16,34 @@ import org.springframework.web.server.ResponseStatusException
  * Unlike Phase 2/3's shims, there's no cross-domain validation left for the Gateway to
  * do here — booking-service can already reach inventory-service itself (docs/adr/0010),
  * and userId existence is never checked at all (implied by a valid JWT, docs/adr/0011).
- * This is purely FeignException -> ResponseStatusException translation.
+ * This is purely downstream-error -> ResponseStatusException translation.
  */
 @Service
 class BookingService(private val bookingFeignClient: BookingFeignClient) {
-    fun getAllBookings(
+    suspend fun getAllBookings(
         page: Int = 0,
         size: Int = 20,
     ): List<Booking> = bookingFeignClient.list(ids = null, userId = null, page = page, size = size)
 
-    fun getBookingsByUser(
+    suspend fun getBookingsByUser(
         userId: Int,
         page: Int = 0,
         size: Int = 20,
     ): List<Booking> = bookingFeignClient.list(ids = null, userId = userId, page = page, size = size)
 
-    fun getBookingById(id: Int): Booking =
+    suspend fun getBookingById(id: Int): Booking =
         try {
             bookingFeignClient.get(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found")
         }
 
-    fun hasCompletedBookingForStay(
+    suspend fun hasCompletedBookingForStay(
         userId: Int,
         stayId: Int,
     ): Boolean = bookingFeignClient.hasCompletedBookingForStay(userId, stayId)
 
-    fun createBooking(request: BookingRequest): Booking =
+    suspend fun createBooking(request: BookingRequest): Booking =
         try {
             bookingFeignClient.create(
                 CreateBookingRequest(
@@ -54,29 +54,29 @@ class BookingService(private val bookingFeignClient: BookingFeignClient) {
                     roomIds = request.roomIds,
                 ),
             )
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid booking")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid booking")
         }
 
-    fun updateBookingStatus(
+    suspend fun updateBookingStatus(
         id: Int,
         request: BookingStatusRequest,
     ): Booking =
         try {
             bookingFeignClient.updateStatus(id, BookingStatusUpdateRequest(request.status))
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found")
         }
 
-    fun deleteBooking(
+    suspend fun deleteBooking(
         id: Int,
         requestingUserId: Int,
     ) {
         try {
             bookingFeignClient.delete(id, requestingUserId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found")
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
     }

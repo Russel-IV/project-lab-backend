@@ -1,34 +1,32 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.models.Language
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "identity-service", contextId = "languageFeignClient")
-interface LanguageFeignClient {
-    @GetMapping("/internal/languages")
-    fun list(): List<Language>
+@Component
+class LanguageFeignClient(
+    @Qualifier("identityServiceWebClient") private val webClient: WebClient,
+) {
 
-    @PostMapping("/internal/languages")
-    fun create(
-        @RequestBody request: LanguageUpsertRequest,
-    ): Language
+    suspend fun list(): List<Language> =
+        webClient.get().uri("/internal/languages").retrieve().awaitBody()
 
-    @PatchMapping("/internal/languages/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: LanguageUpsertRequest,
-    ): Language
+    suspend fun create(request: LanguageUpsertRequest): Language =
+        webClient.post().uri("/internal/languages").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/languages/{id}")
-    fun delete(
-        @PathVariable id: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: LanguageUpsertRequest,
+    ): Language =
+        webClient.patch().uri("/internal/languages/{id}", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(id: Int) {
+        webClient.delete().uri("/internal/languages/{id}", id).retrieve().awaitBodilessEntity()
+    }
 }
 
 data class LanguageUpsertRequest(val languageName: String)

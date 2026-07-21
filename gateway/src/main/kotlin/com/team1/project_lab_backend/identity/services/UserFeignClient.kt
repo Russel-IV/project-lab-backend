@@ -1,44 +1,49 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.models.User
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "identity-service", contextId = "userFeignClient")
-interface UserFeignClient {
-    @GetMapping("/internal/users")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-    ): List<User>
+@Component
+class UserFeignClient(
+    @Qualifier("identityServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/users/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): User
+    suspend fun list(ids: List<Int>? = null): List<User> =
+        webClient.get()
+            .uri { b -> b.path("/internal/users").also { if (ids != null) it.queryParam("ids", *ids.toTypedArray()) }.build() }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/users")
-    fun create(
-        @RequestBody request: UserUpsertRequest,
-    ): User
+    suspend fun get(id: Int): User =
+        webClient.get().uri("/internal/users/{id}", id).retrieve().awaitBody()
 
-    @PatchMapping("/internal/users/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestParam requestingUserId: Int,
-        @RequestBody request: UserUpsertRequest,
-    ): User
+    suspend fun create(request: UserUpsertRequest): User =
+        webClient.post().uri("/internal/users").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/users/{id}")
-    fun delete(
-        @PathVariable id: Int,
-        @RequestParam requestingUserId: Int,
-    )
+    suspend fun update(
+        id: Int,
+        requestingUserId: Int,
+        request: UserUpsertRequest,
+    ): User =
+        webClient.patch()
+            .uri { b -> b.path("/internal/users/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .bodyValue(request)
+            .retrieve()
+            .awaitBody()
+
+    suspend fun delete(
+        id: Int,
+        requestingUserId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/users/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }
 
 data class UserUpsertRequest(val name: String)

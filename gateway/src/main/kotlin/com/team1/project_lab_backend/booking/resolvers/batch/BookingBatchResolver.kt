@@ -14,7 +14,7 @@ class BookingBatchResolver(
     private val roomFeignClient: RoomFeignClient,
 ) {
     @BatchMapping
-    fun user(bookings: List<Booking>): Map<Booking, User> {
+    suspend fun user(bookings: List<Booking>): Map<Booking, User> {
         val ids = bookings.map { it.userId }.distinct()
         val loaded = userFeignClient.list(ids).associateBy { it.id }
         return bookings.associateWith { loaded[it.userId]!! }
@@ -25,7 +25,7 @@ class BookingBatchResolver(
     // extra round trip to booking-service is needed here, only to inventory-service
     // to resolve those ids into full Room details.
     @BatchMapping
-    fun rooms(bookings: List<Booking>): Map<Booking, List<Room>> {
+    suspend fun rooms(bookings: List<Booking>): Map<Booking, List<Room>> {
         val allRoomIds = bookings.flatMap { it.roomIds }.distinct()
         val loadedRooms =
             if (allRoomIds.isEmpty()) {

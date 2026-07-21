@@ -11,7 +11,7 @@ class RoomBatchResolver(
     private val roomPictureService: RoomPictureService,
 ) {
     @BatchMapping
-    fun pictures(rooms: List<Room>): Map<Room, List<RoomPicture>> {
+    suspend fun pictures(rooms: List<Room>): Map<Room, List<RoomPicture>> {
         val ids = rooms.map { it.id }
         val byRoomId = roomPictureService.getPicturesForRooms(ids)
         return rooms.associateWith { byRoomId[it.id] ?: emptyList() }

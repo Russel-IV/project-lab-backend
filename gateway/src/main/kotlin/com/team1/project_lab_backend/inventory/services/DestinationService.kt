@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service
  */
 @Service
 class DestinationService(private val destinationFeignClient: DestinationFeignClient) {
-    fun searchDestinations(
+    suspend fun searchDestinations(
         search: String?,
         limit: Int,
     ): List<Destination> = destinationFeignClient.list(search, limit)
 
-    fun popularDestinations(limit: Int): List<Destination> = destinationFeignClient.popular(limit)
+    suspend fun popularDestinations(limit: Int): List<Destination> = destinationFeignClient.popular(limit)
 }

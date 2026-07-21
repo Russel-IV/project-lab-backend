@@ -7,6 +7,7 @@ import com.team1.project_lab_backend.identity.services.ProfileService
 import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/v1/profile")
@@ -23,13 +23,13 @@ class ProfileController(
     private val profileService: ProfileService,
 ) {
     @GetMapping
-    fun getProfile(): ProfileResponse {
+    suspend fun getProfile(): ProfileResponse {
         val currentUser = requireAuthenticated()
         return profileService.getProfile(currentUser.id)
     }
 
     @PatchMapping
-    fun updateProfile(
+    suspend fun updateProfile(
         @RequestBody request: UpdateProfileRequest,
     ): ProfileResponse {
         val currentUser = requireAuthenticated()
@@ -37,15 +37,15 @@ class ProfileController(
     }
 
     @PostMapping("/picture", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun uploadProfilePicture(
-        @RequestPart("file") file: MultipartFile,
+    suspend fun uploadProfilePicture(
+        @RequestPart("file") file: FilePart,
     ): ProfileResponse {
         val currentUser = requireAuthenticated()
         return profileService.uploadProfilePicture(currentUser.id, file)
     }
 
     @PatchMapping("/password")
-    fun changePassword(
+    suspend fun changePassword(
         @RequestBody request: ChangePasswordRequest,
     ): ResponseEntity<Void> {
         val currentUser = requireAuthenticated()
@@ -54,7 +54,7 @@ class ProfileController(
     }
 
     @DeleteMapping
-    fun deleteAccount(): ResponseEntity<Void> {
+    suspend fun deleteAccount(): ResponseEntity<Void> {
         val currentUser = requireAuthenticated()
         profileService.deleteAccount(currentUser.id)
         return ResponseEntity.noContent().build()

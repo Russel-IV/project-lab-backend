@@ -9,104 +9,112 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtException
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver
-import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver
-import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
+import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken
+import org.springframework.security.oauth2.server.resource.web.server.authentication.ServerBearerTokenAuthenticationConverter
+import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.ServerAuthenticationConverter
+import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter
 import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.cors.reactive.CorsConfigurationSource
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
+import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * WebFlux equivalent of the pre-docs/adr/0025 SecurityConfig — see that ADR for
+ * why the gateway (and only the gateway) is reactive. API shapes below were
+ * verified against the actual spring-security-{config,oauth2-resource-server}
+ * 7.0.5 jars (ServerHttpSecurity.OAuth2ResourceServerSpec, JwtSpec,
+ * ServerBearerTokenAuthenticationConverter) rather than assumed symmetric with
+ * the servlet-stack API, per this project's established "don't trust it just
+ * works" caution around Spring Boot's auto-config splits.
+ */
 @Configuration
-@EnableWebSecurity
+@EnableWebFluxSecurity
 @EnableConfigurationProperties(JwtProperties::class)
 class SecurityConfig(
     private val jwtProperties: JwtProperties,
     @Value("\${app.cors.allowed-origins}") private val corsAllowedOrigins: String,
 ) {
     @Bean
-    fun securityFilterChain(
-        http: HttpSecurity,
-        jwtDecoder: JwtDecoder,
-    ): SecurityFilterChain {
+    fun securityWebFilterChain(
+        http: ServerHttpSecurity,
+        jwtDecoder: ReactiveJwtDecoder,
+    ): SecurityWebFilterChain {
         http
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
             .csrf { csrf -> csrf.disable() }
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .authorizeHttpRequests { auth ->
-                auth.anyRequest().permitAll()
-            }
-            .headers { headers ->
-                headers.frameOptions { it.sameOrigin() }
-            }
+            .authorizeExchange { auth -> auth.anyExchange().permitAll() }
+            .headers { headers -> headers.frameOptions { it.mode(XFrameOptionsServerHttpHeadersWriter.Mode.SAMEORIGIN) } }
             .oauth2ResourceServer { oauth2 ->
                 oauth2
-                    .bearerTokenResolver(bearerTokenResolver(jwtDecoder))
-                    .jwt { jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()) }
+                    .bearerTokenConverter(bearerTokenConverter(jwtDecoder))
+                    .jwt { jwt -> jwt.jwtDecoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter()) }
             }
         return http.build()
     }
 
     /**
-     * NimbusJwtDecoder wired explicitly (rather than relying on Boot's
-     * spring.security.oauth2.resourceserver.jwt.secret-key auto-configuration, which
-     * did not reliably produce a JwtDecoder bean under this Spring Boot 4.0.6 split of
-     * spring-boot-security-oauth2-resource-server) — pinned to HS256 to match
+     * NimbusReactiveJwtDecoder wired explicitly for the same reason the MVC
+     * config wired NimbusJwtDecoder explicitly — pinned to HS256 to match
      * JwtService's explicit signWith(key, Jwts.SIG.HS256).
      */
     @Bean
-    fun jwtDecoder(): JwtDecoder =
-        NimbusJwtDecoder
+    fun jwtDecoder(): ReactiveJwtDecoder =
+        NimbusReactiveJwtDecoder
             .withSecretKey(SecretKeySpec(jwtProperties.secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256"))
             .macAlgorithm(MacAlgorithm.HS256)
             .build()
 
     /**
-     * All routes are permitAll() — auth is enforced downstream by requireAuthenticated()
-     * (util/AuthenticatedPrincipal.kt), not by this filter chain. Spring Security's resource server
-     * otherwise rejects a request with a 401 the moment it sees an invalid/expired Bearer
-     * token, even on a permitAll route, which is a real behavior change from the previous
-     * hand-written JwtAuthFilter (which just left such requests unauthenticated). This
-     * resolver pre-validates the token and returns null instead of the raw value if it
-     * doesn't decode, so the resource server filter treats it as "no token supplied"
-     * rather than "bad credentials" — matching the old filter's forgiving behavior.
+     * Reactive equivalent of the MVC config's forgiving BearerTokenResolver.
+     * ServerHttpSecurity has no bearerTokenResolver hook — the reactive resource
+     * server instead takes a ServerAuthenticationConverter that must produce a
+     * full (still-unauthenticated) Authentication, not just a token string,
+     * which JwtSpec's jwtDecoder/jwtAuthenticationConverter then authenticate.
+     * This wraps the stock ServerBearerTokenAuthenticationConverter and
+     * pre-validates the extracted token, resolving to Mono.empty() (not an
+     * error) when it doesn't decode — so a permitAll() route with a bad/expired
+     * token is treated as "no token supplied" rather than rejected outright,
+     * matching the old hand-written JwtAuthFilter's forgiving behavior.
      */
-    private fun bearerTokenResolver(jwtDecoder: JwtDecoder): BearerTokenResolver {
-        val default = DefaultBearerTokenResolver()
-        return BearerTokenResolver { request ->
-            val token = default.resolve(request) ?: return@BearerTokenResolver null
-            try {
-                jwtDecoder.decode(token)
-                token
-            } catch (e: JwtException) {
-                null
-            }
+    private fun bearerTokenConverter(jwtDecoder: ReactiveJwtDecoder): ServerAuthenticationConverter {
+        val default = ServerBearerTokenAuthenticationConverter()
+        return ServerAuthenticationConverter { exchange ->
+            default.convert(exchange)
+                .cast(BearerTokenAuthenticationToken::class.java)
+                .flatMap { token ->
+                    jwtDecoder.decode(token.token)
+                        .thenReturn(token as Authentication)
+                        .onErrorResume(JwtException::class.java) { Mono.empty() }
+                }
         }
     }
 
     /**
      * Maps the decoded JWT's `sub` claim (the user id, per JwtService.generateToken) to
      * util.AuthenticatedPrincipal, so requireAuthenticated() is unchanged regardless of
-     * which filter populates the SecurityContext.
+     * which filter populates the SecurityContext. JwtSpec requires a Mono-returning
+     * Converter (unlike the servlet-stack Converter<Jwt, AbstractAuthenticationToken>).
      */
     @Bean
-    fun jwtAuthenticationConverter(): Converter<Jwt, AbstractAuthenticationToken> =
+    fun jwtAuthenticationConverter(): Converter<Jwt, Mono<AbstractAuthenticationToken>> =
         Converter { jwt ->
             val id =
                 jwt.subject.toIntOrNull()
                     ?: throw BadCredentialsException("invalid subject claim")
-            UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(id), jwt.tokenValue, emptyList())
+            Mono.just(UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(id), jwt.tokenValue, emptyList()))
         }
 
     @Bean

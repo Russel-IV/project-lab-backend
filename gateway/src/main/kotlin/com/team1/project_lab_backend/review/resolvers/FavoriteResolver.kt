@@ -10,13 +10,13 @@ import org.springframework.stereotype.Controller
 @Controller
 class FavoriteResolver(private val favoriteService: FavoriteService) {
     @QueryMapping
-    fun myFavoriteStayIds(): List<Int> {
+    suspend fun myFavoriteStayIds(): List<Int> {
         val currentUser = requireAuthenticated()
         return favoriteService.getMyFavoriteStayIds(currentUser.id)
     }
 
     @MutationMapping
-    fun addFavorite(
+    suspend fun addFavorite(
         @Argument stayId: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()
@@ -25,7 +25,7 @@ class FavoriteResolver(private val favoriteService: FavoriteService) {
     }
 
     @MutationMapping
-    fun removeFavorite(
+    suspend fun removeFavorite(
         @Argument stayId: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

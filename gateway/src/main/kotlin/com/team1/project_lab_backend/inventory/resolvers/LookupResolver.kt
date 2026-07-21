@@ -44,15 +44,15 @@ class LookupResolver(
     // ---- Amenity ----
 
     @QueryMapping
-    fun amenities(): List<Amenity> = amenityService.getAllAmenities()
+    suspend fun amenities(): List<Amenity> = amenityService.getAllAmenities()
 
     @QueryMapping
-    fun amenity(
+    suspend fun amenity(
         @Argument id: Int,
     ): Amenity = amenityService.getAmenityById(id)
 
     @MutationMapping
-    fun createAmenity(
+    suspend fun createAmenity(
         @Argument input: CreateAmenityInput,
     ): Amenity {
         requireAuthenticated()
@@ -60,7 +60,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updateAmenity(
+    suspend fun updateAmenity(
         @Argument id: Int,
         @Argument input: UpdateAmenityInput,
     ): Amenity {
@@ -69,7 +69,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deleteAmenity(
+    suspend fun deleteAmenity(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -80,10 +80,10 @@ class LookupResolver(
     // ---- Accessibility ----
 
     @QueryMapping
-    fun accessibilities(): List<Accessibility> = accessibilityService.getAllAccessibility()
+    suspend fun accessibilities(): List<Accessibility> = accessibilityService.getAllAccessibility()
 
     @MutationMapping
-    fun createAccessibility(
+    suspend fun createAccessibility(
         @Argument input: CreateAccessibilityInput,
     ): Accessibility {
         requireAuthenticated()
@@ -91,7 +91,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updateAccessibility(
+    suspend fun updateAccessibility(
         @Argument id: Int,
         @Argument input: UpdateAccessibilityInput,
     ): Accessibility {
@@ -100,7 +100,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deleteAccessibility(
+    suspend fun deleteAccessibility(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -111,10 +111,10 @@ class LookupResolver(
     // ---- View ----
 
     @QueryMapping
-    fun views(): List<View> = viewService.getAllViews()
+    suspend fun views(): List<View> = viewService.getAllViews()
 
     @MutationMapping
-    fun createView(
+    suspend fun createView(
         @Argument input: CreateViewInput,
     ): View {
         requireAuthenticated()
@@ -122,7 +122,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updateView(
+    suspend fun updateView(
         @Argument id: Int,
         @Argument input: UpdateViewInput,
     ): View {
@@ -131,7 +131,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deleteView(
+    suspend fun deleteView(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -142,10 +142,10 @@ class LookupResolver(
     // ---- PaymentType ----
 
     @QueryMapping
-    fun paymentTypes(): List<PaymentType> = paymentTypeService.getAllPaymentTypes()
+    suspend fun paymentTypes(): List<PaymentType> = paymentTypeService.getAllPaymentTypes()
 
     @MutationMapping
-    fun createPaymentType(
+    suspend fun createPaymentType(
         @Argument input: CreatePaymentTypeInput,
     ): PaymentType {
         requireAuthenticated()
@@ -153,7 +153,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updatePaymentType(
+    suspend fun updatePaymentType(
         @Argument id: Int,
         @Argument input: UpdatePaymentTypeInput,
     ): PaymentType {
@@ -162,7 +162,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deletePaymentType(
+    suspend fun deletePaymentType(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -173,10 +173,10 @@ class LookupResolver(
     // ---- MealPlan ----
 
     @QueryMapping
-    fun mealPlans(): List<MealPlan> = mealPlanService.getAllMealPlans()
+    suspend fun mealPlans(): List<MealPlan> = mealPlanService.getAllMealPlans()
 
     @MutationMapping
-    fun createMealPlan(
+    suspend fun createMealPlan(
         @Argument input: CreateMealPlanInput,
     ): MealPlan {
         requireAuthenticated()
@@ -184,7 +184,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updateMealPlan(
+    suspend fun updateMealPlan(
         @Argument id: Int,
         @Argument input: UpdateMealPlanInput,
     ): MealPlan {
@@ -193,7 +193,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deleteMealPlan(
+    suspend fun deleteMealPlan(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -204,15 +204,15 @@ class LookupResolver(
     // ---- PropertyBrand ----
 
     @QueryMapping
-    fun propertyBrands(): List<PropertyBrand> = propertyBrandService.getAllPropertyBrands()
+    suspend fun propertyBrands(): List<PropertyBrand> = propertyBrandService.getAllPropertyBrands()
 
     @QueryMapping
-    fun propertyBrand(
+    suspend fun propertyBrand(
         @Argument id: Int,
     ): PropertyBrand = propertyBrandService.getPropertyBrandById(id)
 
     @MutationMapping
-    fun createPropertyBrand(
+    suspend fun createPropertyBrand(
         @Argument input: CreatePropertyBrandInput,
     ): PropertyBrand {
         requireAuthenticated()
@@ -220,7 +220,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updatePropertyBrand(
+    suspend fun updatePropertyBrand(
         @Argument id: Int,
         @Argument input: UpdatePropertyBrandInput,
     ): PropertyBrand {
@@ -229,7 +229,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deletePropertyBrand(
+    suspend fun deletePropertyBrand(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -240,10 +240,10 @@ class LookupResolver(
     // ---- TravelerExperience ----
 
     @QueryMapping
-    fun travelerExperiences(): List<TravelerExperience> = travelerExperienceService.getAllTravelerExperiences()
+    suspend fun travelerExperiences(): List<TravelerExperience> = travelerExperienceService.getAllTravelerExperiences()
 
     @MutationMapping
-    fun createTravelerExperience(
+    suspend fun createTravelerExperience(
         @Argument input: CreateTravelerExperienceInput,
     ): TravelerExperience {
         requireAuthenticated()
@@ -253,7 +253,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun updateTravelerExperience(
+    suspend fun updateTravelerExperience(
         @Argument id: Int,
         @Argument input: UpdateTravelerExperienceInput,
     ): TravelerExperience {
@@ -265,7 +265,7 @@ class LookupResolver(
     }
 
     @MutationMapping
-    fun deleteTravelerExperience(
+    suspend fun deleteTravelerExperience(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()
@@ -276,13 +276,13 @@ class LookupResolver(
     // ---- Destination ----
 
     @QueryMapping
-    fun destinations(
+    suspend fun destinations(
         @Argument search: String?,
         @Argument limit: Int?,
     ): List<Destination> = destinationService.searchDestinations(search, limit ?: 20)
 
     @QueryMapping
-    fun popularDestinations(
+    suspend fun popularDestinations(
         @Argument limit: Int?,
     ): List<Destination> = destinationService.popularDestinations(limit ?: 8)
 }

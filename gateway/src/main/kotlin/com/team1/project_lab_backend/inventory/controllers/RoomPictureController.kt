@@ -7,13 +7,13 @@ import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
 
 /**
  * Lives in inventory, not media, same rationale as RoomPictureResolver: ownership is
@@ -26,9 +26,9 @@ class RoomPictureController(
     private val roomService: RoomService,
 ) {
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun addPicture(
+    suspend fun addPicture(
         @PathVariable roomId: Int,
-        @RequestPart("file") file: MultipartFile,
+        @RequestPart("file") file: FilePart,
         @RequestParam(required = false) caption: String?,
         @RequestParam(defaultValue = "false") isPrimary: Boolean,
         @RequestParam(defaultValue = "0") displayOrder: Int,

@@ -2,10 +2,10 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.MealPlanRequest
 import com.team1.project_lab_backend.inventory.models.MealPlan
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -14,31 +14,31 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class MealPlanService(private val mealPlanFeignClient: MealPlanFeignClient) {
-    fun getAllMealPlans(): List<MealPlan> = mealPlanFeignClient.list(ids = null)
+    suspend fun getAllMealPlans(): List<MealPlan> = mealPlanFeignClient.list(ids = null)
 
-    fun createMealPlan(request: MealPlanRequest): MealPlan =
+    suspend fun createMealPlan(request: MealPlanRequest): MealPlan =
         try {
             mealPlanFeignClient.create(request)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid meal plan")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid meal plan")
         }
 
-    fun updateMealPlan(
+    suspend fun updateMealPlan(
         id: Int,
         request: MealPlanRequest,
     ): MealPlan =
         try {
             mealPlanFeignClient.update(id, request)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "meal plan not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid meal plan")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid meal plan")
         }
 
-    fun deleteMealPlan(id: Int) {
+    suspend fun deleteMealPlan(id: Int) {
         try {
             mealPlanFeignClient.delete(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "meal plan not found")
         }
     }

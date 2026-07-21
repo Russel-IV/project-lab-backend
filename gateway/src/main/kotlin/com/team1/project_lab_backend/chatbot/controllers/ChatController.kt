@@ -2,7 +2,6 @@ package com.team1.project_lab_backend.chatbot.controllers
 
 import com.team1.project_lab_backend.chatbot.services.ChatResponse
 import com.team1.project_lab_backend.chatbot.services.ChatService
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -15,12 +14,12 @@ class ChatController(private val chatService: ChatService) {
     )
 
     @PostMapping
-    fun chat(@RequestBody request: ChatRequestDto): ResponseEntity<ChatResponse> {
+    suspend fun chat(@RequestBody request: ChatRequestDto): ChatResponse {
         return chatService.chat(request.message, request.sessionId)
     }
 
     @PostMapping("/ingest")
-    fun ingestData(): ResponseEntity<Map<String, String>> {
+    suspend fun ingestData(): Map<String, String> {
         return chatService.ingestData()
     }
 }

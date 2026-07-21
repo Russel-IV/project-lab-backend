@@ -3,10 +3,10 @@ package com.team1.project_lab_backend.identity.services
 import com.team1.project_lab_backend.identity.dto.CreatePaymentMethodRequest
 import com.team1.project_lab_backend.identity.dto.PaymentMethodResponse
 import com.team1.project_lab_backend.util.FieldValidationException
-import com.team1.project_lab_backend.util.feignFieldErrors
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientFieldErrors
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -15,9 +15,9 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PaymentMethodService(private val paymentMethodFeignClient: PaymentMethodFeignClient) {
-    fun getPaymentMethods(userId: Int): List<PaymentMethodResponse> = paymentMethodFeignClient.list(userId)
+    suspend fun getPaymentMethods(userId: Int): List<PaymentMethodResponse> = paymentMethodFeignClient.list(userId)
 
-    fun createPaymentMethod(
+    suspend fun createPaymentMethod(
         userId: Int,
         request: CreatePaymentMethodRequest,
     ): PaymentMethodResponse =
@@ -32,28 +32,28 @@ class PaymentMethodService(private val paymentMethodFeignClient: PaymentMethodFe
                     cvv = request.cvv,
                 ),
             )
-        } catch (e: FeignException.UnprocessableEntity) {
-            throw FieldValidationException(feignFieldErrors(e) ?: emptyMap())
+        } catch (e: WebClientResponseException.UnprocessableContent) {
+            throw FieldValidationException(webClientFieldErrors(e) ?: emptyMap())
         }
 
-    fun setDefaultPaymentMethod(
+    suspend fun setDefaultPaymentMethod(
         userId: Int,
         id: Int,
     ) {
         try {
             paymentMethodFeignClient.setDefault(id, userId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
         }
     }
 
-    fun deletePaymentMethod(
+    suspend fun deletePaymentMethod(
         userId: Int,
         id: Int,
     ) {
         try {
             paymentMethodFeignClient.delete(id, userId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment method not found")
         }
     }

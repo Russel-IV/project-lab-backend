@@ -13,25 +13,25 @@ import org.springframework.stereotype.Controller
 @Controller
 class ReviewResolver(private val reviewService: ReviewService) {
     @QueryMapping
-    fun reviews(
+    suspend fun reviews(
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Review> = reviewService.getAllReviews(page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun reviewsByStay(
+    suspend fun reviewsByStay(
         @Argument stayId: Int,
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Review> = reviewService.getReviewsByStay(stayId, page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun reviewSummary(
+    suspend fun reviewSummary(
         @Argument stayId: Int,
     ): ReviewSummary = reviewService.getReviewSummary(stayId)
 
     @QueryMapping
-    fun myReviewForStay(
+    suspend fun myReviewForStay(
         @Argument stayId: Int,
     ): Review? {
         val currentUser = requireAuthenticated()
@@ -39,7 +39,7 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 
     @QueryMapping
-    fun myReviews(
+    suspend fun myReviews(
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Review> {
@@ -48,7 +48,7 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 
     @MutationMapping
-    fun createReview(
+    suspend fun createReview(
         @Argument input: CreateReviewInput,
     ): Review {
         val currentUser = requireAuthenticated()
@@ -58,7 +58,7 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 
     @MutationMapping
-    fun updateReview(
+    suspend fun updateReview(
         @Argument id: Int,
         @Argument input: UpdateReviewInput,
     ): Review {
@@ -71,7 +71,7 @@ class ReviewResolver(private val reviewService: ReviewService) {
     }
 
     @MutationMapping
-    fun deleteReview(
+    suspend fun deleteReview(
         @Argument id: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

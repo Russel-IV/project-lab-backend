@@ -3,10 +3,10 @@ package com.team1.project_lab_backend.inventory.services
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -14,25 +14,25 @@ import org.springframework.web.server.ResponseStatusException
  * search predicates now live in inventory-service, reached via stayFeignClient.
  * Ownership (hostId == requestingUserId) is now checked inside inventory-service
  * itself (it owns Stay), so this shim just forwards requestingUserId and translates
- * the resulting Feign error, same pattern as every other Phase 2-4 shim.
+ * the resulting downstream error, same pattern as every other Phase 2-4 shim.
  */
 @Service
 class StayService(private val stayFeignClient: StayFeignClient) {
-    fun searchStays(
+    suspend fun searchStays(
         filter: StayFilter,
         page: Int = 0,
         size: Int = 20,
     ): List<Stay> =
         try {
             stayFeignClient.search(filter, page, size)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid search filter")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid search filter")
         }
 
-    fun getStayById(id: Int): Stay =
+    suspend fun getStayById(id: Int): Stay =
         try {
             stayFeignClient.get(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }
 
@@ -43,7 +43,7 @@ class StayService(private val stayFeignClient: StayFeignClient) {
      * because inventory owns Stay/host data — see docs/adr/0002, and the
      * ModularityTests.kt kdoc for why this used to live in media.services instead.
      */
-    fun requireOwnedByHost(
+    suspend fun requireOwnedByHost(
         id: Int,
         requestingUserId: Int,
     ): Stay {
@@ -52,42 +52,42 @@ class StayService(private val stayFeignClient: StayFeignClient) {
         return stay
     }
 
-    fun createStay(
+    suspend fun createStay(
         request: StayRequest,
         requestingUserId: Int,
     ): Stay =
         try {
             stayFeignClient.create(request, requestingUserId)
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid stay")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid stay")
         }
 
-    fun updateStay(
+    suspend fun updateStay(
         id: Int,
         request: StayRequest,
         requestingUserId: Int,
     ): Stay =
         try {
             stayFeignClient.update(id, request, requestingUserId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid stay")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid stay")
         }
 
-    fun deleteStay(
+    suspend fun deleteStay(
         id: Int,
         requestingUserId: Int,
     ) {
         try {
             stayFeignClient.delete(id, requestingUserId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
     }

@@ -3,16 +3,13 @@ package com.team1.project_lab_backend.booking.resolvers
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.services.BookingService
-import com.team1.project_lab_backend.identity.models.User
-import com.team1.project_lab_backend.util.AuthenticatedPrincipal
-import org.junit.jupiter.api.AfterEach
+import com.team1.project_lab_backend.util.assertThrowsSuspend
+import com.team1.project_lab_backend.util.withAuthenticatedUser
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -32,22 +29,12 @@ class BookingResolverTest {
 
     private val tomorrow = LocalDate.now().plusDays(1)
     private val dayAfter = LocalDate.now().plusDays(2)
-    private val authenticatedUser = User(id = 1, name = "Alice", email = null)
-
-    @AfterEach
-    fun clearSecurityContext() {
-        SecurityContextHolder.clearContext()
-    }
-
-    private fun authenticateAs(user: User) {
-        SecurityContextHolder.getContext().authentication =
-            UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(user.id), null, emptyList())
-    }
+    private val authenticatedUserId = 1
 
     private fun sampleBooking(id: Int = 1) =
         Booking(
             id = id,
-            userId = authenticatedUser.id,
+            userId = authenticatedUserId,
             checkInDate = tomorrow,
             checkOutDate = dayAfter,
             status = BookingStatus.PENDING,
@@ -59,134 +46,150 @@ class BookingResolverTest {
     // ---- queries ----
 
     @Test
-    fun bookingsDelegatesToService() {
-        val page = listOf(sampleBooking(1), sampleBooking(2))
-        Mockito.`when`(bookingService.getAllBookings(0, 2)).thenReturn(page)
+    fun bookingsDelegatesToService() =
+        runTest {
+            val page = listOf(sampleBooking(1), sampleBooking(2))
+            Mockito.`when`(bookingService.getAllBookings(0, 2)).thenReturn(page)
 
-        val result = resolver.bookings(page = 0, size = 2)
+            val result = resolver.bookings(page = 0, size = 2)
 
-        assertEquals(listOf(1, 2), result.map { it.id })
-        Mockito.verify(bookingService).getAllBookings(0, 2)
-    }
-
-    @Test
-    fun bookingByIdDelegatesToService() {
-        Mockito.`when`(bookingService.getBookingById(3)).thenReturn(sampleBooking(3))
-
-        val result = resolver.booking(3)
-
-        assertEquals(3, result?.id)
-        assertEquals(BookingStatus.PENDING, result?.status)
-    }
+            assertEquals(listOf(1, 2), result.map { it.id })
+            Mockito.verify(bookingService).getAllBookings(0, 2)
+        }
 
     @Test
-    fun bookingByIdPropagatesNotFoundException() {
-        Mockito.`when`(bookingService.getBookingById(99)).thenThrow(
-            ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found"),
-        )
+    fun bookingByIdDelegatesToService() =
+        runTest {
+            Mockito.`when`(bookingService.getBookingById(3)).thenReturn(sampleBooking(3))
 
-        assertThrows(ResponseStatusException::class.java) { resolver.booking(99) }
-    }
+            val result = resolver.booking(3)
 
-    @Test
-    fun myBookingsDelegatesToService() {
-        authenticateAs(authenticatedUser)
-        val page = listOf(sampleBooking(1), sampleBooking(2))
-        Mockito.`when`(bookingService.getBookingsByUser(1, 0, 2)).thenReturn(page)
-
-        val result = resolver.myBookings(page = 0, size = 2)
-
-        assertEquals(listOf(1, 2), result.map { it.id })
-        Mockito.verify(bookingService).getBookingsByUser(1, 0, 2)
-    }
+            assertEquals(3, result?.id)
+            assertEquals(BookingStatus.PENDING, result?.status)
+        }
 
     @Test
-    fun myBookingsRequiresAuthentication() {
-        val ex = assertThrows(ResponseStatusException::class.java) { resolver.myBookings(null, null) }
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
-    }
+    fun bookingByIdPropagatesNotFoundException() =
+        runTest {
+            Mockito.`when`(bookingService.getBookingById(99)).thenThrow(
+                ResponseStatusException(HttpStatus.NOT_FOUND, "booking not found"),
+            )
+
+            assertThrowsSuspend<ResponseStatusException> { resolver.booking(99) }
+        }
 
     @Test
-    fun myBookingStatusForStayDelegatesToService() {
-        authenticateAs(authenticatedUser)
-        Mockito.`when`(bookingService.hasCompletedBookingForStay(1, 2)).thenReturn(true)
+    fun myBookingsDelegatesToService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val page = listOf(sampleBooking(1), sampleBooking(2))
+                Mockito.`when`(bookingService.getBookingsByUser(1, 0, 2)).thenReturn(page)
 
-        val result = resolver.myBookingStatusForStay(2)
+                val result = resolver.myBookings(page = 0, size = 2)
 
-        assertEquals(true, result.hasCompletedBooking)
-    }
+                assertEquals(listOf(1, 2), result.map { it.id })
+                Mockito.verify(bookingService).getBookingsByUser(1, 0, 2)
+            }
+        }
 
     @Test
-    fun myBookingStatusForStayRequiresAuthentication() {
-        val ex = assertThrows(ResponseStatusException::class.java) { resolver.myBookingStatusForStay(2) }
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
-    }
+    fun myBookingsRequiresAuthentication() =
+        runTest {
+            val ex = assertThrowsSuspend<ResponseStatusException> { resolver.myBookings(null, null) }
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+        }
+
+    @Test
+    fun myBookingStatusForStayDelegatesToService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                Mockito.`when`(bookingService.hasCompletedBookingForStay(1, 2)).thenReturn(true)
+
+                val result = resolver.myBookingStatusForStay(2)
+
+                assertEquals(true, result.hasCompletedBooking)
+            }
+        }
+
+    @Test
+    fun myBookingStatusForStayRequiresAuthentication() =
+        runTest {
+            val ex = assertThrowsSuspend<ResponseStatusException> { resolver.myBookingStatusForStay(2) }
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+        }
 
     // ---- mutations ----
 
     @Test
-    fun createBookingDelegatesToService() {
-        authenticateAs(authenticatedUser)
-        val saved = sampleBooking(10)
-        Mockito.`when`(bookingService.createBooking(anyArg())).thenReturn(saved)
+    fun createBookingDelegatesToService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val saved = sampleBooking(10)
+                Mockito.`when`(bookingService.createBooking(anyArg())).thenReturn(saved)
 
-        val input =
-            CreateBookingInput(
-                checkInDate = tomorrow,
-                checkOutDate = dayAfter,
-                guestsCount = 2,
-                roomIds = setOf(5),
-            )
-        val result = resolver.createBooking(input)
+                val input =
+                    CreateBookingInput(
+                        checkInDate = tomorrow,
+                        checkOutDate = dayAfter,
+                        guestsCount = 2,
+                        roomIds = setOf(5),
+                    )
+                val result = resolver.createBooking(input)
 
-        assertEquals(10, result.id)
-        assertEquals(BookingStatus.PENDING, result.status)
-        Mockito.verify(bookingService).createBooking(anyArg())
-    }
-
-    @Test
-    fun createBookingRequiresAuthentication() {
-        val input =
-            CreateBookingInput(
-                checkInDate = tomorrow,
-                checkOutDate = dayAfter,
-                guestsCount = 2,
-                roomIds = setOf(5),
-            )
-        val ex = assertThrows(ResponseStatusException::class.java) { resolver.createBooking(input) }
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
-    }
+                assertEquals(10, result.id)
+                assertEquals(BookingStatus.PENDING, result.status)
+                Mockito.verify(bookingService).createBooking(anyArg())
+            }
+        }
 
     @Test
-    fun updateBookingStatusDelegatesToService() {
-        authenticateAs(authenticatedUser)
-        val confirmed =
-            Booking(
-                id = 1,
-                userId = authenticatedUser.id,
-                checkInDate = tomorrow,
-                checkOutDate = dayAfter,
-                status = BookingStatus.CONFIRMED,
-                guestsCount = 2,
-                createdAt = LocalDateTime.now(),
-                totalPrice = BigDecimal("200.00"),
-            )
-        Mockito.`when`(bookingService.updateBookingStatus(eqArg(1), anyArg())).thenReturn(confirmed)
-
-        val result = resolver.updateBookingStatus(1, BookingStatus.CONFIRMED)
-
-        assertEquals(BookingStatus.CONFIRMED, result.status)
-        Mockito.verify(bookingService).updateBookingStatus(eqArg(1), anyArg())
-    }
+    fun createBookingRequiresAuthentication() =
+        runTest {
+            val input =
+                CreateBookingInput(
+                    checkInDate = tomorrow,
+                    checkOutDate = dayAfter,
+                    guestsCount = 2,
+                    roomIds = setOf(5),
+                )
+            val ex = assertThrowsSuspend<ResponseStatusException> { resolver.createBooking(input) }
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+        }
 
     @Test
-    fun deleteBookingReturnsTrueOnSuccess() {
-        authenticateAs(authenticatedUser)
-        Mockito.doNothing().`when`(bookingService).deleteBooking(eqArg(1), eqArg(1))
+    fun updateBookingStatusDelegatesToService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val confirmed =
+                    Booking(
+                        id = 1,
+                        userId = authenticatedUserId,
+                        checkInDate = tomorrow,
+                        checkOutDate = dayAfter,
+                        status = BookingStatus.CONFIRMED,
+                        guestsCount = 2,
+                        createdAt = LocalDateTime.now(),
+                        totalPrice = BigDecimal("200.00"),
+                    )
+                Mockito.`when`(bookingService.updateBookingStatus(eqArg(1), anyArg())).thenReturn(confirmed)
 
-        val result = resolver.deleteBooking(1)
+                val result = resolver.updateBookingStatus(1, BookingStatus.CONFIRMED)
 
-        assertEquals(true, result)
-        Mockito.verify(bookingService).deleteBooking(eqArg(1), eqArg(1))
-    }
+                assertEquals(BookingStatus.CONFIRMED, result.status)
+                Mockito.verify(bookingService).updateBookingStatus(eqArg(1), anyArg())
+            }
+        }
+
+    @Test
+    fun deleteBookingReturnsTrueOnSuccess() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                Mockito.`when`(bookingService.deleteBooking(eqArg(1), eqArg(1))).thenReturn(Unit)
+
+                val result = resolver.deleteBooking(1)
+
+                assertEquals(true, result)
+                Mockito.verify(bookingService).deleteBooking(eqArg(1), eqArg(1))
+            }
+        }
 }
