@@ -115,3 +115,28 @@ legitimate, separate follow-up, not a consequence of going reactive.
   `spring-cloud-starter-gateway-server-webflux`; there is no separate routing
   layer to migrate, only ordinary controllers, which convert to `suspend fun`
   the same way the GraphQL resolvers do.
+- **Two more "one more artifact" gaps found via live `docker compose` +
+  Zipkin verification (2026-07-21), same pattern as the four-instance list in
+  [[project_microservices_migration]] and Phase 7's tracing findings there**:
+  a bare `WebClient.builder()` (what `WebClientConfig.kt` originally used)
+  silently produces zero cross-service trace propagation — gateway's own
+  spans reached Zipkin, but no span from any outbound call ever continued
+  into inventory-service/media-service/identity-service, with no error
+  anywhere. Root cause was two independent missing pieces, confirmed by
+  fixing one at a time and re-checking Zipkin after each: (1)
+  `spring-boot-starter-webflux` only autoconfigures the *server* side
+  (`WebFluxAutoConfiguration`) — it does not transitively pull in
+  `spring-boot-http-client`'s `ReactiveHttpClientAutoConfiguration`, which is
+  what provides the `ClientHttpConnector` bean carrying Reactor Netty's
+  Micrometer instrumentation; added the dependency explicitly and wired
+  `.clientConnector(...)` into the `@LoadBalanced` builder. (2) Even with a
+  real connector, `WebClient.Builder` still never creates a CLIENT-kind
+  Observation span per outbound call — and therefore never adds trace-context
+  headers to the outgoing request — without `.observationRegistry(...)`
+  explicitly set; the connector and the observation registry are two
+  independent `WebClient.Builder` settings, not one producing the other.
+  Confirmed fixed via a live GraphQL query hitting `StayBatchResolver`: a
+  single Zipkin trace now correctly spans gateway → inventory-service →
+  media-service → identity-service. This is also why the plan's "verify
+  Feign's `feign-micrometer` equivalent isn't a silent no-op" caution
+  (Phase 7) turned out to be exactly right, twice over.

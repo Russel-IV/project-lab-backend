@@ -34,6 +34,21 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!-- docs/adr/0025: spring-boot-starter-webflux only autoconfigures the SERVER
+		     side (WebFluxAutoConfiguration, incoming requests) — it does not
+		     transitively pull in ReactiveHttpClientAutoConfiguration, which is what
+		     provides the (tracing-instrumented, once micrometer-tracing is also on the
+		     classpath) ClientHttpConnector bean WebClientConfig.kt wires into the
+		     @LoadBalanced builder. Without this, WebClient.builder() with no explicit
+		     .clientConnector(...) falls back to Reactor Netty's bare defaults —
+		     confirmed live: gateway's own spans reached Zipkin fine, but zero trace
+		     propagation into any downstream service, silently. Same "one more artifact"
+		     shape as FeignHttpMessageConvertersWarmup.kt's race and feign-micrometer's
+		     necessity in the original migration. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-http-client</artifactId>
+		</dependency>
 		<!-- Distributed tracing (docs/adr/0013) — auto-instruments Spring MVC/GraphQL,
 		     OpenFeign, and JDBC, and auto-propagates trace/span IDs across Feign calls
 		     with no per-call-site code. Exported to Zipkin (docker-compose.yml). -->

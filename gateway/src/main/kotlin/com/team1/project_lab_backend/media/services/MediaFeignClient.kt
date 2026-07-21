@@ -42,7 +42,8 @@ class MediaFeignClient(
         displayOrder: Int,
     ): MediaResponse {
         val body = MultipartBodyBuilder()
-        body.asyncPart("file", file.content(), DataBuffer::class.java).filename(file.filename())
+        val filePart = body.asyncPart("file", file.content(), DataBuffer::class.java).filename(file.filename())
+        file.headers().contentType?.let { filePart.contentType(it) }
         if (caption != null) body.part("caption", caption)
         body.part("isPrimary", isPrimary)
         body.part("displayOrder", displayOrder)
