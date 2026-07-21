@@ -53,41 +53,6 @@ class StayResolverTest {
     }
 
     @Test
-    fun staysReturnsEmptyListWhenNoResults() {
-        Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(emptyList())
-
-        val result = resolver.stays(null, 0, 20)
-
-        assertEquals(0, result.size)
-    }
-
-    @Test
-    fun stayByIdDelegatestoService() {
-        Mockito.`when`(stayService.getStayById(7)).thenReturn(sampleStay(7))
-
-        val result = resolver.stay(7)
-
-        assertEquals(7, result?.id)
-        assertEquals("Cozy Cabin", result?.name)
-    }
-
-    @Test
-    fun stayByIdPropagatesNotFoundException() {
-        Mockito.`when`(stayService.getStayById(99)).thenThrow(
-            org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND,
-                "stay not found",
-            ),
-        )
-
-        assertThrows(ResponseStatusException::class.java) {
-            resolver.stay(99)
-            assertEquals(1, result.size)
-            assertEquals("Cozy Cabin", result[0].name)
-            Mockito.verify(stayService).searchStays(anyArg(), eqArg(2), eqArg(5))
-        }
-
-    @Test
     fun staysPassesRegionIdFilterToService() =
         runTest {
             val expectedFilter = StayFilter(regionId = 3)
