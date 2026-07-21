@@ -276,7 +276,10 @@ class LookupResolver(
     // ---- Destination ----
 
     @QueryMapping
-    fun destinations(): List<Destination> = destinationService.getAllDestinations()
+    fun destinations(
+        @Argument search: String?,
+        @Argument limit: Int?,
+    ): List<Destination> = destinationService.searchDestinations(search, limit ?: 20)
 }
 
 data class CreateAmenityInput(val name: String, val type: AmenityType)

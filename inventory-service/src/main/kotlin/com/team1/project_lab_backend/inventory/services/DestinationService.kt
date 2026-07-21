@@ -10,7 +10,10 @@ class DestinationService(
     private val regionRepository: RegionRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getAllDestinations(): List<Destination> =
-        regionRepository.findAllByOrderByCityAsc()
+    fun searchDestinations(
+        search: String?,
+        limit: Int,
+    ): List<Destination> =
+        regionRepository.search(search, limit)
             .map { Destination(city = it.city, countryCode = it.countryCode, regionId = it.id) }
 }

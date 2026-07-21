@@ -9,5 +9,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class DestinationService(private val destinationFeignClient: DestinationFeignClient) {
-    fun getAllDestinations(): List<Destination> = destinationFeignClient.list()
+    fun searchDestinations(
+        search: String?,
+        limit: Int,
+    ): List<Destination> = destinationFeignClient.list(search, limit)
 }

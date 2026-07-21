@@ -10,11 +10,21 @@ class DestinationServiceTest {
     private val destinationService = DestinationService(destinationFeignClient)
 
     @Test
-    fun getAllDestinationsDelegatesToFeignClient() {
+    fun searchDestinationsDelegatesToFeignClient() {
         val destinations = listOf(Destination(city = "Paris", countryCode = "FR", regionId = 1))
-        Mockito.`when`(destinationFeignClient.list()).thenReturn(destinations)
+        Mockito.`when`(destinationFeignClient.list("Par", 5)).thenReturn(destinations)
 
-        val result = destinationService.getAllDestinations()
+        val result = destinationService.searchDestinations("Par", 5)
+
+        assertEquals(destinations, result)
+    }
+
+    @Test
+    fun searchDestinationsPassesNullSearchThrough() {
+        val destinations = listOf(Destination(city = "Miami", countryCode = "US", regionId = 2))
+        Mockito.`when`(destinationFeignClient.list(null, 20)).thenReturn(destinations)
+
+        val result = destinationService.searchDestinations(null, 20)
 
         assertEquals(destinations, result)
     }

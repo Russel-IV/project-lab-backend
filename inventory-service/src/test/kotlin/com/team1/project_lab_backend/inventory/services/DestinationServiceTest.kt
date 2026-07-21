@@ -11,15 +11,15 @@ class DestinationServiceTest {
     private val destinationService = DestinationService(regionRepository)
 
     @Test
-    fun getAllDestinationsMapsRegionsToDestinations() {
-        Mockito.`when`(regionRepository.findAllByOrderByCityAsc()).thenReturn(
+    fun searchDestinationsMapsRegionsToDestinations() {
+        Mockito.`when`(regionRepository.search(null, 20)).thenReturn(
             listOf(
                 Region(id = 2, city = "Miami", countryCode = "US"),
                 Region(id = 1, city = "Paris", countryCode = "FR"),
             ),
         )
 
-        val result = destinationService.getAllDestinations()
+        val result = destinationService.searchDestinations(null, 20)
 
         assertEquals(2, result.size)
         assertEquals("Miami", result[0].city)
@@ -31,11 +31,23 @@ class DestinationServiceTest {
     }
 
     @Test
-    fun getAllDestinationsReturnsEmptyListWhenNoRegionsExist() {
-        Mockito.`when`(regionRepository.findAllByOrderByCityAsc()).thenReturn(emptyList())
+    fun searchDestinationsReturnsEmptyListWhenNoRegionsMatch() {
+        Mockito.`when`(regionRepository.search("Nowhere", 20)).thenReturn(emptyList())
 
-        val result = destinationService.getAllDestinations()
+        val result = destinationService.searchDestinations("Nowhere", 20)
 
         assertEquals(emptyList<Any>(), result)
+    }
+
+    @Test
+    fun searchDestinationsPassesSearchAndLimitToRepository() {
+        Mockito.`when`(regionRepository.search("Par", 5)).thenReturn(
+            listOf(Region(id = 1, city = "Paris", countryCode = "FR")),
+        )
+
+        val result = destinationService.searchDestinations("Par", 5)
+
+        assertEquals(1, result.size)
+        Mockito.verify(regionRepository).search("Par", 5)
     }
 }
