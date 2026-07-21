@@ -60,10 +60,13 @@ The Gateway's 21 Feign clients are replaced with a `@LoadBalanced` coroutine
 `WebClient`, resolved via Eureka the same way Feign clients are today. This is a
 scoped exception to ADR-0008, which otherwise stands: Inventory↔Booking Feign
 calls (ADR-0010) and every other inter-service call in the system remain Feign,
-unchanged. Resilience4j (`resilience4j-kotlin`'s suspend-function decorators)
-is applied to these WebClient calls — the Gateway declares the Resilience4j
-dependency today but has never actually used it; this migration is also the
-first time it does.
+unchanged. Resilience4j is *not* added to these WebClient calls as part of this
+migration — the Gateway has declared the Resilience4j dependency since ADR-0008
+but has never actually applied it (zero `@CircuitBreaker` usage anywhere in the
+module, confirmed by grep), so this migration preserves that pre-existing gap
+rather than silently fixing it under an unrelated ADR. Wiring `resilience4j-
+kotlin`'s suspend-function decorators onto the new WebClient calls is a
+legitimate, separate follow-up, not a consequence of going reactive.
 
 ## Consequences
 
@@ -81,11 +84,16 @@ first time it does.
 - `FeignConfig.kt`'s OkHttp/LoadBalancer wrapper (needed to work around Feign's
   dropped OkHttp auto-config and get PATCH support) retires — `WebClient`
   supports PATCH natively.
-- Batch resolvers gain real concurrency, not just thread efficiency:
-  independent downstream calls in the same batch (e.g. `StayBatchResolver`'s 9
-  clients) can run via `coroutineScope { awaitAll(...) }` instead of
-  sequentially, reducing tail latency on the Gateway's most expensive query
-  shape.
+- Batch resolvers gain real concurrency, not just thread efficiency.
+  `StayBatchResolver`'s 10 `@BatchMapping` methods each make one downstream
+  call; under the servlet stack, graphql-java's execution strategy runs
+  sibling fields' plain synchronous `DataFetcher`s to completion one after
+  another. Once each method is `suspend fun`, Spring for GraphQL bridges it to
+  a `Mono`, letting the same execution strategy schedule all 10 sibling
+  fields concurrently instead of sequentially — a real tail-latency reduction
+  on the Gateway's most expensive query shape, achieved without any manual
+  `coroutineScope`/`awaitAll` composition inside the resolver methods
+  themselves.
 - Every other service in the system is unaffected. If a future service
   develops a similar I/O-bound-fan-out profile, this ADR does not automatically
   apply to it — that would be its own decision, evaluated on its own blocking
@@ -94,3 +102,16 @@ first time it does.
   each).
 - See ADR-0008's status note for the scoped Feign→WebClient exception this
   introduces.
+- `spring-cloud-starter-gateway-server-webmvc` (ADR-0004) turned out to be
+  dead weight, not something this migration needed to port: a full source
+  grep found zero `org.springframework.cloud.gateway.*` usage anywhere in the
+  Gateway module. Every route ADR-0004 describes as declaratively proxied
+  (`/api/v1/auth/**`, the picture-upload `RewritePath`) is actually a
+  hand-written `@RestController` calling a Feign/WebClient client directly
+  (e.g. `identity/controllers/AuthController.kt`,
+  `inventory/controllers/StayPictureController.kt`) — ADR-0004's
+  implementation description was stale versus the real code. This migration
+  removes the unused dependency outright rather than swapping it for
+  `spring-cloud-starter-gateway-server-webflux`; there is no separate routing
+  layer to migrate, only ordinary controllers, which convert to `suspend fun`
+  the same way the GraphQL resolvers do.

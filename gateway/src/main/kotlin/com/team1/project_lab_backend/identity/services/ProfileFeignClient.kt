@@ -1,42 +1,42 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.ProfileResponse
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "identity-service", contextId = "profileFeignClient")
-interface ProfileFeignClient {
-    @GetMapping("/internal/profile/{userId}")
-    fun getProfile(
-        @PathVariable userId: Int,
-    ): ProfileResponse
+@Component
+class ProfileFeignClient(
+    @Qualifier("identityServiceWebClient") private val webClient: WebClient,
+) {
 
-    @PatchMapping("/internal/profile/{userId}")
-    fun updateProfile(
-        @PathVariable userId: Int,
-        @RequestBody request: ProfileUpdateRequest,
-    ): ProfileResponse
+    suspend fun getProfile(userId: Int): ProfileResponse =
+        webClient.get().uri("/internal/profile/{userId}", userId).retrieve().awaitBody()
 
-    @PatchMapping("/internal/profile/{userId}/picture-url")
-    fun updatePictureUrl(
-        @PathVariable userId: Int,
-        @RequestBody request: UpdatePictureUrlRequest,
-    ): ProfileResponse
+    suspend fun updateProfile(
+        userId: Int,
+        request: ProfileUpdateRequest,
+    ): ProfileResponse =
+        webClient.patch().uri("/internal/profile/{userId}", userId).bodyValue(request).retrieve().awaitBody()
 
-    @PatchMapping("/internal/profile/{userId}/password")
-    fun changePassword(
-        @PathVariable userId: Int,
-        @RequestBody request: PasswordChangeRequest,
-    )
+    suspend fun updatePictureUrl(
+        userId: Int,
+        request: UpdatePictureUrlRequest,
+    ): ProfileResponse =
+        webClient.patch().uri("/internal/profile/{userId}/picture-url", userId).bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/profile/{userId}")
-    fun deleteAccount(
-        @PathVariable userId: Int,
-    )
+    suspend fun changePassword(
+        userId: Int,
+        request: PasswordChangeRequest,
+    ) {
+        webClient.patch().uri("/internal/profile/{userId}/password", userId).bodyValue(request).retrieve().awaitBodilessEntity()
+    }
+
+    suspend fun deleteAccount(userId: Int) {
+        webClient.delete().uri("/internal/profile/{userId}", userId).retrieve().awaitBodilessEntity()
+    }
 }
 
 data class ProfileUpdateRequest(val name: String, val email: String, val phone: String?)

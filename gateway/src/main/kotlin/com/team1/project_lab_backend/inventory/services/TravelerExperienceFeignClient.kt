@@ -2,40 +2,38 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.TravelerExperienceRequest
 import com.team1.project_lab_backend.inventory.models.TravelerExperience
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "inventory-service", contextId = "travelerExperienceFeignClient")
-interface TravelerExperienceFeignClient {
-    @GetMapping("/internal/traveler-experiences")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-    ): List<TravelerExperience>
+@Component
+class TravelerExperienceFeignClient(
+    @Qualifier("inventoryServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/traveler-experiences/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): TravelerExperience
+    suspend fun list(ids: List<Int>? = null): List<TravelerExperience> =
+        webClient.get()
+            .uri { b ->
+                b.path("/internal/traveler-experiences").also { if (ids != null) it.queryParam("ids", *ids.toTypedArray()) }.build()
+            }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/traveler-experiences")
-    fun create(
-        @RequestBody request: TravelerExperienceRequest,
-    ): TravelerExperience
+    suspend fun get(id: Int): TravelerExperience =
+        webClient.get().uri("/internal/traveler-experiences/{id}", id).retrieve().awaitBody()
 
-    @PatchMapping("/internal/traveler-experiences/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: TravelerExperienceRequest,
-    ): TravelerExperience
+    suspend fun create(request: TravelerExperienceRequest): TravelerExperience =
+        webClient.post().uri("/internal/traveler-experiences").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/traveler-experiences/{id}")
-    fun delete(
-        @PathVariable id: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: TravelerExperienceRequest,
+    ): TravelerExperience =
+        webClient.patch().uri("/internal/traveler-experiences/{id}", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(id: Int) {
+        webClient.delete().uri("/internal/traveler-experiences/{id}", id).retrieve().awaitBodilessEntity()
+    }
 }

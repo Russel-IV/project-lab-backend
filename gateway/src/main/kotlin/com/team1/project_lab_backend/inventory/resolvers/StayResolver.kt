@@ -18,19 +18,19 @@ import java.time.LocalDate
 @Controller
 class StayResolver(private val stayService: StayService) {
     @QueryMapping
-    fun stays(
+    suspend fun stays(
         @Argument filter: StayFilterInput?,
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Stay> = stayService.searchStays(filter?.toFilter() ?: StayFilter(), page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun stay(
+    suspend fun stay(
         @Argument id: Int,
     ): Stay? = stayService.getStayById(id)
 
     @MutationMapping
-    fun createStay(
+    suspend fun createStay(
         @Argument input: CreateStayInput,
     ): Stay {
         val currentUser = requireAuthenticated()
@@ -38,7 +38,7 @@ class StayResolver(private val stayService: StayService) {
     }
 
     @MutationMapping
-    fun updateStay(
+    suspend fun updateStay(
         @Argument id: Int,
         @Argument input: UpdateStayInput,
     ): Stay {
@@ -47,7 +47,7 @@ class StayResolver(private val stayService: StayService) {
     }
 
     @MutationMapping
-    fun deleteStay(
+    suspend fun deleteStay(
         @Argument id: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

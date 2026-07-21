@@ -1,6 +1,5 @@
 package com.team1.project_lab_backend.util
 
-import org.springframework.data.repository.CrudRepository
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
@@ -38,10 +37,3 @@ fun BigDecimal.requireInRange(
 fun <T> Optional<T>.orNotFound(message: String): T = orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, message) }
 
 fun <T> Optional<T>.orBadRequest(message: String): T = orElseThrow { ResponseStatusException(HttpStatus.BAD_REQUEST, message) }
-
-fun <T : Any, ID : Any> CrudRepository<T, ID>.requireExistsById(
-    id: ID,
-    message: String,
-) {
-    if (!existsById(id)) throw ResponseStatusException(HttpStatus.NOT_FOUND, message)
-}

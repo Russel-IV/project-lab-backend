@@ -18,21 +18,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.orm</groupId>
-			<artifactId>hibernate-spatial</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -42,11 +29,6 @@
 			<groupId>com.graphql-java</groupId>
 			<artifactId>graphql-java-extended-scalars</artifactId>
 			<version>22.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,21 +62,17 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-zipkin</artifactId>
 		</dependency>
+		<!-- docs/adr/0025: reactive web layer (supersedes spring-boot-starter-webmvc) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-flyway</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
+		<!-- docs/adr/0025: coroutines are the idiom used throughout the gateway's
+		     reactive code (suspend fun resolvers/clients) rather than raw Mono/Flux
+		     chaining; version managed by spring-boot-starter-parent's BOM. -->
 		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<groupId>org.jetbrains.kotlinx</groupId>
+			<artifactId>kotlinx-coroutines-reactor</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -105,47 +83,26 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
-		<!-- docs/adr/0004: Gateway hosts routing/proxying via Spring Cloud Gateway Server MVC -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-gateway-server-webmvc</artifactId>
-		</dependency>
 		<!-- docs/adr/0006: service discovery -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-		<!-- docs/adr/0008: inter-service calls once domain services are extracted -->
+		<!-- docs/adr/0025: @LoadBalanced WebClient.Builder resolves target services via
+		     Eureka the same way Feign clients did — added explicitly rather than relying
+		     on transitive resolution, per this project's track record of transitive
+		     load-balancer wiring gaps (see FeignConfig.kt's own doc comment, now removed
+		     with it). -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-openfeign</artifactId>
+			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
 		</dependency>
-		<!-- Feign's default Client wraps java.net.HttpURLConnection, which cannot send
-		     PATCH requests (updateReview -> review-service PATCH /internal/reviews/{id}
-		     fails with "Invalid HTTP method: PATCH" without this). This Spring Cloud
-		     version has no OkHttp auto-configuration of its own (for the plain Client
-		     bean or its LoadBalancer-wrapped variant), so both are wired manually in
-		     config/FeignConfig.kt. -->
-		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-okhttp</artifactId>
-		</dependency>
-		<!-- Trace propagation across Feign calls (docs/adr/0013) needs this on the
-		     classpath: Spring Cloud OpenFeign's FeignClientsConfiguration only adds a
-		     feign.micrometer.MicrometerObservationCapability to the Feign.Builder (a
-		     Feign Capability, wired independently of which Client bean handles
-		     transport — so this is unrelated to the OkHttp/LoadBalancer Client wiring
-		     above) when feign.micrometer.MicrometerObservationCapability is actually
-		     resolvable, which requires this artifact explicitly — micrometer-tracing-
-		     bridge-otel alone doesn't provide it. Without it, tracing/MDC still work
-		     locally in this service, but no propagation headers are ever added to
-		     outgoing Feign requests, so the callee starts a brand new, disconnected
-		     trace instead of continuing this one — confirmed live via Zipkin showing
-		     single-service traces instead of ones spanning the Feign call. -->
-		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-micrometer</artifactId>
-		</dependency>
+		<!-- docs/adr/0025: Feign (spring-cloud-starter-openfeign, feign-okhttp,
+		     feign-micrometer) removed — all 21 gateway outbound clients now use the
+		     @LoadBalanced WebClient in WebClientConfig.kt. WebClient supports PATCH
+		     natively (the reason feign-okhttp existed), and trace propagation across
+		     WebClient calls needs live Zipkin verification (Phase 7) the same way
+		     feign-micrometer's necessity was originally discovered live, not assumed. -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
@@ -186,12 +143,12 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<artifactId>spring-boot-starter-webflux-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<groupId>org.jetbrains.kotlinx</groupId>
+			<artifactId>kotlinx-coroutines-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -209,33 +166,14 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- Feign contract tests (docs/adr/0008) — stubs review-service's internal API -->
+		<!-- docs/adr/0025: WireMock contract tests (BookingFeignClientTest,
+		     MediaFeignClientTest, ReviewFeignClientTest) now build their client under
+		     test with a plain WebClient — feign-jackson and the classic
+		     com.fasterxml.jackson test-only deps it needed retired with Feign itself. -->
 		<dependency>
 			<groupId>org.wiremock</groupId>
 			<artifactId>wiremock-standalone</artifactId>
 			<version>3.13.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-jackson</artifactId>
-			<version>13.6.1</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- feign-jackson uses classic com.fasterxml.jackson (not this project's Jackson 3
-		     tools.jackson), so it needs its own Kotlin module for data class decoding. -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
-			<artifactId>jackson-module-kotlin</artifactId>
-			<version>2.22.1</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- BookingFeignClientTest needs java.time (de)serialization (checkInDate,
-		     createdAt) that classic com.fasterxml.jackson doesn't support by default. -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>2.21.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

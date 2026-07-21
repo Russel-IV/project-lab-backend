@@ -1,39 +1,52 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.PaymentMethodResponse
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "identity-service", contextId = "paymentMethodFeignClient")
-interface PaymentMethodFeignClient {
-    @GetMapping("/internal/payment-methods")
-    fun list(
-        @RequestParam userId: Int,
-    ): List<PaymentMethodResponse>
+@Component
+class PaymentMethodFeignClient(
+    @Qualifier("identityServiceWebClient") private val webClient: WebClient,
+) {
 
-    @PostMapping("/internal/payment-methods")
-    fun create(
-        @RequestParam userId: Int,
-        @RequestBody request: PaymentMethodCreateRequest,
-    ): PaymentMethodResponse
+    suspend fun list(userId: Int): List<PaymentMethodResponse> =
+        webClient.get()
+            .uri { b -> b.path("/internal/payment-methods").queryParam("userId", userId).build() }
+            .retrieve()
+            .awaitBody()
 
-    @PatchMapping("/internal/payment-methods/{id}/default")
-    fun setDefault(
-        @PathVariable id: Int,
-        @RequestParam userId: Int,
-    )
+    suspend fun create(
+        userId: Int,
+        request: PaymentMethodCreateRequest,
+    ): PaymentMethodResponse =
+        webClient.post()
+            .uri { b -> b.path("/internal/payment-methods").queryParam("userId", userId).build() }
+            .bodyValue(request)
+            .retrieve()
+            .awaitBody()
 
-    @DeleteMapping("/internal/payment-methods/{id}")
-    fun delete(
-        @PathVariable id: Int,
-        @RequestParam userId: Int,
-    )
+    suspend fun setDefault(
+        id: Int,
+        userId: Int,
+    ) {
+        webClient.patch()
+            .uri { b -> b.path("/internal/payment-methods/{id}/default").queryParam("userId", userId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
+
+    suspend fun delete(
+        id: Int,
+        userId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/payment-methods/{id}").queryParam("userId", userId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }
 
 data class PaymentMethodCreateRequest(

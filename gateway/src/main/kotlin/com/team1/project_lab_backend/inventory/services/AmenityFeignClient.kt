@@ -2,40 +2,36 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.AmenityRequest
 import com.team1.project_lab_backend.inventory.models.Amenity
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "inventory-service", contextId = "amenityFeignClient")
-interface AmenityFeignClient {
-    @GetMapping("/internal/amenities")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-    ): List<Amenity>
+@Component
+class AmenityFeignClient(
+    @Qualifier("inventoryServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/amenities/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): Amenity
+    suspend fun list(ids: List<Int>? = null): List<Amenity> =
+        webClient.get()
+            .uri { b -> b.path("/internal/amenities").also { if (ids != null) it.queryParam("ids", *ids.toTypedArray()) }.build() }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/amenities")
-    fun create(
-        @RequestBody request: AmenityRequest,
-    ): Amenity
+    suspend fun get(id: Int): Amenity =
+        webClient.get().uri("/internal/amenities/{id}", id).retrieve().awaitBody()
 
-    @PatchMapping("/internal/amenities/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: AmenityRequest,
-    ): Amenity
+    suspend fun create(request: AmenityRequest): Amenity =
+        webClient.post().uri("/internal/amenities").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/amenities/{id}")
-    fun delete(
-        @PathVariable id: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: AmenityRequest,
+    ): Amenity =
+        webClient.patch().uri("/internal/amenities/{id}", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(id: Int) {
+        webClient.delete().uri("/internal/amenities/{id}", id).retrieve().awaitBodilessEntity()
+    }
 }

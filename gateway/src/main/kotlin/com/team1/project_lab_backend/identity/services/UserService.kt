@@ -2,9 +2,9 @@ package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.UserRequest
 import com.team1.project_lab_backend.identity.models.User
-import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -13,44 +13,44 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class UserService(private val userFeignClient: UserFeignClient) {
-    fun getAllUsers(): List<User> = userFeignClient.list(ids = null)
+    suspend fun getAllUsers(): List<User> = userFeignClient.list(ids = null)
 
-    fun getUserById(id: Int): User =
+    suspend fun getUserById(id: Int): User =
         try {
             userFeignClient.get(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
 
-    fun createUser(request: UserRequest): User =
+    suspend fun createUser(request: UserRequest): User =
         try {
             userFeignClient.create(UserUpsertRequest(name = request.name))
-        } catch (e: FeignException.BadRequest) {
+        } catch (e: WebClientResponseException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
         }
 
-    fun updateUser(
+    suspend fun updateUser(
         id: Int,
         request: UserRequest,
         requestingUserId: Int,
     ): User =
         try {
             userFeignClient.update(id, requestingUserId, UserUpsertRequest(name = request.name))
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
 
-    fun deleteUser(
+    suspend fun deleteUser(
         id: Int,
         requestingUserId: Int,
     ) {
         try {
             userFeignClient.delete(id, requestingUserId)
-        } catch (e: FeignException.Forbidden) {
+        } catch (e: WebClientResponseException.Forbidden) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
     }

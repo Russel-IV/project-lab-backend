@@ -1,33 +1,39 @@
 package com.team1.project_lab_backend.review.services
 
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-/**
- * Resolves via Eureka to review-service's internal REST API (docs/adr/0005,
- * docs/adr/0008). Mirrors FavoriteController one-to-one — this interface and
- * that controller are two halves of one contract that must be kept in sync by
- * hand, since there's no shared library between the two modules.
- */
-@FeignClient(name = "review-service", contextId = "favoriteFeignClient")
-interface FavoriteFeignClient {
-    @GetMapping("/internal/favorites")
-    fun list(
-        @RequestParam userId: Int,
-    ): List<Int>
+@Component
+class FavoriteFeignClient(
+    @Qualifier("reviewServiceWebClient") private val webClient: WebClient,
+) {
 
-    @PostMapping("/internal/favorites")
-    fun add(
-        @RequestParam userId: Int,
-        @RequestParam stayId: Int,
-    )
+    suspend fun list(userId: Int): List<Int> =
+        webClient.get()
+            .uri { b -> b.path("/internal/favorites").queryParam("userId", userId).build() }
+            .retrieve()
+            .awaitBody()
 
-    @DeleteMapping("/internal/favorites")
-    fun remove(
-        @RequestParam userId: Int,
-        @RequestParam stayId: Int,
-    )
+    suspend fun add(
+        userId: Int,
+        stayId: Int,
+    ) {
+        webClient.post()
+            .uri { b -> b.path("/internal/favorites").queryParam("userId", userId).queryParam("stayId", stayId).build() }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
+
+    suspend fun remove(
+        userId: Int,
+        stayId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/favorites").queryParam("userId", userId).queryParam("stayId", stayId).build() }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }

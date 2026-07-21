@@ -2,9 +2,9 @@ package com.team1.project_lab_backend.review.services
 
 import com.team1.project_lab_backend.inventory.services.StayFeignClient
 import com.team1.project_lab_backend.util.requirePositive
-import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -20,9 +20,9 @@ class FavoriteService(
     private val favoriteFeignClient: FavoriteFeignClient,
     private val stayFeignClient: StayFeignClient,
 ) {
-    fun getMyFavoriteStayIds(userId: Int): List<Int> = favoriteFeignClient.list(userId)
+    suspend fun getMyFavoriteStayIds(userId: Int): List<Int> = favoriteFeignClient.list(userId)
 
-    fun addFavorite(
+    suspend fun addFavorite(
         userId: Int,
         stayId: Int,
     ) {
@@ -31,7 +31,7 @@ class FavoriteService(
         favoriteFeignClient.add(userId, stayId)
     }
 
-    fun removeFavorite(
+    suspend fun removeFavorite(
         userId: Int,
         stayId: Int,
     ) {
@@ -39,10 +39,10 @@ class FavoriteService(
         favoriteFeignClient.remove(userId, stayId)
     }
 
-    private fun requireStayExists(stayId: Int) {
+    private suspend fun requireStayExists(stayId: Int) {
         try {
             stayFeignClient.get(stayId)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }
     }

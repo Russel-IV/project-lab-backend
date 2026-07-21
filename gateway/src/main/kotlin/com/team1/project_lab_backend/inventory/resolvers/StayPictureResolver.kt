@@ -22,12 +22,12 @@ class StayPictureResolver(
     private val stayService: StayService,
 ) {
     @QueryMapping
-    fun stayPictures(
+    suspend fun stayPictures(
         @Argument stayId: Int,
     ): List<StayPicture> = stayPictureService.getPicturesForStayAsEntities(stayId)
 
     @MutationMapping
-    fun updateStayPicture(
+    suspend fun updateStayPicture(
         @Argument stayId: Int,
         @Argument id: Int,
         @Argument input: UpdateStayPictureInput,
@@ -44,7 +44,7 @@ class StayPictureResolver(
     }
 
     @MutationMapping
-    fun deleteStayPicture(
+    suspend fun deleteStayPicture(
         @Argument stayId: Int,
         @Argument id: Int,
     ): Boolean {

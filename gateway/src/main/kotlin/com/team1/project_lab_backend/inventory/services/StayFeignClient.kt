@@ -3,50 +3,65 @@ package com.team1.project_lab_backend.inventory.services
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "inventory-service", contextId = "stayFeignClient")
-interface StayFeignClient {
-    @GetMapping("/internal/stays")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-    ): List<Stay>
+@Component
+class StayFeignClient(
+    @Qualifier("inventoryServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/stays/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): Stay
+    suspend fun list(ids: List<Int>? = null): List<Stay> =
+        webClient.get()
+            .uri { b -> b.path("/internal/stays").also { if (ids != null) it.queryParam("ids", *ids.toTypedArray()) }.build() }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/stays/search")
-    fun search(
-        @RequestBody filter: StayFilter,
-        @RequestParam page: Int,
-        @RequestParam size: Int,
-    ): List<Stay>
+    suspend fun get(id: Int): Stay =
+        webClient.get().uri("/internal/stays/{id}", id).retrieve().awaitBody()
 
-    @PostMapping("/internal/stays")
-    fun create(
-        @RequestBody request: StayRequest,
-        @RequestParam requestingUserId: Int,
-    ): Stay
+    suspend fun search(
+        filter: StayFilter,
+        page: Int,
+        size: Int,
+    ): List<Stay> =
+        webClient.post()
+            .uri { b -> b.path("/internal/stays/search").queryParam("page", page).queryParam("size", size).build() }
+            .bodyValue(filter)
+            .retrieve()
+            .awaitBody()
 
-    @PatchMapping("/internal/stays/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: StayRequest,
-        @RequestParam requestingUserId: Int,
-    ): Stay
+    suspend fun create(
+        request: StayRequest,
+        requestingUserId: Int,
+    ): Stay =
+        webClient.post()
+            .uri { b -> b.path("/internal/stays").queryParam("requestingUserId", requestingUserId).build() }
+            .bodyValue(request)
+            .retrieve()
+            .awaitBody()
 
-    @DeleteMapping("/internal/stays/{id}")
-    fun delete(
-        @PathVariable id: Int,
-        @RequestParam requestingUserId: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: StayRequest,
+        requestingUserId: Int,
+    ): Stay =
+        webClient.patch()
+            .uri { b -> b.path("/internal/stays/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .bodyValue(request)
+            .retrieve()
+            .awaitBody()
+
+    suspend fun delete(
+        id: Int,
+        requestingUserId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/stays/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }

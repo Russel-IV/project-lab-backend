@@ -14,19 +14,19 @@ import java.time.LocalDate
 @Controller
 class RoomResolver(private val roomService: RoomService) {
     @QueryMapping
-    fun rooms(
+    suspend fun rooms(
         @Argument stayId: Int,
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Room> = roomService.getRoomsForStay(stayId, page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun room(
+    suspend fun room(
         @Argument id: Int,
     ): Room? = roomService.getRoomById(id)
 
     @QueryMapping
-    fun availableRooms(
+    suspend fun availableRooms(
         @Argument stayId: Int,
         @Argument checkIn: LocalDate,
         @Argument checkOut: LocalDate,
@@ -34,7 +34,7 @@ class RoomResolver(private val roomService: RoomService) {
     ): List<Room> = roomService.getAvailableRooms(stayId, checkIn, checkOut, guests)
 
     @MutationMapping
-    fun createRoom(
+    suspend fun createRoom(
         @Argument stayId: Int,
         @Argument input: CreateRoomInput,
     ): Room {
@@ -43,7 +43,7 @@ class RoomResolver(private val roomService: RoomService) {
     }
 
     @MutationMapping
-    fun updateRoom(
+    suspend fun updateRoom(
         @Argument id: Int,
         @Argument input: UpdateRoomInput,
     ): Room {
@@ -52,7 +52,7 @@ class RoomResolver(private val roomService: RoomService) {
     }
 
     @MutationMapping
-    fun deleteRoom(
+    suspend fun deleteRoom(
         @Argument id: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

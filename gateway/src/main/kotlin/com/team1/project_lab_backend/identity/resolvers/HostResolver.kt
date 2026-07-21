@@ -13,15 +13,15 @@ import java.math.BigDecimal
 @Controller
 class HostResolver(private val hostService: HostService) {
     @QueryMapping
-    fun hosts(): List<Host> = hostService.getAllHosts()
+    suspend fun hosts(): List<Host> = hostService.getAllHosts()
 
     @QueryMapping
-    fun host(
+    suspend fun host(
         @Argument id: Int,
     ): Host = hostService.getHostById(id)
 
     @MutationMapping
-    fun createHost(
+    suspend fun createHost(
         @Argument input: CreateHostInput,
     ): Host {
         requireAuthenticated()
@@ -29,7 +29,7 @@ class HostResolver(private val hostService: HostService) {
     }
 
     @MutationMapping
-    fun updateHost(
+    suspend fun updateHost(
         @Argument id: Int,
         @Argument input: UpdateHostInput,
     ): Host {
@@ -38,7 +38,7 @@ class HostResolver(private val hostService: HostService) {
     }
 
     @MutationMapping
-    fun deleteHost(
+    suspend fun deleteHost(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()

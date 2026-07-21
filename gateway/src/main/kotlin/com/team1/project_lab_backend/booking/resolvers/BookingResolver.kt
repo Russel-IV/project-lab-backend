@@ -25,18 +25,18 @@ class BookingResolver(private val bookingService: BookingService) {
     fun createdAt(booking: Booking): OffsetDateTime = booking.createdAt.atOffset(ZoneOffset.UTC)
 
     @QueryMapping
-    fun bookings(
+    suspend fun bookings(
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Booking> = bookingService.getAllBookings(page ?: 0, size ?: 20)
 
     @QueryMapping
-    fun booking(
+    suspend fun booking(
         @Argument id: Int,
     ): Booking = bookingService.getBookingById(id)
 
     @QueryMapping
-    fun myBookings(
+    suspend fun myBookings(
         @Argument page: Int?,
         @Argument size: Int?,
     ): List<Booking> {
@@ -45,7 +45,7 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @QueryMapping
-    fun myBookingStatusForStay(
+    suspend fun myBookingStatusForStay(
         @Argument stayId: Int,
     ): BookingStatusForStay {
         val currentUser = requireAuthenticated()
@@ -53,7 +53,7 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @MutationMapping
-    fun createBooking(
+    suspend fun createBooking(
         @Argument input: CreateBookingInput,
     ): Booking {
         val currentUser = requireAuthenticated()
@@ -69,7 +69,7 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @MutationMapping
-    fun updateBookingStatus(
+    suspend fun updateBookingStatus(
         @Argument id: Int,
         @Argument status: BookingStatus,
     ): Booking {
@@ -78,7 +78,7 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @MutationMapping
-    fun deleteBooking(
+    suspend fun deleteBooking(
         @Argument id: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

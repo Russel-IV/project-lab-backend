@@ -2,10 +2,10 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.AccessibilityRequest
 import com.team1.project_lab_backend.inventory.models.Accessibility
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -14,31 +14,31 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class AccessibilityService(private val accessibilityFeignClient: AccessibilityFeignClient) {
-    fun getAllAccessibility(): List<Accessibility> = accessibilityFeignClient.list(ids = null)
+    suspend fun getAllAccessibility(): List<Accessibility> = accessibilityFeignClient.list(ids = null)
 
-    fun createAccessibility(request: AccessibilityRequest): Accessibility =
+    suspend fun createAccessibility(request: AccessibilityRequest): Accessibility =
         try {
             accessibilityFeignClient.create(request)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid accessibility")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid accessibility")
         }
 
-    fun updateAccessibility(
+    suspend fun updateAccessibility(
         id: Int,
         request: AccessibilityRequest,
     ): Accessibility =
         try {
             accessibilityFeignClient.update(id, request)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "accessibility not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid accessibility")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid accessibility")
         }
 
-    fun deleteAccessibility(id: Int) {
+    suspend fun deleteAccessibility(id: Int) {
         try {
             accessibilityFeignClient.delete(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "accessibility not found")
         }
     }

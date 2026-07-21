@@ -4,36 +4,37 @@ import com.team1.project_lab_backend.identity.dto.UserRequest
 import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.identity.services.UserService
 import com.team1.project_lab_backend.util.requireAuthenticated
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
-import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.stereotype.Controller
 
 @Controller
 class UserResolver(private val userService: UserService) {
     @QueryMapping
-    fun users(): List<User> = userService.getAllUsers()
+    suspend fun users(): List<User> = userService.getAllUsers()
 
     @QueryMapping
-    fun user(
+    suspend fun user(
         @Argument id: Int,
     ): User = userService.getUserById(id)
 
     @SchemaMapping(typeName = "User", field = "email")
-    fun email(user: User): String? {
-        val currentUser = SecurityContextHolder.getContext().authentication?.principal as? User
+    suspend fun email(user: User): String? {
+        val currentUser = ReactiveSecurityContextHolder.getContext().awaitSingleOrNull()?.authentication?.principal as? User
         return if (currentUser?.id == user.id) user.email else null
     }
 
     @MutationMapping
-    fun createUser(
+    suspend fun createUser(
         @Argument input: CreateUserInput,
     ): User = userService.createUser(UserRequest(name = input.name))
 
     @MutationMapping
-    fun updateUser(
+    suspend fun updateUser(
         @Argument id: Int,
         @Argument input: UpdateUserInput,
     ): User {
@@ -42,7 +43,7 @@ class UserResolver(private val userService: UserService) {
     }
 
     @MutationMapping
-    fun deleteUser(
+    suspend fun deleteUser(
         @Argument id: Int,
     ): Boolean {
         val currentUser = requireAuthenticated()

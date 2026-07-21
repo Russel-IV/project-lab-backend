@@ -1,21 +1,21 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.AuthResponse
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "identity-service", contextId = "authFeignClient")
-interface AuthFeignClient {
-    @PostMapping("/internal/auth/login")
-    fun login(
-        @RequestBody request: LoginRequest,
-    ): AuthResponse
+@Component
+class AuthFeignClient(
+    @Qualifier("identityServiceWebClient") private val webClient: WebClient,
+) {
 
-    @PostMapping("/internal/auth/signup")
-    fun signup(
-        @RequestBody request: SignupRequest,
-    ): AuthResponse
+    suspend fun login(request: LoginRequest): AuthResponse =
+        webClient.post().uri("/internal/auth/login").bodyValue(request).retrieve().awaitBody()
+
+    suspend fun signup(request: SignupRequest): AuthResponse =
+        webClient.post().uri("/internal/auth/signup").bodyValue(request).retrieve().awaitBody()
 }
 
 data class LoginRequest(val email: String, val password: String)

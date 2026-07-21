@@ -1,9 +1,9 @@
 package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.AuthResponse
-import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -12,24 +12,24 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class AuthService(private val authFeignClient: AuthFeignClient) {
-    fun signup(
+    suspend fun signup(
         name: String,
         email: String,
         rawPassword: String,
     ): AuthResponse =
         try {
             authFeignClient.signup(SignupRequest(name = name, email = email, password = rawPassword))
-        } catch (e: FeignException.Conflict) {
+        } catch (e: WebClientResponseException.Conflict) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "email already in use")
         }
 
-    fun login(
+    suspend fun login(
         email: String,
         rawPassword: String,
     ): AuthResponse =
         try {
             authFeignClient.login(LoginRequest(email = email, password = rawPassword))
-        } catch (e: FeignException.Unauthorized) {
+        } catch (e: WebClientResponseException.Unauthorized) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid credentials")
         }
 }

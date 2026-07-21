@@ -2,40 +2,36 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.MealPlanRequest
 import com.team1.project_lab_backend.inventory.models.MealPlan
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "inventory-service", contextId = "mealPlanFeignClient")
-interface MealPlanFeignClient {
-    @GetMapping("/internal/meal-plans")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-    ): List<MealPlan>
+@Component
+class MealPlanFeignClient(
+    @Qualifier("inventoryServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/meal-plans/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): MealPlan
+    suspend fun list(ids: List<Int>? = null): List<MealPlan> =
+        webClient.get()
+            .uri { b -> b.path("/internal/meal-plans").also { if (ids != null) it.queryParam("ids", *ids.toTypedArray()) }.build() }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/meal-plans")
-    fun create(
-        @RequestBody request: MealPlanRequest,
-    ): MealPlan
+    suspend fun get(id: Int): MealPlan =
+        webClient.get().uri("/internal/meal-plans/{id}", id).retrieve().awaitBody()
 
-    @PatchMapping("/internal/meal-plans/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: MealPlanRequest,
-    ): MealPlan
+    suspend fun create(request: MealPlanRequest): MealPlan =
+        webClient.post().uri("/internal/meal-plans").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/meal-plans/{id}")
-    fun delete(
-        @PathVariable id: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: MealPlanRequest,
+    ): MealPlan =
+        webClient.patch().uri("/internal/meal-plans/{id}", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(id: Int) {
+        webClient.delete().uri("/internal/meal-plans/{id}", id).retrieve().awaitBodilessEntity()
+    }
 }

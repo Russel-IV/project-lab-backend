@@ -2,10 +2,10 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.PropertyBrandRequest
 import com.team1.project_lab_backend.inventory.models.PropertyBrand
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -14,38 +14,38 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PropertyBrandService(private val propertyBrandFeignClient: PropertyBrandFeignClient) {
-    fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandFeignClient.list(ids = null)
+    suspend fun getAllPropertyBrands(): List<PropertyBrand> = propertyBrandFeignClient.list(ids = null)
 
-    fun getPropertyBrandById(id: Int): PropertyBrand =
+    suspend fun getPropertyBrandById(id: Int): PropertyBrand =
         try {
             propertyBrandFeignClient.get(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
         }
 
-    fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrand =
+    suspend fun createPropertyBrand(request: PropertyBrandRequest): PropertyBrand =
         try {
             propertyBrandFeignClient.create(request)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid property brand")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid property brand")
         }
 
-    fun updatePropertyBrand(
+    suspend fun updatePropertyBrand(
         id: Int,
         request: PropertyBrandRequest,
     ): PropertyBrand =
         try {
             propertyBrandFeignClient.update(id, request)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid property brand")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid property brand")
         }
 
-    fun deletePropertyBrand(id: Int) {
+    suspend fun deletePropertyBrand(id: Int) {
         try {
             propertyBrandFeignClient.delete(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "property brand not found")
         }
     }

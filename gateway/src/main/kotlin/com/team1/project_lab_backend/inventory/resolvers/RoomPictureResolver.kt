@@ -20,12 +20,12 @@ class RoomPictureResolver(
     private val roomService: RoomService,
 ) {
     @QueryMapping
-    fun roomPictures(
+    suspend fun roomPictures(
         @Argument roomId: Int,
     ): List<RoomPicture> = roomPictureService.getPicturesForRoomAsEntities(roomId)
 
     @MutationMapping
-    fun updateRoomPicture(
+    suspend fun updateRoomPicture(
         @Argument roomId: Int,
         @Argument id: Int,
         @Argument input: UpdateRoomPictureInput,
@@ -42,7 +42,7 @@ class RoomPictureResolver(
     }
 
     @MutationMapping
-    fun deleteRoomPicture(
+    suspend fun deleteRoomPicture(
         @Argument roomId: Int,
         @Argument id: Int,
     ): Boolean {

@@ -14,14 +14,14 @@ class ReviewBatchResolver(
     private val stayFeignClient: StayFeignClient,
 ) {
     @BatchMapping
-    fun user(reviews: List<Review>): Map<Review, User> {
+    suspend fun user(reviews: List<Review>): Map<Review, User> {
         val ids = reviews.map { it.userId }.distinct()
         val loaded = userFeignClient.list(ids).associateBy { it.id }
         return reviews.associateWith { loaded[it.userId]!! }
     }
 
     @BatchMapping
-    fun stay(reviews: List<Review>): Map<Review, Stay> {
+    suspend fun stay(reviews: List<Review>): Map<Review, Stay> {
         val ids = reviews.map { it.stayId }.distinct()
         val loaded = stayFeignClient.list(ids).associateBy { it.id }
         return reviews.associateWith { loaded[it.stayId]!! }

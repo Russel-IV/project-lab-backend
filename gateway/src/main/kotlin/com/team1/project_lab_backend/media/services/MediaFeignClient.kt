@@ -1,55 +1,78 @@
 package com.team1.project_lab_backend.media.services
 
-import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RequestPart
-import org.springframework.web.multipart.MultipartFile
+import org.springframework.http.client.MultipartBodyBuilder
+import org.springframework.http.codec.multipart.FilePart
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.BodyInserters
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-@FeignClient(name = "media-service")
-interface MediaFeignClient {
-    @GetMapping("/api/v1/media")
-    fun listForOwners(
-        @RequestParam ownerType: String,
-        @RequestParam ownerIds: List<Int>,
-    ): List<MediaResponse>
+@Component
+class MediaFeignClient(
+    @Qualifier("mediaServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/api/v1/media/{ownerType}/{ownerId}")
-    fun listForOwner(
-        @PathVariable ownerType: String,
-        @PathVariable ownerId: Int,
-    ): List<MediaResponse>
+    suspend fun listForOwners(
+        ownerType: String,
+        ownerIds: List<Int>,
+    ): List<MediaResponse> =
+        webClient.get()
+            .uri { b ->
+                b.path("/api/v1/media").queryParam("ownerType", ownerType).queryParam("ownerIds", *ownerIds.toTypedArray()).build()
+            }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/api/v1/media/{ownerType}/{ownerId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun upload(
-        @PathVariable ownerType: String,
-        @PathVariable ownerId: Int,
-        @RequestPart("file") file: MultipartFile,
-        @RequestParam caption: String?,
-        @RequestParam isPrimary: Boolean,
-        @RequestParam displayOrder: Int,
-    ): MediaResponse
+    suspend fun listForOwner(
+        ownerType: String,
+        ownerId: Int,
+    ): List<MediaResponse> =
+        webClient.get().uri("/api/v1/media/{ownerType}/{ownerId}", ownerType, ownerId).retrieve().awaitBody()
 
-    @PatchMapping("/api/v1/media/{ownerType}/{ownerId}/{id}")
-    fun update(
-        @PathVariable ownerType: String,
-        @PathVariable ownerId: Int,
-        @PathVariable id: Int,
-        @RequestBody request: UpdateMediaRequest,
-    ): MediaResponse
+    suspend fun upload(
+        ownerType: String,
+        ownerId: Int,
+        file: FilePart,
+        caption: String?,
+        isPrimary: Boolean,
+        displayOrder: Int,
+    ): MediaResponse {
+        val body = MultipartBodyBuilder()
+        body.asyncPart("file", file.content(), DataBuffer::class.java).filename(file.filename())
+        if (caption != null) body.part("caption", caption)
+        body.part("isPrimary", isPrimary)
+        body.part("displayOrder", displayOrder)
+        return webClient.post()
+            .uri("/api/v1/media/{ownerType}/{ownerId}", ownerType, ownerId)
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(BodyInserters.fromMultipartData(body.build()))
+            .retrieve()
+            .awaitBody()
+    }
 
-    @DeleteMapping("/api/v1/media/{ownerType}/{ownerId}/{id}")
-    fun delete(
-        @PathVariable ownerType: String,
-        @PathVariable ownerId: Int,
-        @PathVariable id: Int,
-    )
+    suspend fun update(
+        ownerType: String,
+        ownerId: Int,
+        id: Int,
+        request: UpdateMediaRequest,
+    ): MediaResponse =
+        webClient.patch()
+            .uri("/api/v1/media/{ownerType}/{ownerId}/{id}", ownerType, ownerId, id)
+            .bodyValue(request)
+            .retrieve()
+            .awaitBody()
+
+    suspend fun delete(
+        ownerType: String,
+        ownerId: Int,
+        id: Int,
+    ) {
+        webClient.delete().uri("/api/v1/media/{ownerType}/{ownerId}/{id}", ownerType, ownerId, id).retrieve().awaitBodilessEntity()
+    }
 }
 
 data class MediaResponse(

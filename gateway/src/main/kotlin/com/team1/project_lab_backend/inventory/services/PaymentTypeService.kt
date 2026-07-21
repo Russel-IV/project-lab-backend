@@ -2,10 +2,10 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.PaymentTypeRequest
 import com.team1.project_lab_backend.inventory.models.PaymentType
-import com.team1.project_lab_backend.util.feignErrorMessage
-import feign.FeignException
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -14,31 +14,31 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class PaymentTypeService(private val paymentTypeFeignClient: PaymentTypeFeignClient) {
-    fun getAllPaymentTypes(): List<PaymentType> = paymentTypeFeignClient.list(ids = null)
+    suspend fun getAllPaymentTypes(): List<PaymentType> = paymentTypeFeignClient.list(ids = null)
 
-    fun createPaymentType(request: PaymentTypeRequest): PaymentType =
+    suspend fun createPaymentType(request: PaymentTypeRequest): PaymentType =
         try {
             paymentTypeFeignClient.create(request)
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid payment type")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid payment type")
         }
 
-    fun updatePaymentType(
+    suspend fun updatePaymentType(
         id: Int,
         request: PaymentTypeRequest,
     ): PaymentType =
         try {
             paymentTypeFeignClient.update(id, request)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment type not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid payment type")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid payment type")
         }
 
-    fun deletePaymentType(id: Int) {
+    suspend fun deletePaymentType(id: Int) {
         try {
             paymentTypeFeignClient.delete(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "payment type not found")
         }
     }

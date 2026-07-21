@@ -2,60 +2,66 @@ package com.team1.project_lab_backend.booking.services
 
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 import java.time.LocalDate
 
-/**
- * Resolves via Eureka to booking-service's internal REST API (docs/adr/0002,
- * docs/adr/0010, docs/adr/0011). Mirrors BookingController/BookingConflictController
- * one-to-one — this interface and those controllers are two halves of one contract
- * that must be kept in sync by hand, since there's no shared library between the two
- * modules.
- */
-@FeignClient(name = "booking-service", contextId = "bookingFeignClient")
-interface BookingFeignClient {
-    @GetMapping("/internal/bookings")
-    fun list(
-        @RequestParam(required = false) ids: List<Int>?,
-        @RequestParam(required = false) userId: Int?,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
-    ): List<Booking>
+@Component
+class BookingFeignClient(
+    @Qualifier("bookingServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/bookings/{id}")
-    fun get(
-        @PathVariable id: Int,
-    ): Booking
+    suspend fun list(
+        ids: List<Int>? = null,
+        userId: Int? = null,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Booking> =
+        webClient.get()
+            .uri { b ->
+                b.path("/internal/bookings").queryParam("page", page).queryParam("size", size)
+                if (ids != null) b.queryParam("ids", *ids.toTypedArray())
+                if (userId != null) b.queryParam("userId", userId)
+                b.build()
+            }
+            .retrieve()
+            .awaitBody()
 
-    @GetMapping("/internal/bookings/completed-for-stay")
-    fun hasCompletedBookingForStay(
-        @RequestParam userId: Int,
-        @RequestParam stayId: Int,
-    ): Boolean
+    suspend fun get(id: Int): Booking =
+        webClient.get().uri("/internal/bookings/{id}", id).retrieve().awaitBody()
 
-    @PostMapping("/internal/bookings")
-    fun create(
-        @RequestBody request: CreateBookingRequest,
-    ): Booking
+    suspend fun hasCompletedBookingForStay(
+        userId: Int,
+        stayId: Int,
+    ): Boolean =
+        webClient.get()
+            .uri { b ->
+                b.path("/internal/bookings/completed-for-stay").queryParam("userId", userId).queryParam("stayId", stayId).build()
+            }
+            .retrieve()
+            .awaitBody()
 
-    @PatchMapping("/internal/bookings/{id}/status")
-    fun updateStatus(
-        @PathVariable id: Int,
-        @RequestBody request: BookingStatusUpdateRequest,
-    ): Booking
+    suspend fun create(request: CreateBookingRequest): Booking =
+        webClient.post().uri("/internal/bookings").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/bookings/{id}")
-    fun delete(
-        @PathVariable id: Int,
-        @RequestParam requestingUserId: Int,
-    )
+    suspend fun updateStatus(
+        id: Int,
+        request: BookingStatusUpdateRequest,
+    ): Booking =
+        webClient.patch().uri("/internal/bookings/{id}/status", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(
+        id: Int,
+        requestingUserId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/bookings/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }
 
 data class CreateBookingRequest(

@@ -14,10 +14,10 @@ class LanguageResolver(
     private val languageService: LanguageService,
 ) {
     @QueryMapping
-    fun languages(): List<Language> = languageService.getAllLanguages()
+    suspend fun languages(): List<Language> = languageService.getAllLanguages()
 
     @MutationMapping
-    fun createLanguage(
+    suspend fun createLanguage(
         @Argument input: CreateLanguageInput,
     ): Language {
         requireAuthenticated()
@@ -25,7 +25,7 @@ class LanguageResolver(
     }
 
     @MutationMapping
-    fun updateLanguage(
+    suspend fun updateLanguage(
         @Argument id: Int,
         @Argument input: UpdateLanguageInput,
     ): Language {
@@ -34,7 +34,7 @@ class LanguageResolver(
     }
 
     @MutationMapping
-    fun deleteLanguage(
+    suspend fun deleteLanguage(
         @Argument id: Int,
     ): Boolean {
         requireAuthenticated()

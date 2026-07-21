@@ -2,13 +2,13 @@ package com.team1.project_lab_backend.media.services
 
 import com.team1.project_lab_backend.media.dto.RoomPictureResponse
 import com.team1.project_lab_backend.media.models.RoomPicture
-import com.team1.project_lab_backend.util.feignErrorMessage
+import com.team1.project_lab_backend.util.webClientErrorMessage
 import com.team1.project_lab_backend.util.requireNonNegative
 import com.team1.project_lab_backend.util.requirePositive
-import feign.FeignException
 import org.springframework.http.HttpStatus
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Service
-import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -25,22 +25,22 @@ import org.springframework.web.server.ResponseStatusException
 class RoomPictureService(
     private val mediaFeignClient: MediaFeignClient,
 ) {
-    fun getPicturesForRoom(roomId: Int): List<RoomPictureResponse> {
+    suspend fun getPicturesForRoom(roomId: Int): List<RoomPictureResponse> {
         roomId.requirePositive("roomId")
         return mediaFeignClient.listForOwner("ROOM", roomId).map { it.toRoomPictureResponse() }
     }
 
-    fun getPicturesForRoomAsEntities(roomId: Int): List<RoomPicture> {
+    suspend fun getPicturesForRoomAsEntities(roomId: Int): List<RoomPicture> {
         roomId.requirePositive("roomId")
         return mediaFeignClient.listForOwner("ROOM", roomId).map { it.toRoomPicture() }
     }
 
-    fun getPicturesForRooms(roomIds: List<Int>): Map<Int, List<RoomPicture>> =
+    suspend fun getPicturesForRooms(roomIds: List<Int>): Map<Int, List<RoomPicture>> =
         mediaFeignClient.listForOwners("ROOM", roomIds).map { it.toRoomPicture() }.groupBy { it.roomId }
 
-    fun addPicture(
+    suspend fun addPicture(
         roomId: Int,
-        file: MultipartFile,
+        file: FilePart,
         caption: String?,
         isPrimary: Boolean,
         displayOrder: Int,
@@ -49,12 +49,12 @@ class RoomPictureService(
         displayOrder.requireNonNegative("displayOrder")
         return try {
             mediaFeignClient.upload("ROOM", roomId, file, caption, isPrimary, displayOrder).toRoomPictureResponse()
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid picture")
         }
     }
 
-    fun updatePictureMetadata(
+    suspend fun updatePictureMetadata(
         roomId: Int,
         id: Int,
         caption: String?,
@@ -66,14 +66,14 @@ class RoomPictureService(
         displayOrder.requireNonNegative("displayOrder")
         return try {
             mediaFeignClient.update("ROOM", roomId, id, UpdateMediaRequest(caption, isPrimary, displayOrder)).toRoomPicture()
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
-        } catch (e: FeignException.BadRequest) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, feignErrorMessage(e) ?: "invalid picture")
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid picture")
         }
     }
 
-    fun deletePicture(
+    suspend fun deletePicture(
         roomId: Int,
         id: Int,
     ) {
@@ -81,7 +81,7 @@ class RoomPictureService(
         id.requirePositive()
         try {
             mediaFeignClient.delete("ROOM", roomId, id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         }
     }

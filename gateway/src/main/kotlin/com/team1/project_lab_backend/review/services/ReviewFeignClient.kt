@@ -2,59 +2,68 @@ package com.team1.project_lab_backend.review.services
 
 import com.team1.project_lab_backend.review.dto.ReviewSummary
 import com.team1.project_lab_backend.review.models.Review
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 
-/**
- * Resolves via Eureka to review-service's internal REST API (docs/adr/0005,
- * docs/adr/0008). Mirrors ReviewController one-to-one — this interface and that
- * controller are two halves of one contract that must be kept in sync by hand, since
- * there's no shared library between the two modules.
- */
-@FeignClient(name = "review-service", contextId = "reviewFeignClient")
-interface ReviewFeignClient {
-    @GetMapping("/internal/reviews")
-    fun list(
-        @RequestParam(required = false) stayId: Int?,
-        @RequestParam(required = false) userId: Int?,
-        @RequestParam(required = false) ids: List<Int>?,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
-    ): List<Review>
+@Component
+class ReviewFeignClient(
+    @Qualifier("reviewServiceWebClient") private val webClient: WebClient,
+) {
 
-    @GetMapping("/internal/reviews/summary")
-    fun summary(
-        @RequestParam stayId: Int,
-    ): ReviewSummary
+    suspend fun list(
+        stayId: Int? = null,
+        userId: Int? = null,
+        ids: List<Int>? = null,
+        page: Int = 0,
+        size: Int = 20,
+    ): List<Review> =
+        webClient.get()
+            .uri { b ->
+                b.path("/internal/reviews").queryParam("page", page).queryParam("size", size)
+                if (stayId != null) b.queryParam("stayId", stayId)
+                if (userId != null) b.queryParam("userId", userId)
+                if (ids != null) b.queryParam("ids", *ids.toTypedArray())
+                b.build()
+            }
+            .retrieve()
+            .awaitBody()
 
-    @GetMapping("/internal/reviews/mine")
-    fun mine(
-        @RequestParam userId: Int,
-        @RequestParam stayId: Int,
-    ): Review
+    suspend fun summary(stayId: Int): ReviewSummary =
+        webClient.get()
+            .uri { b -> b.path("/internal/reviews/summary").queryParam("stayId", stayId).build() }
+            .retrieve()
+            .awaitBody()
 
-    @PostMapping("/internal/reviews")
-    fun create(
-        @RequestBody request: CreateReviewRequest,
-    ): Review
+    suspend fun mine(
+        userId: Int,
+        stayId: Int,
+    ): Review =
+        webClient.get()
+            .uri { b -> b.path("/internal/reviews/mine").queryParam("userId", userId).queryParam("stayId", stayId).build() }
+            .retrieve()
+            .awaitBody()
 
-    @PatchMapping("/internal/reviews/{id}")
-    fun update(
-        @PathVariable id: Int,
-        @RequestBody request: UpdateReviewRequest,
-    ): Review
+    suspend fun create(request: CreateReviewRequest): Review =
+        webClient.post().uri("/internal/reviews").bodyValue(request).retrieve().awaitBody()
 
-    @DeleteMapping("/internal/reviews/{id}")
-    fun delete(
-        @PathVariable id: Int,
-        @RequestParam requestingUserId: Int,
-    )
+    suspend fun update(
+        id: Int,
+        request: UpdateReviewRequest,
+    ): Review =
+        webClient.patch().uri("/internal/reviews/{id}", id).bodyValue(request).retrieve().awaitBody()
+
+    suspend fun delete(
+        id: Int,
+        requestingUserId: Int,
+    ) {
+        webClient.delete()
+            .uri { b -> b.path("/internal/reviews/{id}").queryParam("requestingUserId", requestingUserId).build(id) }
+            .retrieve()
+            .awaitBodilessEntity()
+    }
 }
 
 data class CreateReviewRequest(val text: String, val userId: Int, val stayId: Int, val rating: Int)

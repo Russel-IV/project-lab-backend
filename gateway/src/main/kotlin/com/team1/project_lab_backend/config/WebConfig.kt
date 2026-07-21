@@ -1,51 +1,46 @@
 package com.team1.project_lab_backend.config
 
-import jakarta.servlet.MultipartConfigElement
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
-import org.springframework.web.servlet.HandlerInterceptor
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.config.ResourceHandlerRegistry
+import org.springframework.web.reactive.config.WebFluxConfigurer
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 import java.nio.file.Path
 
+/**
+ * docs/adr/0025: WebFluxConfigurer replaces WebMvcConfigurer. No MultipartConfigElement
+ * bean needed — WebFlux streams multipart natively (Part/FilePart), no servlet-style
+ * multi-part config to wire.
+ */
 @Configuration
 class WebConfig(
     @Value("\${app.upload.dir}") private val uploadDir: String,
-) : WebMvcConfigurer {
-    // This Spring Boot version moved MultipartAutoConfiguration into a separate
-    // spring-boot-servlet artifact (transitively present, confirmed via `jar tf` on
-    // the built fat jar), but the DispatcherServlet registration this app actually
-    // gets never picks up its MultipartConfigElement bean — file uploads fail with
-    // "Unable to process parts as no multi-part configuration has been provided"
-    // without this explicit bean.
-    @Bean
-    fun multipartConfigElement(): MultipartConfigElement = MultipartConfigElement("")
-
+) : WebFluxConfigurer {
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
         val absolutePath = Path.of(uploadDir).toAbsolutePath().toString()
         registry.addResourceHandler("/uploads/**")
             .addResourceLocations("file:$absolutePath/")
     }
+}
 
-    override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(
-            object : HandlerInterceptor {
-                override fun preHandle(
-                    request: HttpServletRequest,
-                    response: HttpServletResponse,
-                    handler: Any,
-                ): Boolean {
-                    if (request.requestURI.startsWith("/uploads/")) {
-                        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment")
-                    }
-                    return true
-                }
-            },
-        )
+/**
+ * WebFlux has no HandlerInterceptor equivalent for this kind of path-scoped response
+ * header — a WebFilter is the standard replacement.
+ */
+@Component
+class UploadsContentDispositionFilter : WebFilter {
+    override fun filter(
+        exchange: ServerWebExchange,
+        chain: WebFilterChain,
+    ): Mono<Void> {
+        if (exchange.request.uri.path.startsWith("/uploads/")) {
+            exchange.response.headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+        }
+        return chain.filter(exchange)
     }
 }

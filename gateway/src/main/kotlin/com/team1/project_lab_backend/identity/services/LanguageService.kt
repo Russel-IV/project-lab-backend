@@ -2,9 +2,9 @@ package com.team1.project_lab_backend.identity.services
 
 import com.team1.project_lab_backend.identity.dto.LanguageRequest
 import com.team1.project_lab_backend.identity.models.Language
-import feign.FeignException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -13,31 +13,31 @@ import org.springframework.web.server.ResponseStatusException
  */
 @Service
 class LanguageService(private val languageFeignClient: LanguageFeignClient) {
-    fun getAllLanguages(): List<Language> = languageFeignClient.list()
+    suspend fun getAllLanguages(): List<Language> = languageFeignClient.list()
 
-    fun createLanguage(request: LanguageRequest): Language =
+    suspend fun createLanguage(request: LanguageRequest): Language =
         try {
             languageFeignClient.create(LanguageUpsertRequest(languageName = request.languageName))
-        } catch (e: FeignException.BadRequest) {
+        } catch (e: WebClientResponseException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
         }
 
-    fun updateLanguage(
+    suspend fun updateLanguage(
         id: Int,
         request: LanguageRequest,
     ): Language =
         try {
             languageFeignClient.update(id, LanguageUpsertRequest(languageName = request.languageName))
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "language not found")
-        } catch (e: FeignException.BadRequest) {
+        } catch (e: WebClientResponseException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "languageName must not be blank")
         }
 
-    fun deleteLanguage(id: Int) {
+    suspend fun deleteLanguage(id: Int) {
         try {
             languageFeignClient.delete(id)
-        } catch (e: FeignException.NotFound) {
+        } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "language not found")
         }
     }
