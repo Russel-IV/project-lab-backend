@@ -28,6 +28,7 @@ class BookingService(
     private val bookingRepository: BookingRepository,
     private val roomFeignClient: RoomFeignClient,
     private val paymentIntentRepository: PaymentIntentRepository,
+    private val stripeClient: StripeClient,
 ) {
     @Transactional(readOnly = true)
     fun getAllBookings(
@@ -92,6 +93,13 @@ class BookingService(
         // Idempotent retry: the frontend may resend createBooking after a flaky response.
         paymentIntent.bookingId?.let { existingBookingId ->
             return bookingRepository.findById(existingBookingId).orNotFound("booking not found")
+        }
+
+        // Real Stripe status, not our locally-stored (pre-confirmation) row — the
+        // frontend only calls createBooking after stripe.confirmPayment() resolves,
+        // but a client can call this mutation directly, so re-verify server-side.
+        if (stripeClient.retrieveStatus(paymentIntent.paymentIntentId) != "succeeded") {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "payment intent has not succeeded")
         }
 
         if (paymentIntent.roomIds != request.roomIds) {

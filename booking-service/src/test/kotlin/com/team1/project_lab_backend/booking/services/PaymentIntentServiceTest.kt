@@ -22,8 +22,9 @@ private fun <T> anyArg(): T {
 class PaymentIntentServiceTest {
     private val paymentIntentRepository = Mockito.mock(PaymentIntentRepository::class.java)
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
+    private val stripeClient = Mockito.mock(StripeClient::class.java)
 
-    private val paymentIntentService = PaymentIntentService(paymentIntentRepository, roomFeignClient)
+    private val paymentIntentService = PaymentIntentService(paymentIntentRepository, roomFeignClient, stripeClient)
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
@@ -61,6 +62,8 @@ class PaymentIntentServiceTest {
         stubNoExistingIntent(request)
         Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt()))
             .thenReturn(listOf(room(10)))
+        Mockito.`when`(stripeClient.createPaymentIntent(Mockito.anyInt(), Mockito.anyString(), anyArg(), anyArg()))
+            .thenReturn(StripePaymentIntentResult(id = "pi_test_123", clientSecret = "pi_test_123_secret_abc"))
         Mockito.`when`(paymentIntentRepository.save(Mockito.any(PaymentIntent::class.java)))
             .thenAnswer { it.arguments[0] }
 
@@ -68,7 +71,8 @@ class PaymentIntentServiceTest {
 
         assertEquals(10000, result.amount)
         assertEquals("usd", result.currency)
-        assertEquals(true, result.paymentIntentId.startsWith("pi_mock_"))
+        assertEquals("pi_test_123", result.paymentIntentId)
+        assertEquals("pi_test_123_secret_abc", result.clientSecret)
     }
 
     @Test

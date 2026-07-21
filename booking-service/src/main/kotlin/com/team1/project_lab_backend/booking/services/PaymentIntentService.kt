@@ -14,12 +14,12 @@ import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.util.UUID
 
 @Service
 class PaymentIntentService(
     private val paymentIntentRepository: PaymentIntentRepository,
     private val roomFeignClient: RoomFeignClient,
+    private val stripeClient: StripeClient,
 ) {
     @Transactional
     fun createPaymentIntent(request: CreatePaymentIntentRequest): PaymentIntentResponse {
@@ -59,11 +59,23 @@ class PaymentIntentService(
         val totalPrice = rooms.fold(BigDecimal.ZERO) { acc, room -> acc + room.price } * nights
         val amount = totalPrice.movePointRight(2).setScale(0, RoundingMode.HALF_UP).toInt()
 
-        val paymentIntentId = "pi_mock_${UUID.randomUUID()}"
+        val stripeIntent =
+            stripeClient.createPaymentIntent(
+                amount = amount,
+                currency = "usd",
+                idempotencyKey = request.idempotencyKey,
+                metadata =
+                    mapOf(
+                        "roomIds" to request.roomIds.joinToString(","),
+                        "checkInDate" to request.checkInDate.toString(),
+                        "checkOutDate" to request.checkOutDate.toString(),
+                    ),
+            )
+
         val saved =
             paymentIntentRepository.save(
                 PaymentIntent(
-                    paymentIntentId = paymentIntentId,
+                    paymentIntentId = stripeIntent.id,
                     idempotencyKey = request.idempotencyKey,
                     userId = request.userId,
                     checkInDate = request.checkInDate,
@@ -71,7 +83,7 @@ class PaymentIntentService(
                     guestsCount = request.guestsCount,
                     amount = amount,
                     currency = "usd",
-                    clientSecret = "${paymentIntentId}_secret_${UUID.randomUUID()}",
+                    clientSecret = stripeIntent.clientSecret,
                     roomIds = request.roomIds.toMutableSet(),
                 ),
             )

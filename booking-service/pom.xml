@@ -113,6 +113,15 @@
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-micrometer</artifactId>
 		</dependency>
+		<!-- Real Stripe integration for PaymentIntentService/BookingService (replaces
+		     the pi_mock_ placeholder clientSecret, which Stripe.js rejects client-side
+		     since real Stripe IDs never contain hyphens after the prefix). Not part of
+		     the Spring BOM, so the version is pinned explicitly here. -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>29.2.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>

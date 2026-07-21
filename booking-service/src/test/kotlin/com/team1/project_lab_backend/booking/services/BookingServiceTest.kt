@@ -29,8 +29,9 @@ class BookingServiceTest {
     private val bookingRepository = Mockito.mock(BookingRepository::class.java)
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
     private val paymentIntentRepository = Mockito.mock(PaymentIntentRepository::class.java)
+    private val stripeClient = Mockito.mock(StripeClient::class.java)
 
-    private val bookingService = BookingService(bookingRepository, roomFeignClient, paymentIntentRepository)
+    private val bookingService = BookingService(bookingRepository, roomFeignClient, paymentIntentRepository, stripeClient)
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
@@ -70,6 +71,7 @@ class BookingServiceTest {
         request: CreateBookingRequest,
         amount: Int,
         bookingId: Int? = null,
+        stripeStatus: String = "succeeded",
     ) {
         Mockito.`when`(paymentIntentRepository.findByPaymentIntentId(request.paymentIntentId)).thenReturn(
             Optional.of(
@@ -88,6 +90,7 @@ class BookingServiceTest {
                 ),
             ),
         )
+        Mockito.`when`(stripeClient.retrieveStatus(request.paymentIntentId)).thenReturn(stripeStatus)
     }
 
     private fun stubHappyPath(
@@ -181,6 +184,15 @@ class BookingServiceTest {
 
         val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+    }
+
+    @Test
+    fun createBookingRejectsPaymentIntentThatHasNotSucceeded() {
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000, stripeStatus = "requires_payment_method")
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
