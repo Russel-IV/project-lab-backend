@@ -46,9 +46,9 @@ fi
 STAGGER_SECONDS="${LIFT_STAGGER_SECONDS:-5}"
 HEALTH_TIMEOUT_SECONDS="${LIFT_HEALTH_TIMEOUT_SECONDS:-180}"
 
-INFRA_SERVICES=(project-lab-database review-database media-database identity-database inventory-database booking-database zipkin)
-DB_SERVICES=(project-lab-database review-database media-database identity-database inventory-database booking-database)
-APP_SERVICES=(project-lab-backend identity-service inventory-service booking-service review-service media-service)
+INFRA_SERVICES=(project-lab-database review-database media-database identity-database inventory-database booking-database chatbot-database zipkin)
+DB_SERVICES=(project-lab-database review-database media-database identity-database inventory-database booking-database chatbot-database)
+APP_SERVICES=(project-lab-backend identity-service inventory-service booking-service review-service media-service chatbot-service)
 
 # Host port each app service's own /actuator/health is reachable on.
 declare -A HEALTH_PORT=(
@@ -58,7 +58,9 @@ declare -A HEALTH_PORT=(
     [booking-service]=8083
     [review-service]=8084
     [media-service]=8085
+    [chatbot-service]=8086
 )
+
 
 # Polls `docker inspect`'s own healthcheck status — used for containers that
 # already declare a healthcheck in docker-compose.yml (the 6 Postgres
