@@ -1,8 +1,10 @@
 package com.team1.project_lab_backend.config
 
+import io.micrometer.observation.ObservationRegistry
 import org.springframework.cloud.client.loadbalancer.LoadBalanced
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.client.reactive.ClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
 
 /**
@@ -23,9 +25,32 @@ import org.springframework.web.reactive.function.client.WebClient
  */
 @Configuration
 class WebClientConfig {
+    /**
+     * Two separate hooks, both required, confirmed the hard way via live Zipkin
+     * checks after fixing only one at a time:
+     * - `.clientConnector(connector)`: the injected ClientHttpConnector (from
+     *   spring-boot-http-client's ReactiveHttpClientAutoConfiguration, not
+     *   transitively pulled in by spring-boot-starter-webflux alone — added
+     *   explicitly, see pom.xml).
+     * - `.observationRegistry(registry)`: without this, WebClient never creates a
+     *   CLIENT-kind span per outbound call at all, so there's nothing to carry
+     *   trace-context headers into the downstream request regardless of which
+     *   connector is underneath it — the two are independent WebClient.Builder
+     *   settings, not one production of the other.
+     * A bare `WebClient.builder()` with neither set uses Reactor Netty's raw
+     * defaults and silently propagates no trace context downstream — confirmed
+     * live via Zipkin before this fix (gateway's own spans reached Zipkin, but no
+     * span from any call ever continued into inventory-service/media-service/etc).
+     */
     @Bean
     @LoadBalanced
-    fun loadBalancedWebClientBuilder(): WebClient.Builder = WebClient.builder()
+    fun loadBalancedWebClientBuilder(
+        connector: ClientHttpConnector,
+        observationRegistry: ObservationRegistry,
+    ): WebClient.Builder =
+        WebClient.builder()
+            .clientConnector(connector)
+            .observationRegistry(observationRegistry)
 
     @Bean("inventoryServiceWebClient")
     fun inventoryServiceWebClient(builder: WebClient.Builder): WebClient = builder.baseUrl("http://inventory-service").build()
