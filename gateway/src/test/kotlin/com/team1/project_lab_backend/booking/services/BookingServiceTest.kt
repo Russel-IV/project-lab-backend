@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.booking.services
 
 import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
+import com.team1.project_lab_backend.booking.dto.PaymentIntentRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.util.assertThrowsSuspend
@@ -100,6 +101,7 @@ class BookingServiceTest {
                         checkOutDate = dayAfterTomorrow,
                         guestsCount = 2,
                         roomIds = setOf(5),
+                        paymentIntentId = "pi_mock_1",
                     ),
                 )
 
@@ -120,6 +122,73 @@ class BookingServiceTest {
                             checkOutDate = dayAfterTomorrow,
                             guestsCount = 2,
                             roomIds = setOf(5),
+                            paymentIntentId = "pi_mock_1",
+                        ),
+                    )
+                }
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+        }
+
+    @Test
+    fun createBookingTranslatesForbiddenFromBookingService() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.create(anyArg())).thenThrow(webClientException(403))
+
+            val ex =
+                assertThrowsSuspend<ResponseStatusException> {
+                    bookingService.createBooking(
+                        BookingRequest(
+                            userId = 1,
+                            checkInDate = tomorrow,
+                            checkOutDate = dayAfterTomorrow,
+                            guestsCount = 2,
+                            roomIds = setOf(5),
+                            paymentIntentId = "pi_mock_1",
+                        ),
+                    )
+                }
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+        }
+
+    @Test
+    fun createPaymentIntentDelegatesToFeignClient() =
+        runTest {
+            val response = PaymentIntentResponse("pi_mock_1", "pi_mock_1_secret_2", 20000, "usd")
+            Mockito.`when`(bookingFeignClient.createPaymentIntent(anyArg())).thenReturn(response)
+
+            val result =
+                bookingService.createPaymentIntent(
+                    PaymentIntentRequest(
+                        userId = 1,
+                        roomIds = setOf(5),
+                        checkInDate = tomorrow,
+                        checkOutDate = dayAfterTomorrow,
+                        guestsCount = 2,
+                        idempotencyKey = "key-1",
+                    ),
+                )
+
+            assertEquals("pi_mock_1", result.paymentIntentId)
+            assertEquals(20000, result.amount)
+        }
+
+    @Test
+    fun createPaymentIntentTranslatesBadRequestFromBookingService() =
+        runTest {
+            Mockito.`when`(bookingFeignClient.createPaymentIntent(anyArg())).thenThrow(webClientException(400))
+
+            val ex =
+                assertThrowsSuspend<ResponseStatusException> {
+                    bookingService.createPaymentIntent(
+                        PaymentIntentRequest(
+                            userId = 1,
+                            roomIds = setOf(5),
+                            checkInDate = tomorrow,
+                            checkOutDate = dayAfterTomorrow,
+                            guestsCount = 2,
+                            idempotencyKey = "key-1",
                         ),
                     )
                 }

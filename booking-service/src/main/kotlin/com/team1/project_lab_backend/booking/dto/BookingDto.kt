@@ -16,6 +16,7 @@ data class CreateBookingRequest(
     val checkOutDate: LocalDate,
     val guestsCount: Int,
     val roomIds: Set<Int>,
+    val paymentIntentId: String,
 )
 
 data class BookingStatusRequest(

@@ -8,4 +8,6 @@ input CreateBookingInput {
     guestsCount: Int!
     "IDs of the rooms to include in the booking."
     roomIds: [Int!]!
+    "ID of a payment intent previously created via createPaymentIntent, for the same rooms/dates/guests. Verified server-side before the booking is created."
+    paymentIntentId: String!
 }

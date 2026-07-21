@@ -13,7 +13,6 @@ import java.time.LocalDate
 class BookingFeignClient(
     @Qualifier("bookingServiceWebClient") private val webClient: WebClient,
 ) {
-
     suspend fun list(
         ids: List<Int>? = null,
         userId: Int? = null,
@@ -30,8 +29,7 @@ class BookingFeignClient(
             .retrieve()
             .awaitBody()
 
-    suspend fun get(id: Int): Booking =
-        webClient.get().uri("/internal/bookings/{id}", id).retrieve().awaitBody()
+    suspend fun get(id: Int): Booking = webClient.get().uri("/internal/bookings/{id}", id).retrieve().awaitBody()
 
     suspend fun hasCompletedBookingForStay(
         userId: Int,
@@ -47,11 +45,13 @@ class BookingFeignClient(
     suspend fun create(request: CreateBookingRequest): Booking =
         webClient.post().uri("/internal/bookings").bodyValue(request).retrieve().awaitBody()
 
+    suspend fun createPaymentIntent(request: CreatePaymentIntentRequest): PaymentIntentResponse =
+        webClient.post().uri("/internal/payment-intents").bodyValue(request).retrieve().awaitBody()
+
     suspend fun updateStatus(
         id: Int,
         request: BookingStatusUpdateRequest,
-    ): Booking =
-        webClient.patch().uri("/internal/bookings/{id}/status", id).bodyValue(request).retrieve().awaitBody()
+    ): Booking = webClient.patch().uri("/internal/bookings/{id}/status", id).bodyValue(request).retrieve().awaitBody()
 
     suspend fun delete(
         id: Int,
@@ -70,6 +70,23 @@ data class CreateBookingRequest(
     val checkOutDate: LocalDate,
     val guestsCount: Int,
     val roomIds: Set<Int>,
+    val paymentIntentId: String,
 )
 
 data class BookingStatusUpdateRequest(val status: BookingStatus)
+
+data class CreatePaymentIntentRequest(
+    val userId: Int,
+    val roomIds: Set<Int>,
+    val checkInDate: LocalDate,
+    val checkOutDate: LocalDate,
+    val guestsCount: Int,
+    val idempotencyKey: String,
+)
+
+data class PaymentIntentResponse(
+    val paymentIntentId: String,
+    val clientSecret: String,
+    val amount: Int,
+    val currency: String,
+)

@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.booking.resolvers
 
 import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
+import com.team1.project_lab_backend.booking.dto.PaymentIntentRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.services.BookingService
@@ -53,6 +54,30 @@ class BookingResolver(private val bookingService: BookingService) {
     }
 
     @MutationMapping
+    suspend fun createPaymentIntent(
+        @Argument input: CreatePaymentIntentInput,
+    ): PaymentIntentPayload {
+        val currentUser = requireAuthenticated()
+        val result =
+            bookingService.createPaymentIntent(
+                PaymentIntentRequest(
+                    userId = currentUser.id,
+                    roomIds = input.roomIds,
+                    checkInDate = input.checkInDate,
+                    checkOutDate = input.checkOutDate,
+                    guestsCount = input.guestsCount,
+                    idempotencyKey = input.idempotencyKey,
+                ),
+            )
+        return PaymentIntentPayload(
+            clientSecret = result.clientSecret,
+            paymentIntentId = result.paymentIntentId,
+            amount = result.amount,
+            currency = result.currency,
+        )
+    }
+
+    @MutationMapping
     suspend fun createBooking(
         @Argument input: CreateBookingInput,
     ): Booking {
@@ -64,6 +89,7 @@ class BookingResolver(private val bookingService: BookingService) {
                 checkOutDate = input.checkOutDate,
                 guestsCount = input.guestsCount,
                 roomIds = input.roomIds,
+                paymentIntentId = input.paymentIntentId,
             ),
         )
     }
@@ -92,6 +118,22 @@ data class CreateBookingInput(
     val checkOutDate: LocalDate,
     val guestsCount: Int,
     val roomIds: Set<Int>,
+    val paymentIntentId: String,
+)
+
+data class CreatePaymentIntentInput(
+    val roomIds: Set<Int>,
+    val checkInDate: LocalDate,
+    val checkOutDate: LocalDate,
+    val guestsCount: Int,
+    val idempotencyKey: String,
+)
+
+data class PaymentIntentPayload(
+    val clientSecret: String,
+    val paymentIntentId: String,
+    val amount: Int,
+    val currency: String,
 )
 
 data class BookingStatusForStay(val hasCompletedBooking: Boolean)

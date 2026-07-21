@@ -4,7 +4,9 @@ import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.dto.CreateBookingRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
+import com.team1.project_lab_backend.booking.models.PaymentIntent
 import com.team1.project_lab_backend.booking.repositories.BookingRepository
+import com.team1.project_lab_backend.booking.repositories.PaymentIntentRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -26,8 +28,9 @@ private fun <T> anyArg(): T {
 class BookingServiceTest {
     private val bookingRepository = Mockito.mock(BookingRepository::class.java)
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
+    private val paymentIntentRepository = Mockito.mock(PaymentIntentRepository::class.java)
 
-    private val bookingService = BookingService(bookingRepository, roomFeignClient)
+    private val bookingService = BookingService(bookingRepository, roomFeignClient, paymentIntentRepository)
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
@@ -50,13 +53,42 @@ class BookingServiceTest {
         checkIn: LocalDate = tomorrow,
         checkOut: LocalDate = dayAfterTomorrow,
         guests: Int = 1,
+        paymentIntentId: String = "pi_mock_1",
     ) = CreateBookingRequest(
         userId = userId,
         checkInDate = checkIn,
         checkOutDate = checkOut,
         guestsCount = guests,
         roomIds = roomIds,
+        paymentIntentId = paymentIntentId,
     )
+
+    // Stubs a payment intent whose stored fields mirror the given request exactly,
+    // so createBooking's payment-intent-match checks pass and validation continues
+    // past them into the behavior each test actually targets.
+    private fun stubPaymentIntent(
+        request: CreateBookingRequest,
+        amount: Int,
+        bookingId: Int? = null,
+    ) {
+        Mockito.`when`(paymentIntentRepository.findByPaymentIntentId(request.paymentIntentId)).thenReturn(
+            Optional.of(
+                PaymentIntent(
+                    id = 1,
+                    paymentIntentId = request.paymentIntentId,
+                    idempotencyKey = "key-1",
+                    userId = request.userId,
+                    checkInDate = request.checkInDate,
+                    checkOutDate = request.checkOutDate,
+                    guestsCount = request.guestsCount,
+                    amount = amount,
+                    clientSecret = "secret",
+                    bookingId = bookingId,
+                    roomIds = request.roomIds.toMutableSet(),
+                ),
+            ),
+        )
+    }
 
     private fun stubHappyPath(
         roomIds: Set<Int> = setOf(10),
@@ -75,7 +107,7 @@ class BookingServiceTest {
                 checkOutDate = dayAfterTomorrow,
                 status = BookingStatus.PENDING,
                 guestsCount = 1,
-                totalPrice = BigDecimal("100.00"),
+                totalPrice = BigDecimal("100.00") * roomIds.size.toBigDecimal(),
                 roomIds = roomIds.toMutableSet(),
             )
         Mockito.`when`(bookingRepository.save(Mockito.any(Booking::class.java))).thenReturn(saved)
@@ -87,8 +119,10 @@ class BookingServiceTest {
     @Test
     fun createBookingReturnsPersistedBooking() {
         stubHappyPath()
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
 
-        val result = bookingService.createBooking(baseRequest())
+        val result = bookingService.createBooking(request)
 
         assertEquals(99, result.id)
         assertEquals(BookingStatus.PENDING, result.status)
@@ -98,69 +132,128 @@ class BookingServiceTest {
     @Test
     fun createBookingCapturesTotalPrice() {
         stubHappyPath() // 1 room at $100, tomorrow → dayAfterTomorrow = 1 night
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
         val captor = ArgumentCaptor.forClass(Booking::class.java)
 
-        bookingService.createBooking(baseRequest())
+        bookingService.createBooking(request)
 
         Mockito.verify(bookingRepository).save(captor.capture())
         assertEquals(BigDecimal("100.00"), captor.value.totalPrice)
     }
 
     @Test
+    fun createBookingReplaysExistingBookingWhenPaymentIntentAlreadyConsumed() {
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000, bookingId = 42)
+        val existing =
+            Booking(
+                id = 42,
+                userId = 1,
+                checkInDate = tomorrow,
+                checkOutDate = dayAfterTomorrow,
+                status = BookingStatus.PENDING,
+                guestsCount = 1,
+                totalPrice = BigDecimal("100.00"),
+                roomIds = mutableSetOf(10),
+            )
+        Mockito.`when`(bookingRepository.findById(42)).thenReturn(Optional.of(existing))
+
+        val result = bookingService.createBooking(request)
+
+        assertEquals(42, result.id)
+        Mockito.verify(bookingRepository, Mockito.never()).save(anyArg())
+    }
+
+    @Test
+    fun createBookingRejectsUnknownPaymentIntent() {
+        val request = baseRequest()
+        Mockito.`when`(paymentIntentRepository.findByPaymentIntentId(request.paymentIntentId)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun createBookingRejectsPaymentIntentBelongingToAnotherUser() {
+        val request = baseRequest(userId = 1)
+        stubPaymentIntent(request.copy(userId = 2), amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
+        assertEquals(HttpStatus.FORBIDDEN, ex.statusCode)
+    }
+
+    @Test
+    fun createBookingRejectsRoomIdsNotMatchingPaymentIntent() {
+        val request = baseRequest(roomIds = setOf(10))
+        stubPaymentIntent(request.copy(roomIds = setOf(11)), amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun createBookingRejectsAmountNoLongerMatchingPaymentIntent() {
+        stubHappyPath() // rooms priced at $100/night in RoomFeignClient
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 999999) // stale amount from before a price change
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
     fun createBookingRejectsCheckInInPast() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(checkIn = LocalDate.now().minusDays(1)))
-            }
+        val request = baseRequest(checkIn = LocalDate.now().minusDays(1))
+        stubPaymentIntent(request, amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createBookingRejectsCheckInMoreThanSixMonthsAway() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(
-                    baseRequest(checkIn = LocalDate.now().plusMonths(7)),
-                )
-            }
+        val request = baseRequest(checkIn = LocalDate.now().plusMonths(7))
+        stubPaymentIntent(request, amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createBookingRejectsCheckOutNotAfterCheckIn() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(checkIn = tomorrow, checkOut = tomorrow))
-            }
+        val request = baseRequest(checkIn = tomorrow, checkOut = tomorrow)
+        stubPaymentIntent(request, amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createBookingRejectsEmptyRoomIds() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(roomIds = emptySet()))
-            }
+        val request = baseRequest(roomIds = emptySet())
+        stubPaymentIntent(request, amount = 0)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createBookingRejectsZeroGuestsCount() {
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(guests = 0))
-            }
+        val request = baseRequest(guests = 0)
+        stubPaymentIntent(request, amount = 10000)
+
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
     @Test
     fun createBookingRejectsUnknownRoomIds() {
         Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(emptyList())
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest())
-            }
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -168,11 +261,10 @@ class BookingServiceTest {
     fun createBookingRejectsRoomsFromDifferentStays() {
         val mixedStayRooms = listOf(room(10, stayId = 1), room(11, stayId = 2))
         Mockito.`when`(roomFeignClient.list(anyArg(), anyArg(), anyArg(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(mixedStayRooms)
+        val request = baseRequest(roomIds = setOf(10, 11))
+        stubPaymentIntent(request, amount = 20000)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(roomIds = setOf(10, 11)))
-            }
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -183,11 +275,10 @@ class BookingServiceTest {
         Mockito.`when`(
             bookingRepository.findConflictingRoomIds(anyArg(), anyArg(), anyArg(), anyArg()),
         ).thenReturn(setOf(10))
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest())
-            }
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 
@@ -195,11 +286,10 @@ class BookingServiceTest {
     fun createBookingRejectsGuestsExceedingCapacity() {
         // Room sleeps 1, requesting 5 guests
         stubHappyPath(sleeps = 1)
+        val request = baseRequest(guests = 5)
+        stubPaymentIntent(request, amount = 10000)
 
-        val ex =
-            assertThrows(ResponseStatusException::class.java) {
-                bookingService.createBooking(baseRequest(guests = 5))
-            }
+        val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }
 

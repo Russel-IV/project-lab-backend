@@ -4,9 +4,12 @@ import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
 import com.team1.project_lab_backend.booking.dto.CreateBookingRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
+import com.team1.project_lab_backend.booking.models.PaymentIntent
 import com.team1.project_lab_backend.booking.repositories.BookingRepository
+import com.team1.project_lab_backend.booking.repositories.PaymentIntentRepository
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
+import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 
 private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
@@ -23,6 +27,7 @@ private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIR
 class BookingService(
     private val bookingRepository: BookingRepository,
     private val roomFeignClient: RoomFeignClient,
+    private val paymentIntentRepository: PaymentIntentRepository,
 ) {
     @Transactional(readOnly = true)
     fun getAllBookings(
@@ -75,6 +80,29 @@ class BookingService(
     @Transactional
     fun createBooking(request: CreateBookingRequest): Booking {
         request.userId.requirePositive("userId")
+        request.paymentIntentId.requireNotBlank("paymentIntentId")
+
+        val paymentIntent =
+            paymentIntentRepository.findByPaymentIntentId(request.paymentIntentId)
+                .orElseThrow { ResponseStatusException(HttpStatus.BAD_REQUEST, "payment intent not found") }
+        if (paymentIntent.userId != request.userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        }
+
+        // Idempotent retry: the frontend may resend createBooking after a flaky response.
+        paymentIntent.bookingId?.let { existingBookingId ->
+            return bookingRepository.findById(existingBookingId).orNotFound("booking not found")
+        }
+
+        if (paymentIntent.roomIds != request.roomIds) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds do not match payment intent")
+        }
+        if (paymentIntent.checkInDate != request.checkInDate || paymentIntent.checkOutDate != request.checkOutDate) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "dates do not match payment intent")
+        }
+        if (paymentIntent.guestsCount != request.guestsCount) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "guestsCount does not match payment intent")
+        }
 
         if (request.roomIds.isEmpty()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "roomIds must not be empty")
@@ -127,19 +155,44 @@ class BookingService(
 
         val nights = (request.checkOutDate.toEpochDay() - request.checkInDate.toEpochDay()).toBigDecimal()
         val totalPrice = rooms.fold(BigDecimal.ZERO) { acc, room -> acc + room.price } * nights
+        val amount = totalPrice.movePointRight(2).setScale(0, RoundingMode.HALF_UP).toInt()
+        // Room prices could have changed between createPaymentIntent and this call —
+        // reject rather than silently charging/booking at a stale price.
+        if (amount != paymentIntent.amount) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "amount no longer matches payment intent")
+        }
 
-        return bookingRepository.save(
-            Booking(
-                id = 0,
-                userId = request.userId,
-                checkInDate = request.checkInDate,
-                checkOutDate = request.checkOutDate,
-                status = BookingStatus.PENDING,
-                guestsCount = request.guestsCount,
-                totalPrice = totalPrice,
-                roomIds = request.roomIds.toMutableSet(),
+        val saved =
+            bookingRepository.save(
+                Booking(
+                    id = 0,
+                    userId = request.userId,
+                    checkInDate = request.checkInDate,
+                    checkOutDate = request.checkOutDate,
+                    status = BookingStatus.PENDING,
+                    guestsCount = request.guestsCount,
+                    totalPrice = totalPrice,
+                    roomIds = request.roomIds.toMutableSet(),
+                ),
+            )
+        paymentIntentRepository.save(
+            PaymentIntent(
+                id = paymentIntent.id,
+                paymentIntentId = paymentIntent.paymentIntentId,
+                idempotencyKey = paymentIntent.idempotencyKey,
+                userId = paymentIntent.userId,
+                checkInDate = paymentIntent.checkInDate,
+                checkOutDate = paymentIntent.checkOutDate,
+                guestsCount = paymentIntent.guestsCount,
+                amount = paymentIntent.amount,
+                currency = paymentIntent.currency,
+                clientSecret = paymentIntent.clientSecret,
+                bookingId = saved.id,
+                createdAt = paymentIntent.createdAt,
+                roomIds = paymentIntent.roomIds,
             ),
         )
+        return saved
     }
 
     @Transactional

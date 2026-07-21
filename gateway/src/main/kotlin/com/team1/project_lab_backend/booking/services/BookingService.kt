@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.booking.services
 
 import com.team1.project_lab_backend.booking.dto.BookingRequest
 import com.team1.project_lab_backend.booking.dto.BookingStatusRequest
+import com.team1.project_lab_backend.booking.dto.PaymentIntentRequest
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.util.webClientErrorMessage
 import org.springframework.http.HttpStatus
@@ -52,10 +53,29 @@ class BookingService(private val bookingFeignClient: BookingFeignClient) {
                     checkOutDate = request.checkOutDate,
                     guestsCount = request.guestsCount,
                     roomIds = request.roomIds,
+                    paymentIntentId = request.paymentIntentId,
                 ),
             )
         } catch (e: WebClientResponseException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid booking")
+        } catch (e: WebClientResponseException.Forbidden) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        }
+
+    suspend fun createPaymentIntent(request: PaymentIntentRequest): PaymentIntentResponse =
+        try {
+            bookingFeignClient.createPaymentIntent(
+                CreatePaymentIntentRequest(
+                    userId = request.userId,
+                    roomIds = request.roomIds,
+                    checkInDate = request.checkInDate,
+                    checkOutDate = request.checkOutDate,
+                    guestsCount = request.guestsCount,
+                    idempotencyKey = request.idempotencyKey,
+                ),
+            )
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid payment intent")
         }
 
     suspend fun updateBookingStatus(

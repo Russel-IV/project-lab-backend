@@ -9,8 +9,18 @@ data class BookingRequest(
     val checkOutDate: LocalDate,
     val guestsCount: Int,
     val roomIds: Set<Int>,
+    val paymentIntentId: String,
 )
 
 data class BookingStatusRequest(
     val status: BookingStatus,
+)
+
+data class PaymentIntentRequest(
+    val userId: Int,
+    val roomIds: Set<Int>,
+    val checkInDate: LocalDate,
+    val checkOutDate: LocalDate,
+    val guestsCount: Int,
+    val idempotencyKey: String,
 )

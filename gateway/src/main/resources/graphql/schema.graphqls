@@ -124,6 +124,8 @@ type Mutation {
     "Deletes a room by ID. Requires authentication."
     deleteRoom(id: Int!): Boolean!
 
+    "Creates a payment intent for the given rooms/dates/guests, pricing it server-side. Requires authentication."
+    createPaymentIntent(input: CreatePaymentIntentInput!): PaymentIntentPayload!
     "Creates a booking for the authenticated user."
     createBooking(input: CreateBookingInput!): Booking!
     "Updates the status of an existing booking. Requires authentication."

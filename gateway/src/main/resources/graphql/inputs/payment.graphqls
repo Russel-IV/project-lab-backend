@@ -1,0 +1,13 @@
+"Input for creating a payment intent prior to booking. Card payments only, always captured immediately — there is no pay-later/manual-capture path."
+input CreatePaymentIntentInput {
+    "IDs of the rooms to include in the booking."
+    roomIds: [Int!]!
+    "Desired check-in date."
+    checkInDate: Date!
+    "Desired check-out date. Must be after `checkInDate`."
+    checkOutDate: Date!
+    "Number of guests."
+    guestsCount: Int!
+    "Client-generated key. Retrying createPaymentIntent with the same key returns the original intent instead of creating a duplicate."
+    idempotencyKey: String!
+}

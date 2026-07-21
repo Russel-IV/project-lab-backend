@@ -82,7 +82,8 @@ class BookingFeignClientTest {
                 post(urlPathEqualTo("/internal/bookings"))
                     .withRequestBody(
                         equalToJson(
-                            """{"userId":5,"checkInDate":"2026-08-01","checkOutDate":"2026-08-03","guestsCount":2,"roomIds":[10]}""",
+                            """{"userId":5,"checkInDate":"2026-08-01","checkOutDate":"2026-08-03","guestsCount":2,""" +
+                                """"roomIds":[10],"paymentIntentId":"pi_mock_1"}""",
                         ),
                     )
                     .willReturn(
@@ -103,11 +104,49 @@ class BookingFeignClientTest {
                         checkOutDate = java.time.LocalDate.of(2026, 8, 3),
                         guestsCount = 2,
                         roomIds = setOf(10),
+                        paymentIntentId = "pi_mock_1",
                     ),
                 )
 
             assertEquals(9, result.id)
             verify(postRequestedFor(urlPathEqualTo("/internal/bookings")))
+        }
+
+    @Test
+    fun createPaymentIntentSendsRequestBodyShapePaymentIntentControllerExpectsAndDecodesResponse() =
+        runTest {
+            wireMock.stubFor(
+                post(urlPathEqualTo("/internal/payment-intents"))
+                    .withRequestBody(
+                        equalToJson(
+                            """{"userId":5,"roomIds":[10],"checkInDate":"2026-08-01","checkOutDate":"2026-08-03",""" +
+                                """"guestsCount":2,"idempotencyKey":"key-1"}""",
+                        ),
+                    )
+                    .willReturn(
+                        aResponse().withStatus(201).withHeader("Content-Type", "application/json")
+                            .withBody(
+                                """{"paymentIntentId":"pi_mock_1","clientSecret":"pi_mock_1_secret_2",""" +
+                                    """"amount":20000,"currency":"usd"}""",
+                            ),
+                    ),
+            )
+
+            val result =
+                client.createPaymentIntent(
+                    CreatePaymentIntentRequest(
+                        userId = 5,
+                        roomIds = setOf(10),
+                        checkInDate = java.time.LocalDate.of(2026, 8, 1),
+                        checkOutDate = java.time.LocalDate.of(2026, 8, 3),
+                        guestsCount = 2,
+                        idempotencyKey = "key-1",
+                    ),
+                )
+
+            assertEquals("pi_mock_1", result.paymentIntentId)
+            assertEquals(20000, result.amount)
+            verify(postRequestedFor(urlPathEqualTo("/internal/payment-intents")))
         }
 
     @Test

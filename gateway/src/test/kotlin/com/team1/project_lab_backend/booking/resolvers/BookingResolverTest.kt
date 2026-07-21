@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.booking.resolvers
 import com.team1.project_lab_backend.booking.models.Booking
 import com.team1.project_lab_backend.booking.models.BookingStatus
 import com.team1.project_lab_backend.booking.services.BookingService
+import com.team1.project_lab_backend.booking.services.PaymentIntentResponse
 import com.team1.project_lab_backend.util.assertThrowsSuspend
 import com.team1.project_lab_backend.util.withAuthenticatedUser
 import kotlinx.coroutines.test.runTest
@@ -133,6 +134,7 @@ class BookingResolverTest {
                         checkOutDate = dayAfter,
                         guestsCount = 2,
                         roomIds = setOf(5),
+                        paymentIntentId = "pi_mock_1",
                     )
                 val result = resolver.createBooking(input)
 
@@ -151,8 +153,47 @@ class BookingResolverTest {
                     checkOutDate = dayAfter,
                     guestsCount = 2,
                     roomIds = setOf(5),
+                    paymentIntentId = "pi_mock_1",
                 )
             val ex = assertThrowsSuspend<ResponseStatusException> { resolver.createBooking(input) }
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
+        }
+
+    @Test
+    fun createPaymentIntentDelegatesToService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val response = PaymentIntentResponse("pi_mock_1", "pi_mock_1_secret_2", 20000, "usd")
+                Mockito.`when`(bookingService.createPaymentIntent(anyArg())).thenReturn(response)
+
+                val input =
+                    CreatePaymentIntentInput(
+                        roomIds = setOf(5),
+                        checkInDate = tomorrow,
+                        checkOutDate = dayAfter,
+                        guestsCount = 2,
+                        idempotencyKey = "key-1",
+                    )
+                val result = resolver.createPaymentIntent(input)
+
+                assertEquals("pi_mock_1", result.paymentIntentId)
+                assertEquals(20000, result.amount)
+                Mockito.verify(bookingService).createPaymentIntent(anyArg())
+            }
+        }
+
+    @Test
+    fun createPaymentIntentRequiresAuthentication() =
+        runTest {
+            val input =
+                CreatePaymentIntentInput(
+                    roomIds = setOf(5),
+                    checkInDate = tomorrow,
+                    checkOutDate = dayAfter,
+                    guestsCount = 2,
+                    idempotencyKey = "key-1",
+                )
+            val ex = assertThrowsSuspend<ResponseStatusException> { resolver.createPaymentIntent(input) }
             assertEquals(HttpStatus.UNAUTHORIZED, ex.statusCode)
         }
 

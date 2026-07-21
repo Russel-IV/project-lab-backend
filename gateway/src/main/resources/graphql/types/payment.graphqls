@@ -1,0 +1,11 @@
+"A mocked Stripe-style payment intent, priced server-side for a specific set of rooms/dates/guests."
+type PaymentIntentPayload {
+    "Opaque secret used to complete payment client-side."
+    clientSecret: String!
+    "Stable identifier for this payment intent. Pass this as CreateBookingInput.paymentIntentId."
+    paymentIntentId: String!
+    "Amount in the smallest currency unit (e.g. cents), computed server-side from current room prices — never trust client-supplied price math."
+    amount: Int!
+    "ISO 4217 currency code."
+    currency: String!
+}
