@@ -7,6 +7,7 @@ import com.team1.project_lab_backend.inventory.dto.StayResponse
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.Amenity
 import com.team1.project_lab_backend.inventory.models.AmenityType
+import com.team1.project_lab_backend.inventory.models.Region
 import com.team1.project_lab_backend.inventory.models.Room
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.inventory.repositories.AccessibilityRepository
@@ -14,6 +15,7 @@ import com.team1.project_lab_backend.inventory.repositories.AmenityRepository
 import com.team1.project_lab_backend.inventory.repositories.MealPlanRepository
 import com.team1.project_lab_backend.inventory.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.inventory.repositories.PropertyBrandRepository
+import com.team1.project_lab_backend.inventory.repositories.RegionRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
@@ -57,6 +59,7 @@ class StayService(
     private val mealPlanRepository: MealPlanRepository,
     private val paymentTypeRepository: PaymentTypeRepository,
     private val travelerExperienceRepository: TravelerExperienceRepository,
+    private val regionRepository: RegionRepository,
 ) {
     @Transactional(readOnly = true)
     fun searchStays(
@@ -187,6 +190,7 @@ class StayService(
                 stateProvince = request.address.stateProvince,
                 postalCode = request.address.postalCode,
                 countryCode = request.address.countryCode,
+                region = findOrCreateRegion(request.address.city, request.address.countryCode, request.address.stateProvince),
             )
         return Stay(
             id = id,
@@ -215,6 +219,20 @@ class StayService(
                 },
         )
     }
+
+    // ADR-0018: region is the stable dedup key for (city, country_code), not the raw
+    // strings — reuse the existing row rather than letting every address write mint a
+    // new one. idx_region_city_country (V5) makes this race-safe under concurrent
+    // creates for a brand-new city: the loser's insert throws a constraint violation
+    // that surfaces as a 500, an acceptable trade-off for how rarely a genuinely new
+    // city is listed for the first time versus building out retry/upsert logic for it.
+    private fun findOrCreateRegion(
+        city: String,
+        countryCode: String,
+        stateProvince: String?,
+    ): Region =
+        regionRepository.findByCityIgnoreCaseAndCountryCodeIgnoreCase(city, countryCode)
+            ?: regionRepository.save(Region(city = city, countryCode = countryCode, stateProvince = stateProvince))
 
     private fun <T : Any> fetchAllByIds(
         ids: Set<Int>,
@@ -298,13 +316,16 @@ class StayService(
         Specification { root, query, cb ->
             val predicates = mutableListOf<Predicate>()
 
-            if (filter.city != null || filter.countryCode != null) {
+            if (filter.city != null || filter.countryCode != null || filter.regionId != null) {
                 val address = root.join<Stay, Address>("address", JoinType.INNER)
                 filter.city?.let {
                     predicates += cb.like(cb.lower(address.get("city")), "%${it.lowercase()}%")
                 }
                 filter.countryCode?.let {
                     predicates += cb.equal(cb.lower(address.get<String>("countryCode")), it.lowercase())
+                }
+                filter.regionId?.let {
+                    predicates += cb.equal(address.get<Region>("region").get<Int>("id"), it)
                 }
             }
 
@@ -446,6 +467,7 @@ class StayService(
                     stateProvince = address.stateProvince,
                     postalCode = address.postalCode,
                     countryCode = address.countryCode,
+                    regionId = address.region.id,
                 ),
             viewIds = views.map { it.id }.toSet(),
             amenityIds = amenities.map { it.id }.toSet(),

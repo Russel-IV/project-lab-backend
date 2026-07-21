@@ -5,12 +5,14 @@ import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
+import com.team1.project_lab_backend.inventory.models.Region
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.inventory.repositories.AccessibilityRepository
 import com.team1.project_lab_backend.inventory.repositories.AmenityRepository
 import com.team1.project_lab_backend.inventory.repositories.MealPlanRepository
 import com.team1.project_lab_backend.inventory.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.inventory.repositories.PropertyBrandRepository
+import com.team1.project_lab_backend.inventory.repositories.RegionRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
@@ -34,6 +36,7 @@ class StayServiceTest {
     private val mealPlanRepository = Mockito.mock(MealPlanRepository::class.java)
     private val paymentTypeRepository = Mockito.mock(PaymentTypeRepository::class.java)
     private val travelerExperienceRepository = Mockito.mock(TravelerExperienceRepository::class.java)
+    private val regionRepository = Mockito.mock(RegionRepository::class.java)
     private val stayService =
         StayService(
             stayRepository,
@@ -46,7 +49,21 @@ class StayServiceTest {
             mealPlanRepository,
             paymentTypeRepository,
             travelerExperienceRepository,
+            regionRepository,
         )
+
+    init {
+        // Default: no existing region for any (city, countryCode) — findOrCreateRegion()
+        // falls through to save(), which we echo back so buildStay() gets a non-null
+        // Region. Tests exercising reuse override this with a specific stub.
+        Mockito.`when`(regionRepository.save(Mockito.any(Region::class.java))).thenAnswer { it.arguments[0] }
+    }
+
+    private fun sampleRegion(
+        id: Int = 1,
+        city: String = "Testville",
+        countryCode: String = "US",
+    ) = Region(id = id, city = city, countryCode = countryCode)
 
     private fun baseAddress(): AddressRequest =
         AddressRequest(
@@ -80,6 +97,7 @@ class StayServiceTest {
                 streetAddress = request.address.streetAddress,
                 city = request.address.city,
                 countryCode = request.address.countryCode,
+                region = sampleRegion(city = request.address.city, countryCode = request.address.countryCode),
             )
         val stay =
             Stay(
@@ -110,6 +128,35 @@ class StayServiceTest {
         assertEquals(10, response.id)
         assertEquals("Test Stay", response.name)
         assertEquals(1, response.hostId)
+    }
+
+    @Test
+    fun createStayReusesExistingRegionForSameCityAndCountry() {
+        val request = baseRequest()
+        stubHost()
+        val existingRegion = sampleRegion(id = 7)
+        Mockito.`when`(regionRepository.findByCityIgnoreCaseAndCountryCodeIgnoreCase("Testville", "US"))
+            .thenReturn(existingRegion)
+        Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenAnswer { it.arguments[0] }
+
+        val response = stayService.createStay(request, 1)
+
+        assertEquals(7, response.address.regionId)
+        Mockito.verify(regionRepository, Mockito.never()).save(Mockito.any(Region::class.java))
+    }
+
+    @Test
+    fun createStayCreatesNewRegionForUnseenCityAndCountry() {
+        val request = baseRequest()
+        stubHost()
+        Mockito.`when`(regionRepository.findByCityIgnoreCaseAndCountryCodeIgnoreCase("Testville", "US"))
+            .thenReturn(null)
+        Mockito.`when`(regionRepository.save(Mockito.any(Region::class.java))).thenReturn(sampleRegion(id = 9))
+        Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenAnswer { it.arguments[0] }
+
+        val response = stayService.createStay(request, 1)
+
+        assertEquals(9, response.address.regionId)
     }
 
     @Test
@@ -321,7 +368,7 @@ class StayServiceTest {
     fun updateStayIdempotentForSameData() {
         val request = baseRequest()
         val host = stubHost()
-        val address = Address(id = 5, streetAddress = "123 Main", city = "Testville", countryCode = "US")
+        val address = Address(id = 5, streetAddress = "123 Main", city = "Testville", countryCode = "US", region = sampleRegion())
         val existingStay =
             Stay(
                 id = 20,

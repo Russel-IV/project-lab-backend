@@ -34,6 +34,7 @@ data class StayRequest(
 data class StayFilter(
     val city: String? = null,
     val countryCode: String? = null,
+    val regionId: Int? = null,
     val propertyType: PropertyType? = null,
     val minPricePerNight: BigDecimal? = null,
     val maxPricePerNight: BigDecimal? = null,

@@ -56,7 +56,7 @@ class RoomServiceTest {
         name = "Test Stay",
         propertyType = PropertyType.HOME,
         hostId = hostId,
-        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US", regionId = 1),
     )
 
     private fun feignBadRequest(body: String) =

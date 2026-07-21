@@ -17,4 +17,5 @@ data class AddressResponse(
     val stateProvince: String?,
     val postalCode: String?,
     val countryCode: String,
+    val regionId: Int,
 )

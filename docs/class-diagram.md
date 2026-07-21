@@ -86,6 +86,12 @@ classDiagram
         +String? postalCode
         +String countryCode
     }
+    class Region {
+        +Int id
+        +String city
+        +String countryCode
+        +String? stateProvince
+    }
     class PropertyBrand {
         +Int id
         +String brandName
@@ -117,6 +123,7 @@ classDiagram
     }
 
     Stay "1" --> "1" Address : address
+    Address "0..*" --> "1" Region : region
     Stay "0..*" --> "0..1" PropertyBrand : propertyBrand
     Stay "1" --> "0..*" Room : stayId
     Stay "0..*" --> "0..*" View : views
@@ -128,7 +135,7 @@ classDiagram
     Stay --> PropertyType
 ```
 
-`Stay.hostId` is a plain `Int`, not a JPA relation — host existence is Feign-checked against identity-service, not joined. `Room.stayId` is likewise a plain column with a real intra-service `@ManyToOne`-style FK, unlike `hostId`.
+`Stay.hostId` is a plain `Int`, not a JPA relation — host existence is Feign-checked against identity-service, not joined. `Room.stayId` is likewise a plain column with a real intra-service `@ManyToOne`-style FK, unlike `hostId`. `Address.region` is a real `@ManyToOne` (docs/adr/0018) — the stable identifier for a (city, country_code) pair, resolved or created by `StayService.findOrCreateRegion()`.
 
 ## booking-service
 

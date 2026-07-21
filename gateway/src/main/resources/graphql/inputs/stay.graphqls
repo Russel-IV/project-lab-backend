@@ -103,9 +103,11 @@ input LocationInput {
 "Search and availability filter for the stays query. All fields are optional and combined with AND logic."
 input StayFilterInput {
     "Case-insensitive city name substring match."
-    city: String
+    city: String @deprecated(reason: "use regionId")
     "Exact ISO 3166-1 alpha-2 country code match (e.g. 'US', 'GB')."
-    countryCode: String
+    countryCode: String @deprecated(reason: "use regionId")
+    "Stable destination identifier (docs/adr/0018) — the preferred replacement for city/countryCode, immune to same-name-different-region collisions."
+    regionId: Int
     "Limit results to a specific property category."
     propertyType: PropertyType
     "Require at least one room with a nightly rate at or below this amount."

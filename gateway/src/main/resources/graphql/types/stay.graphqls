@@ -58,6 +58,8 @@ type Destination {
     city: String!
     "ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB')."
     countryCode: String!
+    "Stable identifier for this city/country pair (docs/adr/0018) — the preferred way to correlate a destination with StayFilterInput.regionId."
+    regionId: Int!
 }
 
 "Physical address of a stay."
@@ -73,6 +75,8 @@ type Address {
     postalCode: String
     "ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB')."
     countryCode: String!
+    "Stable identifier for this address's (city, country_code) pair (docs/adr/0018)."
+    regionId: Int!
 }
 
 "A photo associated with a stay."

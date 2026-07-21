@@ -13,4 +13,5 @@ data class Address(
     val stateProvince: String? = null,
     val postalCode: String? = null,
     val countryCode: String,
+    val regionId: Int,
 )

@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.resolvers
 
 import com.team1.project_lab_backend.identity.models.User
+import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -45,7 +47,7 @@ class StayResolverTest {
             name = "Cozy Cabin",
             propertyType = PropertyType.HOME,
             hostId = 42,
-            address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US"),
+            address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US", regionId = 1),
         )
 
     // ---- queries ----
@@ -60,6 +62,17 @@ class StayResolverTest {
         assertEquals(1, result.size)
         assertEquals("Cozy Cabin", result[0].name)
         Mockito.verify(stayService).searchStays(anyArg(), eqArg(2), eqArg(5))
+    }
+
+    @Test
+    fun staysPassesRegionIdFilterToService() {
+        Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(emptyList())
+
+        resolver.stays(StayFilterInput(regionId = 3), 0, 20)
+
+        val captor = ArgumentCaptor.forClass(StayFilter::class.java)
+        Mockito.verify(stayService).searchStays(captor.capture(), eqArg(0), eqArg(20))
+        assertEquals(3, captor.value.regionId)
     }
 
     @Test

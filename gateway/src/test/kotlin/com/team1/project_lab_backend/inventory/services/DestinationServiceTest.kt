@@ -11,7 +11,7 @@ class DestinationServiceTest {
 
     @Test
     fun getAllDestinationsDelegatesToFeignClient() {
-        val destinations = listOf(Destination(city = "Paris", countryCode = "FR"))
+        val destinations = listOf(Destination(city = "Paris", countryCode = "FR", regionId = 1))
         Mockito.`when`(destinationFeignClient.list()).thenReturn(destinations)
 
         val result = destinationService.getAllDestinations()

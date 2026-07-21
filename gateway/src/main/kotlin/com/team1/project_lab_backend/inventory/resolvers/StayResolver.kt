@@ -184,6 +184,7 @@ data class UpdateStayInput(
 data class StayFilterInput(
     val city: String? = null,
     val countryCode: String? = null,
+    val regionId: Int? = null,
     val propertyType: PropertyType? = null,
     val minPricePerNight: BigDecimal? = null,
     val maxPricePerNight: BigDecimal? = null,
@@ -199,6 +200,7 @@ data class StayFilterInput(
         StayFilter(
             city = city,
             countryCode = countryCode,
+            regionId = regionId,
             propertyType = propertyType,
             minPricePerNight = minPricePerNight,
             maxPricePerNight = maxPricePerNight,
