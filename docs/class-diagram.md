@@ -91,6 +91,7 @@ classDiagram
         +String city
         +String countryCode
         +String? stateProvince
+        +Int? curatedRank
     }
     class PropertyBrand {
         +Int id

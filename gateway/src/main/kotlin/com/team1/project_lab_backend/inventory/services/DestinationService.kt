@@ -13,4 +13,6 @@ class DestinationService(private val destinationFeignClient: DestinationFeignCli
         search: String?,
         limit: Int,
     ): List<Destination> = destinationFeignClient.list(search, limit)
+
+    fun popularDestinations(limit: Int): List<Destination> = destinationFeignClient.popular(limit)
 }

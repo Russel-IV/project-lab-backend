@@ -19,4 +19,9 @@ class DestinationController(private val destinationService: DestinationService) 
         @RequestParam(required = false) search: String?,
         @RequestParam(defaultValue = "20") limit: Int,
     ): List<Destination> = destinationService.searchDestinations(search, limit)
+
+    @GetMapping("/popular")
+    fun popular(
+        @RequestParam(defaultValue = "8") limit: Int,
+    ): List<Destination> = destinationService.popularDestinations(limit)
 }

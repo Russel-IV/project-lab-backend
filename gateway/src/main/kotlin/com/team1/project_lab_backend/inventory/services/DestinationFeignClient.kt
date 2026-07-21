@@ -12,4 +12,9 @@ interface DestinationFeignClient {
         @RequestParam(required = false) search: String?,
         @RequestParam limit: Int,
     ): List<Destination>
+
+    @GetMapping("/internal/destinations/popular")
+    fun popular(
+        @RequestParam limit: Int,
+    ): List<Destination>
 }

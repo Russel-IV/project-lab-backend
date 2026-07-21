@@ -15,10 +15,12 @@ class DestinationServiceTest {
         city: String,
         countryCode: String = "US",
         stayCount: Long = 0,
+        curatedRank: Int? = null,
     ) = object : RegionSearchResult {
         override val id: Int = id
         override val city: String = city
         override val countryCode: String = countryCode
+        override val curatedRank: Int? = curatedRank
         override val stayCount: Long = stayCount
     }
 
@@ -131,5 +133,57 @@ class DestinationServiceTest {
 
         assertEquals("Valparaíso", result[0].city)
         assertEquals("Nueva Valparaíso", result[1].city)
+    }
+
+    // ---- popularDestinations (ADR-0022) ----
+
+    @Test
+    fun popularDestinationsFallsBackEntirelyToPopularityWithZeroCuratedRows() {
+        Mockito.`when`(regionRepository.search(null)).thenReturn(
+            listOf(
+                regionResult(id = 1, city = "Paris", stayCount = 5),
+                regionResult(id = 2, city = "Amsterdam", stayCount = 50),
+                regionResult(id = 3, city = "Zermatt", stayCount = 1),
+            ),
+        )
+
+        val result = destinationService.popularDestinations(8)
+
+        assertEquals(listOf("Amsterdam", "Paris", "Zermatt"), result.map { it.city })
+    }
+
+    @Test
+    fun popularDestinationsPadsWithTopStayCountWhenFewerCuratedThanLimit() {
+        Mockito.`when`(regionRepository.search(null)).thenReturn(
+            listOf(
+                // curated, but ranked below curated_rank=1 despite a lower stay count
+                regionResult(id = 1, city = "Paris", stayCount = 1, curatedRank = 2),
+                regionResult(id = 2, city = "Tokyo", stayCount = 1, curatedRank = 1),
+                // not curated — only fills remaining slots, ordered by stay_count
+                regionResult(id = 3, city = "Amsterdam", stayCount = 50),
+                regionResult(id = 4, city = "Zermatt", stayCount = 20),
+            ),
+        )
+
+        val result = destinationService.popularDestinations(3)
+
+        assertEquals(listOf("Tokyo", "Paris", "Amsterdam"), result.map { it.city })
+    }
+
+    @Test
+    fun popularDestinationsIgnoresPaddingWhenCuratedRowsAlreadyMeetLimit() {
+        Mockito.`when`(regionRepository.search(null)).thenReturn(
+            listOf(
+                regionResult(id = 1, city = "Paris", stayCount = 1, curatedRank = 2),
+                regionResult(id = 2, city = "Tokyo", stayCount = 1, curatedRank = 1),
+                regionResult(id = 3, city = "Miami", stayCount = 1, curatedRank = 3),
+                // uncurated, huge stay count — must not bump a curated row out
+                regionResult(id = 4, city = "Amsterdam", stayCount = 9999),
+            ),
+        )
+
+        val result = destinationService.popularDestinations(3)
+
+        assertEquals(listOf("Tokyo", "Paris", "Miami"), result.map { it.city })
     }
 }

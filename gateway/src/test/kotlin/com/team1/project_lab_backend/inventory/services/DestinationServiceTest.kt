@@ -28,4 +28,14 @@ class DestinationServiceTest {
 
         assertEquals(destinations, result)
     }
+
+    @Test
+    fun popularDestinationsDelegatesToFeignClient() {
+        val destinations = listOf(Destination(city = "Tokyo", countryCode = "JP", regionId = 3))
+        Mockito.`when`(destinationFeignClient.popular(8)).thenReturn(destinations)
+
+        val result = destinationService.popularDestinations(8)
+
+        assertEquals(destinations, result)
+    }
 }

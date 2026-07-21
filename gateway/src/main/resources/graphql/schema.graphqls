@@ -28,6 +28,8 @@ type Query {
     stay(id: Int!): Stay
     "Returns distinct city/country pairs currently in use by stay addresses, optionally filtered by a case-insensitive, typo- and diacritic-tolerant city search."
     destinations(search: String, limit: Int = 20): [Destination!]!
+    "Returns curated destinations for the empty-query state, padded with the most-booked destinations if fewer than `limit` are explicitly curated."
+    popularDestinations(limit: Int = 8): [Destination!]!
 
     "Returns a paginated list of rooms for a given stay."
     rooms(stayId: Int!, page: Int = 0, size: Int = 20): [Room!]!

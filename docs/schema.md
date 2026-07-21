@@ -71,6 +71,7 @@ erDiagram
         string city
         string country_code
         string state_province "nullable"
+        int curated_rank "nullable"
     }
     PROPERTY_BRAND {
         int id PK
@@ -141,7 +142,7 @@ erDiagram
 
 `STAY.host_id` has no FK — resolved via Feign to identity-service's `Host`/`User`. `amenity.type` is a plain `VARCHAR`, not the `amenity_type` enum (kept as free-form string for `ROOM_AMENITY`/`PROPERTY_AMENITY` values). `location` is GIST-indexed for geo search. `ADDRESS.city` is GIN-indexed on `lower(city)` with `pg_trgm` (`idx_address_city_trgm`, docs/adr/0019) to accelerate substring/fuzzy destination search; the `pg_trgm` and `unaccent` extensions are enabled for this purpose.
 
-`REGION` is the stable dedup key for a (city, country_code) pair (docs/adr/0018) — one row per distinct pair, unique-indexed on `(lower(city), country_code)`. `Address.region_id` is resolved/created by `StayService.findOrCreateRegion()` from the free-text city/country on write, not supplied directly by API callers. `destinations`/`StayFilterInput.regionId` read/filter against `region` directly rather than re-deriving distinct pairs from `address` on every call.
+`REGION` is the stable dedup key for a (city, country_code) pair (docs/adr/0018) — one row per distinct pair, unique-indexed on `(lower(city), country_code)`. `Address.region_id` is resolved/created by `StayService.findOrCreateRegion()` from the free-text city/country on write, not supplied directly by API callers. `destinations`/`StayFilterInput.regionId` read/filter against `region` directly rather than re-deriving distinct pairs from `address` on every call. `curated_rank` (docs/adr/0022) is a manually-assigned editorial ranking for `popularDestinations`'s empty-query state — null means "not curated"; there's no admin/host-facing way to set it yet, by design.
 
 ## booking-service (`booking-database`)
 

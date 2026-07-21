@@ -22,9 +22,13 @@ interface RegionRepository : JpaRepository<Region, Int> {
     // so this only fetches candidates + the stay_count each needs to be ranked on;
     // DestinationService sorts and truncates to `limit` itself. Each address has at
     // most one stay (address_id is UNIQUE on stay), so COUNT(s.id) needs no DISTINCT.
+    // search(null) also serves as the "everything, with stay_count and curated_rank"
+    // fetch DestinationService.popularDestinations() (docs/adr/0022) partitions and
+    // paginates itself — no separate query needed for that.
     @Query(
         value = """
-            SELECT r.id AS id, r.city AS city, r.country_code AS countryCode, COUNT(s.id) AS stayCount
+            SELECT r.id AS id, r.city AS city, r.country_code AS countryCode,
+                   r.curated_rank AS curatedRank, COUNT(s.id) AS stayCount
             FROM region r
             LEFT JOIN address a ON a.region_id = r.id
             LEFT JOIN stay s ON s.address_id = a.id
@@ -33,7 +37,7 @@ interface RegionRepository : JpaRepository<Region, Int> {
                     unaccent(lower(r.city)) ILIKE '%' || unaccent(lower(CAST(:search AS text))) || '%'
                     OR similarity(r.city, CAST(:search AS text)) > 0.3
                   )
-            GROUP BY r.id, r.city, r.country_code
+            GROUP BY r.id, r.city, r.country_code, r.curated_rank
         """,
         nativeQuery = true,
     )
@@ -46,5 +50,6 @@ interface RegionSearchResult {
     val id: Int
     val city: String
     val countryCode: String
+    val curatedRank: Int?
     val stayCount: Long
 }
