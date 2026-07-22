@@ -142,7 +142,7 @@ You can apply this policy in the AWS Console under **Lifecycle policies** for ea
 
 ### AWS EC2 Instance
 
-You must set up one EC2 instance running **Ubuntu Server 26.04 (64-bit ARM / aarch64)** (e.g. `t4g.large`) with these items installed:
+You must set up one EC2 instance running **Ubuntu Server 26.04 (64-bit x86 / amd64)** (e.g. `t3.large` or `t3a.large`) with these items installed:
 
 1. **Docker and Docker Compose**:
    ```bash
@@ -259,7 +259,7 @@ To save costs, you can turn off your EC2 instance when you do not use it. You ca
 The workflow will send the command to AWS and wait until the instance changes status.
 
 > [!NOTE]
-> Containers in `docker-compose.prod.yml` are configured with `restart: "no"`. When you start your EC2 instance (`t4g.large`), the microservices will **not** start automatically on boot. This prevents heavy background CPU/RAM load during server startup. Run the **Redeploy All Services** workflow to boot up your stack sequentially when ready.
+> Containers in `docker-compose.prod.yml` are configured with `restart: "no"`. When you start your EC2 instance (`t3.large`), the microservices will **not** start automatically on boot. This prevents heavy background CPU/RAM load during server startup. Run the **Redeploy All Services** workflow to boot up your stack sequentially when ready.
 
 ## 6. Manual Stack Redeployment (No Rebuild)
 
