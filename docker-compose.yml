@@ -84,7 +84,7 @@ services:
                 condition: service_healthy
 
     project-lab-database:
-        image: postgis/postgis:16-3.4
+        image: postgis/postgis:16-3.5
         container_name: project-lab-database
         mem_limit: 200m
         ports:
@@ -302,7 +302,7 @@ services:
     # Own database (docs/adr/0011) — postgis/postgis, not plain postgres: Stay.location
     # is a GEOGRAPHY(POINT, 4326) column (mirrors project-lab-database's image choice).
     inventory-database:
-        image: postgis/postgis:16-3.4
+        image: postgis/postgis:16-3.5
         container_name: inventory-database
         mem_limit: 200m
         ports:
