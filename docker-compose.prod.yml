@@ -46,7 +46,7 @@ services:
         image: openzipkin/zipkin-slim:latest
         container_name: zipkin
         mem_limit: 512m
-        restart: unless-stopped
+        restart: "no"
         ports:
             - "9411:9411"
 
@@ -54,7 +54,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/eureka-server:${IMAGE_TAG}
         container_name: eureka-server
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
@@ -71,7 +71,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/gateway:${IMAGE_TAG}
         container_name: project-lab-backend
         mem_limit: 1536m
-        restart: unless-stopped
+        restart: "no"
         ports:
             - "8080:8080"
         volumes:
@@ -98,7 +98,7 @@ services:
         image: postgis/postgis:16-3.4
         container_name: project-lab-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -116,7 +116,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/review-service:${IMAGE_TAG}
         container_name: review-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - REVIEW_DB_HOST=review-database
@@ -136,7 +136,7 @@ services:
         image: postgres:16-alpine
         container_name: review-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -154,7 +154,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/media-service:${IMAGE_TAG}
         container_name: media-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         volumes:
             - uploads:/app/uploads
         environment:
@@ -176,7 +176,7 @@ services:
         image: postgres:16-alpine
         container_name: media-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -194,7 +194,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/identity-service:${IMAGE_TAG}
         container_name: identity-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - IDENTITY_DB_HOST=identity-database
@@ -215,7 +215,7 @@ services:
         image: postgres:16-alpine
         container_name: identity-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -233,7 +233,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/inventory-service:${IMAGE_TAG}
         container_name: inventory-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - INVENTORY_DB_HOST=inventory-database
@@ -253,7 +253,7 @@ services:
         image: postgis/postgis:16-3.4
         container_name: inventory-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -271,7 +271,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/booking-service:${IMAGE_TAG}
         container_name: booking-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
             - BOOKING_DB_HOST=booking-database
@@ -291,7 +291,7 @@ services:
         image: postgres:16-alpine
         container_name: booking-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -309,7 +309,7 @@ services:
         image: pgvector/pgvector:pg16
         container_name: chatbot-database
         mem_limit: 256m
-        restart: unless-stopped
+        restart: "no"
         environment:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -327,7 +327,7 @@ services:
         image: ${ECR_REGISTRY}/project-lab/chatbot-service:${IMAGE_TAG}
         container_name: chatbot-service
         mem_limit: 1024m
-        restart: unless-stopped
+        restart: "no"
         ports:
             - "8086:8086"
         environment:

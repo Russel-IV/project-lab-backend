@@ -258,6 +258,9 @@ To save costs, you can turn off your EC2 instance when you do not use it. You ca
 
 The workflow will send the command to AWS and wait until the instance changes status.
 
+> [!NOTE]
+> Containers in `docker-compose.prod.yml` are configured with `restart: "no"`. When you start your EC2 instance (`t4g.large`), the microservices will **not** start automatically on boot. This prevents heavy background CPU/RAM load during server startup. Run the **Redeploy All Services** workflow to boot up your stack sequentially when ready.
+
 ## 6. Manual Stack Redeployment (No Rebuild)
 
 If you start your EC2 instance after it was turned off, or if you want to pull the latest images from ECR and completely restart all microservices, you can run the redeployment workflow. This does not compile or build code from source, making it very fast.

@@ -74,21 +74,66 @@ jobs:
             echo "Pulling ECR images with tag: $IMAGE_TAG..."
             docker compose -f docker-compose.prod.yml pull
 
-            echo "Starting all containers..."
-            docker compose -f docker-compose.prod.yml up -d
+            # Helper function to get port for each service
+            get_port() {
+              case "$1" in
+                project-lab-backend) echo 8080 ;;
+                identity-service) echo 8081 ;;
+                inventory-service) echo 8082 ;;
+                booking-service) echo 8083 ;;
+                review-service) echo 8084 ;;
+                media-service) echo 8085 ;;
+                chatbot-service) echo 8086 ;;
+              esac
+            }
+
+            echo "Starting databases and zipkin..."
+            docker compose -f docker-compose.prod.yml up -d project-lab-database review-database media-database identity-database inventory-database booking-database chatbot-database zipkin
+
+            # Wait for all databases to report healthy
+            for db in project-lab-database review-database media-database identity-database inventory-database booking-database chatbot-database; do
+              echo "Waiting for database $db to report healthy..."
+              while true; do
+                status=$(docker inspect --format='{{.State.Health.Status}}' "$db" 2>/dev/null || echo "starting")
+                if [ "$status" = "healthy" ]; then
+                  echo "$db is healthy."
+                  break
+                fi
+                sleep 2
+              done
+            done
+
+            echo "Starting eureka-server..."
+            docker compose -f docker-compose.prod.yml up -d eureka-server
+            echo "Waiting for eureka-server to report healthy..."
+            while true; do
+              status=$(docker inspect --format='{{.State.Health.Status}}' "eureka-server" 2>/dev/null || echo "starting")
+              if [ "$status" = "healthy" ]; then
+                echo "eureka-server is healthy."
+                break
+              fi
+              sleep 2
+            done
+
+            echo "Starting app services sequentially to avoid CPU throttling..."
+            APP_SERVICES="identity-service inventory-service booking-service review-service media-service chatbot-service project-lab-backend"
+            for svc in $APP_SERVICES; do
+              echo "Starting service $svc..."
+              docker compose -f docker-compose.prod.yml up -d "$svc"
+              port=$(get_port "$svc")
+              echo "Waiting for $svc on http://localhost:$port/actuator/health..."
+              while true; do
+                if curl -sf "http://localhost:$port/actuator/health" >/dev/null; then
+                  echo "$svc is up and healthy."
+                  break
+                fi
+                sleep 3
+              done
+              echo "Pausing 5 seconds before starting the next service..."
+              sleep 5
+            done
 
             echo "Cleaning up old/dangling Docker images..."
             docker system prune -f
 
-            echo "Waiting for the Gateway to report healthy..."
-            for i in $(seq 1 20); do
-              if curl -sf http://localhost:8080/actuator/health >/dev/null; then
-                echo "Gateway is up and healthy!"
-                exit 0
-              fi
-              echo "Still waiting..."
-              sleep 3
-            done
-            echo "Gateway failed to report healthy within 60 seconds."
-            docker compose -f docker-compose.prod.yml logs project-lab-backend --tail 100
-            exit 1
+            echo "Stack has been successfully redeployed sequentially!"
