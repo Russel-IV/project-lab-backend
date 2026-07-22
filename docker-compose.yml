@@ -86,6 +86,7 @@ services:
     project-lab-database:
         image: postgis/postgis:16-3.5
         container_name: project-lab-database
+        platform: linux/amd64
         mem_limit: 200m
         ports:
             - "${POSTGRES_PORT}:5432"
@@ -304,6 +305,7 @@ services:
     inventory-database:
         image: postgis/postgis:16-3.5
         container_name: inventory-database
+        platform: linux/amd64
         mem_limit: 200m
         ports:
             - "5436:5432"
