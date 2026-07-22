@@ -142,7 +142,7 @@ You can apply this policy in the AWS Console under **Lifecycle policies** for ea
 
 ### AWS EC2 Instance
 
-You must set up one EC2 instance with these items installed:
+You must set up one EC2 instance running **Ubuntu Server 26.04 (64-bit ARM / aarch64)** (e.g. `t4g.large`) with these items installed:
 
 1. **Docker and Docker Compose**:
    ```bash
