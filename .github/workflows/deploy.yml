@@ -217,7 +217,7 @@ jobs:
             # Verify Gateway health if it was redeployed
             if echo "$services" | grep -q "project-lab-backend"; then
               echo "Waiting for the Gateway to report healthy..."
-              for i in $(seq 1 20); do
+              for i in $(seq 1 40); do
                 if curl -sf http://localhost:8080/actuator/health >/dev/null; then
                   echo "Gateway is up and healthy!"
                   exit 0
@@ -225,7 +225,7 @@ jobs:
                 echo "Still waiting..."
                 sleep 3
               done
-              echo "Gateway failed to report healthy within 60 seconds."
+              echo "Gateway failed to report healthy within 120 seconds."
               docker compose -f docker-compose.prod.yml logs project-lab-backend --tail 100
               exit 1
             fi

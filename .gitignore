@@ -45,5 +45,5 @@ pnpm-debug.log*
 project-lab-backend-key.pem
 
 # Etc
-
+GEMINI.md
 .claude

@@ -85,6 +85,7 @@ services:
 
     project-lab-database:
         image: postgis/postgis:16-3.5
+        platform: linux/amd64
         container_name: project-lab-database
         mem_limit: 200m
         ports:
@@ -174,6 +175,11 @@ services:
         volumes:
             - uploads:/app/uploads
         environment:
+            - STORAGE_TYPE=${STORAGE_TYPE:-local}
+            - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+            - AWS_REGION=${AWS_REGION:-us-east-1}
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
             - MEDIA_DB_HOST=media-database
             - MEDIA_DB_PORT=5432
             - MEDIA_DB_NAME=${POSTGRES_DB}
@@ -303,6 +309,7 @@ services:
     # is a GEOGRAPHY(POINT, 4326) column (mirrors project-lab-database's image choice).
     inventory-database:
         image: postgis/postgis:16-3.5
+        platform: linux/amd64
         container_name: inventory-database
         mem_limit: 200m
         ports:

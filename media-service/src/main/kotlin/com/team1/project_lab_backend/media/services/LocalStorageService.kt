@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.media.services
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.nio.file.Files
@@ -16,6 +17,7 @@ import java.util.UUID
  * storage URLs are already globally reachable without routing through Gateway.
  */
 @Service
+@ConditionalOnProperty(name = ["app.storage.type"], havingValue = "local", matchIfMissing = true)
 class LocalStorageService(
     @Value("\${app.upload.dir}") private val uploadDir: String,
     @Value("\${app.public-url}") private val publicUrl: String,
