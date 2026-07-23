@@ -26,6 +26,8 @@ type RoomPicture {
     roomId: Int!
     "Public URL of the image."
     url: String!
+    "Public URL of a resized (max ~400px wide) variant, for grid/thumbnail display. Falls back to the full-size url if no thumbnail could be generated."
+    thumbnailUrl: String!
     "Optional descriptive caption."
     caption: String
     "Whether this is the main cover photo shown for the room."

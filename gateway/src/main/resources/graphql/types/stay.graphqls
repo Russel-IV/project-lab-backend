@@ -45,6 +45,16 @@ type Stay {
     location: Location
 }
 
+"A page of stays plus pagination metadata."
+type StayConnection {
+    "The stays in this page."
+    items: [Stay!]!
+    "Total number of stays matching the filter, across all pages."
+    totalCount: Int!
+    "Whether a subsequent page (page + 1) contains further results."
+    hasNextPage: Boolean!
+}
+
 "WGS-84 geographic coordinates (latitude/longitude)."
 type Location {
     "Latitude in decimal degrees (-90 to 90)."
@@ -86,6 +96,8 @@ type StayPicture {
     stayId: Int!
     "Public URL of the image."
     url: String!
+    "Public URL of a resized (max ~400px wide) variant, for grid/thumbnail display. Falls back to the full-size url if no thumbnail could be generated."
+    thumbnailUrl: String!
     "Optional descriptive caption."
     caption: String
     "Whether this is the main cover photo shown in listings."

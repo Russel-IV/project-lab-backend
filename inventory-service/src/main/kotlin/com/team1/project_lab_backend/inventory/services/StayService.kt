@@ -4,6 +4,7 @@ import com.team1.project_lab_backend.inventory.dto.AddressResponse
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.dto.StayResponse
+import com.team1.project_lab_backend.inventory.dto.StaySearchResult
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.Amenity
 import com.team1.project_lab_backend.inventory.models.AmenityType
@@ -36,6 +37,7 @@ import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.http.HttpStatus
@@ -66,10 +68,16 @@ class StayService(
         filter: StayFilter,
         page: Int = 0,
         size: Int = 20,
-    ): List<StayResponse> {
+    ): StaySearchResult {
         validateFilter(filter)
         val spec = buildSpec(filter)
-        return stayRepository.findAll(spec, PageRequest.of(page, size)).content.map { it.toResponse() }
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"))
+        val result = stayRepository.findAll(spec, pageable)
+        return StaySearchResult(
+            items = result.content.map { it.toResponse() },
+            totalCount = result.totalElements,
+            hasNextPage = result.hasNext(),
+        )
     }
 
     @Transactional(readOnly = true)
@@ -331,6 +339,10 @@ class StayService(
 
             filter.propertyType?.let {
                 predicates += cb.equal(root.get<Any>("propertyType"), it)
+            }
+
+            filter.isRefundable?.let {
+                predicates += cb.equal(root.get<Boolean>("isRefundable"), it)
             }
 
             filter.maxPricePerNight?.let { max ->

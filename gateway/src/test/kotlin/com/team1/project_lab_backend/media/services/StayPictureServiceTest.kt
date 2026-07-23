@@ -29,6 +29,7 @@ class StayPictureServiceTest {
         ownerType = "STAY",
         ownerId = stayId,
         url = "http://localhost:8080/uploads/stays/$stayId/photo.jpg",
+        thumbnailUrl = "http://localhost:8080/uploads/stays/$stayId/photo.jpg",
         caption = null,
         isPrimary = isPrimary,
         displayOrder = 0,

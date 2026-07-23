@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.resolvers
 
 import com.team1.project_lab_backend.inventory.dto.AddressRequest
+import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.PropertyType
@@ -22,7 +23,7 @@ class StayResolver(private val stayService: StayService) {
         @Argument filter: StayFilterInput?,
         @Argument page: Int?,
         @Argument size: Int?,
-    ): List<Stay> = stayService.searchStays(filter?.toFilter() ?: StayFilter(), page ?: 0, size ?: 20)
+    ): StayConnection = stayService.searchStays(filter?.toFilter() ?: StayFilter(), page ?: 0, size ?: 20)
 
     @QueryMapping
     suspend fun stay(
@@ -186,6 +187,7 @@ data class StayFilterInput(
     val countryCode: String? = null,
     val regionId: Int? = null,
     val propertyType: PropertyType? = null,
+    val isRefundable: Boolean? = null,
     val minPricePerNight: BigDecimal? = null,
     val maxPricePerNight: BigDecimal? = null,
     val checkIn: LocalDate? = null,
@@ -202,6 +204,7 @@ data class StayFilterInput(
             countryCode = countryCode,
             regionId = regionId,
             propertyType = propertyType,
+            isRefundable = isRefundable,
             minPricePerNight = minPricePerNight,
             maxPricePerNight = maxPricePerNight,
             checkIn = checkIn,

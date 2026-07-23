@@ -24,6 +24,8 @@ data class Media(
     val ownerId: Int,
     @Column(name = "url", nullable = false, columnDefinition = "TEXT")
     val url: String,
+    @Column(name = "thumbnail_url", columnDefinition = "TEXT")
+    val thumbnailUrl: String? = null,
     @Column(name = "caption", columnDefinition = "TEXT")
     val caption: String? = null,
     @Column(name = "is_primary", nullable = false)

@@ -16,10 +16,20 @@ import com.team1.project_lab_backend.inventory.repositories.RegionRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Path
+import jakarta.persistence.criteria.Root
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
@@ -349,6 +359,54 @@ class StayServiceTest {
                 stayService.searchStays(StayFilter(guests = 0))
             }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    private fun sampleStayEntity(id: Int) =
+        Stay(
+            id = id,
+            name = "Test Stay $id",
+            propertyType = PropertyType.HOME,
+            address = Address(id = id, streetAddress = "123 Main", city = "Testville", countryCode = "US", region = sampleRegion()),
+            hostId = 1,
+        )
+
+    @Test
+    fun searchStaysAppliesStableIdSortAndPaginationMetadata() {
+        val page = PageImpl(listOf(sampleStayEntity(1), sampleStayEntity(2)), PageRequest.of(0, 20), 42L)
+        val pageableCaptor = ArgumentCaptor.forClass(Pageable::class.java)
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>(), pageableCaptor.capture()))
+            .thenReturn(page)
+
+        val result = stayService.searchStays(StayFilter(), page = 0, size = 20)
+
+        assertEquals(Sort.by(Sort.Direction.ASC, "id"), pageableCaptor.value.sort)
+        assertEquals(2, result.items.size)
+        assertEquals(42L, result.totalCount)
+        assertEquals(true, result.hasNextPage)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun searchStaysBuildsIsRefundablePredicateWhenFilterSet() {
+        val page = PageImpl<Stay>(emptyList())
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>(), Mockito.any(Pageable::class.java)))
+            .thenReturn(page)
+
+        stayService.searchStays(StayFilter(isRefundable = true))
+
+        val specCaptor = ArgumentCaptor.forClass(Specification::class.java) as ArgumentCaptor<Specification<Stay>>
+        Mockito.verify(stayRepository).findAll(specCaptor.capture(), Mockito.any(Pageable::class.java))
+        val spec = specCaptor.value
+
+        val root = Mockito.mock(Root::class.java) as Root<Stay>
+        val query = Mockito.mock(CriteriaQuery::class.java) as CriteriaQuery<Stay>
+        val cb = Mockito.mock(CriteriaBuilder::class.java)
+        val path = Mockito.mock(Path::class.java) as Path<Boolean>
+        Mockito.`when`(root.get<Boolean>("isRefundable")).thenReturn(path)
+
+        spec.toPredicate(root, query, cb)
+
+        Mockito.verify(cb).equal(path, true)
     }
 
     @Test

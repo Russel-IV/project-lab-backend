@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.AddressRequest
+import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Address
@@ -42,11 +43,14 @@ class StayServiceTest {
     fun searchStaysDelegatesToFeignClient() =
         runTest {
             val filter = StayFilter()
-            Mockito.`when`(stayFeignClient.search(filter, 0, 20)).thenReturn(listOf(sampleStay()))
+            val connection = StayConnection(items = listOf(sampleStay()), totalCount = 1, hasNextPage = false)
+            Mockito.`when`(stayFeignClient.search(filter, 0, 20)).thenReturn(connection)
 
             val result = stayService.searchStays(filter)
 
-            assertEquals(1, result.size)
+            assertEquals(1, result.items.size)
+            assertEquals(1, result.totalCount)
+            assertEquals(false, result.hasNextPage)
         }
 
     @Test

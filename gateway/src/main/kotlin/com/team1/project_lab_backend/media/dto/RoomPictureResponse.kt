@@ -4,6 +4,7 @@ data class RoomPictureResponse(
     val id: Int,
     val roomId: Int,
     val url: String,
+    val thumbnailUrl: String,
     val caption: String?,
     val isPrimary: Boolean,
     val displayOrder: Int,

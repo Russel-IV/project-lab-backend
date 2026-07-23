@@ -61,6 +61,7 @@ class MediaFeignClientTest {
                         aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                             .withBody(
                                 """[{"id":1,"ownerType":"STAY","ownerId":2,"url":"http://localhost:8080/uploads/stays/2/a.jpg",""" +
+                                    """"thumbnailUrl":"http://localhost:8080/uploads/stays/2/a.jpg",""" +
                                     """"caption":null,"isPrimary":true,"displayOrder":0}]""",
                             ),
                     ),
@@ -83,6 +84,7 @@ class MediaFeignClientTest {
                         aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                             .withBody(
                                 """[{"id":1,"ownerType":"ROOM","ownerId":5,"url":"http://localhost:8080/uploads/rooms/5/a.jpg",""" +
+                                    """"thumbnailUrl":"http://localhost:8080/uploads/rooms/5/a.jpg",""" +
                                     """"caption":null,"isPrimary":false,"displayOrder":0}]""",
                             ),
                     ),
@@ -104,6 +106,7 @@ class MediaFeignClientTest {
                         aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                             .withBody(
                                 """{"id":1,"ownerType":"STAY","ownerId":2,"url":"http://localhost:8080/uploads/stays/2/a.jpg",""" +
+                                    """"thumbnailUrl":"http://localhost:8080/uploads/stays/2/a.jpg",""" +
                                     """"caption":"New","isPrimary":false,"displayOrder":3}""",
                             ),
                     ),

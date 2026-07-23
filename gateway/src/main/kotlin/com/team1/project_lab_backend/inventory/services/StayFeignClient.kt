@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.inventory.services
 
+import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
@@ -27,7 +28,7 @@ class StayFeignClient(
         filter: StayFilter,
         page: Int,
         size: Int,
-    ): List<Stay> =
+    ): StayConnection =
         webClient.post()
             .uri { b -> b.path("/internal/stays/search").queryParam("page", page).queryParam("size", size).build() }
             .bodyValue(filter)

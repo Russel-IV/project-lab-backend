@@ -8,6 +8,7 @@ data class StayPicture(
     val id: Int,
     val stayId: Int,
     val url: String,
+    val thumbnailUrl: String,
     val caption: String? = null,
     val isPrimary: Boolean = false,
     val displayOrder: Int = 0,

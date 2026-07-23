@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.dto
 
 import com.team1.project_lab_backend.inventory.models.PropertyType
+import com.team1.project_lab_backend.inventory.models.Stay
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -34,6 +35,7 @@ data class StayFilter(
     val countryCode: String? = null,
     val regionId: Int? = null,
     val propertyType: PropertyType? = null,
+    val isRefundable: Boolean? = null,
     val minPricePerNight: BigDecimal? = null,
     val maxPricePerNight: BigDecimal? = null,
     val checkIn: LocalDate? = null,
@@ -43,4 +45,10 @@ data class StayFilter(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
+)
+
+data class StayConnection(
+    val items: List<Stay>,
+    val totalCount: Int,
+    val hasNextPage: Boolean,
 )

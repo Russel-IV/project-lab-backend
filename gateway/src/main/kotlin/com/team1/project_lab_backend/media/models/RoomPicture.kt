@@ -8,6 +8,7 @@ data class RoomPicture(
     val id: Int,
     val roomId: Int,
     val url: String,
+    val thumbnailUrl: String,
     val caption: String? = null,
     val isPrimary: Boolean = false,
     val displayOrder: Int = 0,

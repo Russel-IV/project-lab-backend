@@ -87,8 +87,24 @@ class RoomPictureService(
     }
 
     private fun MediaResponse.toRoomPicture() =
-        RoomPicture(id = id, roomId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
+        RoomPicture(
+            id = id,
+            roomId = ownerId,
+            url = url,
+            thumbnailUrl = thumbnailUrl,
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 
     private fun MediaResponse.toRoomPictureResponse() =
-        RoomPictureResponse(id = id, roomId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
+        RoomPictureResponse(
+            id = id,
+            roomId = ownerId,
+            url = url,
+            thumbnailUrl = thumbnailUrl,
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 }

@@ -36,6 +36,7 @@ data class StayFilter(
     val countryCode: String? = null,
     val regionId: Int? = null,
     val propertyType: PropertyType? = null,
+    val isRefundable: Boolean? = null,
     val minPricePerNight: BigDecimal? = null,
     val maxPricePerNight: BigDecimal? = null,
     val checkIn: LocalDate? = null,
@@ -45,6 +46,12 @@ data class StayFilter(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
+)
+
+data class StaySearchResult(
+    val items: List<StayResponse>,
+    val totalCount: Long,
+    val hasNextPage: Boolean,
 )
 
 /**

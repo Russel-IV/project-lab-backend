@@ -30,6 +30,7 @@ class RoomPictureServiceTest {
         ownerType = "ROOM",
         ownerId = roomId,
         url = "http://localhost:8080/uploads/rooms/$roomId/photo.jpg",
+        thumbnailUrl = "http://localhost:8080/uploads/rooms/$roomId/photo.jpg",
         caption = null,
         isPrimary = isPrimary,
         displayOrder = 0,

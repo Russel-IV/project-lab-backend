@@ -20,8 +20,13 @@
 -- so scripts/sql/inventory.sql should run before this fragment.
 --
 -- Stay pictures: same captions/primary/display_order structure as before (2-4
--- per stay, 40 total). Room pictures: new -- one per room (26 total, ids 41-66),
--- captioned with the room's own name, previously never seeded at all.
+-- per stay, 40 total). Room pictures: one per room (26 total, ids 41-66),
+-- captioned with the room's own name.
+--
+-- Section 2 below adds pictures for inventory.sql's second seed batch (stays
+-- 16-35, rooms 27-57): 2 stay pictures each (ids 67-106, 40 total) and 1 room
+-- picture each (ids 107-137, 31 total), reusing the same 20 files in
+-- scripts/images/ on a repeating cycle -- same approach as section 1.
 -- Safe to run multiple times: ON CONFLICT DO NOTHING, sequence reset.
 -- ============================================================
 
@@ -92,5 +97,85 @@ INSERT INTO media (id, owner_type, owner_id, url, caption, is_primary, display_o
 (64, 'ROOM', 24, 'rooms/24/photo-1496417263034-38ec4f0b665a_3.webp', 'Aurora Cabin', true, 0),
 (65, 'ROOM', 25, 'rooms/25/photo-1520250497591-112f2f40a3f4_3.webp', 'Canal View Double', true, 0),
 (66, 'ROOM', 26, 'rooms/26/photo-1535827841776-24afc1e255ac_6.webp', 'Canal House Suite', true, 0)
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('media', 'id'), COALESCE(MAX(id), 1)) FROM media;
+
+
+-- ============================================================
+-- 2. ADDITIONAL PICTURES — SEED BATCH 2 (stays 16-35, rooms 27-57)
+-- ============================================================
+
+INSERT INTO media (id, owner_type, owner_id, url, caption, is_primary, display_order) VALUES
+(67, 'STAY', 16, 'stays/16/photo-1445019980597-93fa8acb246c_3.webp', 'Tiled house exterior in Alfama', true, 0),
+(68, 'STAY', 16, 'stays/16/photo-1455587734955-081b22074882_4.webp', 'Private terrace over the Tagus', false, 1),
+(69, 'STAY', 17, 'stays/17/photo-1495365200479-c4ed1d35e1aa.webp', 'Machiya hotel entrance', true, 0),
+(70, 'STAY', 17, 'stays/17/photo-1496417263034-38ec4f0b665a_3.webp', 'Tatami interior with garden view', false, 1),
+(71, 'STAY', 18, 'stays/18/photo-1520250497591-112f2f40a3f4_3.webp', 'Palermo Soho loft building', true, 0),
+(72, 'STAY', 18, 'stays/18/photo-1535827841776-24afc1e255ac_6.webp', 'Open-plan living space', false, 1),
+(73, 'STAY', 19, 'stays/19/photo-1542314831-068cd1dbfeeb_3.webp', 'Ringstrasse hotel facade', true, 0),
+(74, 'STAY', 19, 'stays/19/photo-1549294413-26f195200c16_4.webp', 'Opera View Double room', false, 1),
+(75, 'STAY', 20, 'stays/20/photo-1551882547-ff40c63fe5fa_4.webp', 'Palm Jumeirah tower at dusk', true, 0),
+(76, 'STAY', 20, 'stays/20/photo-1566073771259-6a8506099945_4.webp', 'Private beach club', false, 1),
+(77, 'STAY', 21, 'stays/21/photo-1584132967334-10e028bd69f7_3.webp', 'Marina Bay infinity pool', true, 0),
+(78, 'STAY', 21, 'stays/21/photo-1611892440504-42a792e24d32_3.webp', 'Gardens by the Bay view', false, 1),
+(79, 'STAY', 22, 'stays/22/photo-1618773928121-c32242e63f39_4.webp', 'Colonial courtyard entrance', true, 0),
+(80, 'STAY', 22, 'stays/22/photo-1629140727571-9b5c6f6267b4_7.webp', 'View toward Sacsayhuamán', false, 1),
+(81, 'STAY', 23, 'stays/23/photo-1631049307264-da0ec9d70304_4.webp', 'Baroque building facade', true, 0),
+(82, 'STAY', 23, 'stays/23/premium_photo-1661929519129-7a76946c1d38_3.webp', 'Astronomical Clock view', false, 1),
+(83, 'STAY', 24, 'stays/24/premium_photo-1661964071015-d97428970584_2.webp', 'Teak house on the river', true, 0),
+(84, 'STAY', 24, 'stays/24/premium_photo-1661964402307-02267d1423f5_4.webp', 'Private longtail boat dock', false, 1),
+(85, 'STAY', 25, 'stays/25/premium_photo-1675745329954-9639d3b74bbf_6.webp', 'Nyhavn canal house facade', true, 0),
+(86, 'STAY', 25, 'stays/25/premium_photo-1687960116497-0dc41e1808a2_3.webp', 'Canal view from the window', false, 1),
+(87, 'STAY', 26, 'stays/26/photo-1445019980597-93fa8acb246c_3.webp', 'Garden cottage exterior', true, 0),
+(88, 'STAY', 26, 'stays/26/photo-1455587734955-081b22074882_4.webp', 'Lush Karen garden', false, 1),
+(89, 'STAY', 27, 'stays/27/photo-1495365200479-c4ed1d35e1aa.webp', 'Copacabana beachfront balcony', true, 0),
+(90, 'STAY', 27, 'stays/27/photo-1496417263034-38ec4f0b665a_3.webp', 'Wraparound balcony view', false, 1),
+(91, 'STAY', 28, 'stays/28/photo-1520250497591-112f2f40a3f4_3.webp', 'Gangnam tower exterior', true, 0),
+(92, 'STAY', 28, 'stays/28/photo-1535827841776-24afc1e255ac_6.webp', 'Rooftop bar at night', false, 1),
+(93, 'STAY', 29, 'stays/29/photo-1542314831-068cd1dbfeeb_3.webp', 'Cedar cabin exterior', true, 0),
+(94, 'STAY', 29, 'stays/29/photo-1549294413-26f195200c16_4.webp', 'Deck with harbor views', false, 1),
+(95, 'STAY', 30, 'stays/30/photo-1551882547-ff40c63fe5fa_4.webp', 'Stone flat on the Royal Mile', true, 0),
+(96, 'STAY', 30, 'stays/30/photo-1566073771259-6a8506099945_4.webp', 'Living room with castle view', false, 1),
+(97, 'STAY', 31, 'stays/31/photo-1584132967334-10e028bd69f7_3.webp', 'Old Quarter tube house facade', true, 0),
+(98, 'STAY', 31, 'stays/31/photo-1611892440504-42a792e24d32_3.webp', 'Hidden interior courtyard', false, 1),
+(99, 'STAY', 32, 'stays/32/photo-1618773928121-c32242e63f39_4.webp', 'Danube-bank hotel facade', true, 0),
+(100, 'STAY', 32, 'stays/32/photo-1629140727571-9b5c6f6267b4_7.webp', 'Buda Castle view', false, 1),
+(101, 'STAY', 33, 'stays/33/photo-1631049307264-da0ec9d70304_4.webp', 'Timber lodge on Lake Wakatipu', true, 0),
+(102, 'STAY', 33, 'stays/33/premium_photo-1661929519129-7a76946c1d38_3.webp', 'View of the Remarkables', false, 1),
+(103, 'STAY', 34, 'stays/34/premium_photo-1661964071015-d97428970584_2.webp', 'Colonial house facade in Habana Vieja', true, 0),
+(104, 'STAY', 34, 'stays/34/premium_photo-1661964402307-02267d1423f5_4.webp', 'Plant-filled interior patio', false, 1),
+(105, 'STAY', 35, 'stays/35/premium_photo-1675745329954-9639d3b74bbf_6.webp', 'Market Square hotel facade', true, 0),
+(106, 'STAY', 35, 'stays/35/premium_photo-1687960116497-0dc41e1808a2_3.webp', 'View of St. Mary''s Basilica', false, 1),
+(107, 'ROOM', 27, 'rooms/27/photo-1445019980597-93fa8acb246c_3.webp', 'Tagus View Room', true, 0),
+(108, 'ROOM', 28, 'rooms/28/photo-1455587734955-081b22074882_4.webp', 'Tatami Twin', true, 0),
+(109, 'ROOM', 29, 'rooms/29/photo-1495365200479-c4ed1d35e1aa.webp', 'Zen Garden Suite', true, 0),
+(110, 'ROOM', 30, 'rooms/30/photo-1496417263034-38ec4f0b665a_3.webp', 'Machiya Penthouse', true, 0),
+(111, 'ROOM', 31, 'rooms/31/photo-1520250497591-112f2f40a3f4_3.webp', 'Palermo Loft Room', true, 0),
+(112, 'ROOM', 32, 'rooms/32/photo-1535827841776-24afc1e255ac_6.webp', 'Opera View Double', true, 0),
+(113, 'ROOM', 33, 'rooms/33/photo-1542314831-068cd1dbfeeb_3.webp', 'Ringstrasse Suite', true, 0),
+(114, 'ROOM', 34, 'rooms/34/photo-1549294413-26f195200c16_4.webp', 'Marina View King', true, 0),
+(115, 'ROOM', 35, 'rooms/35/photo-1551882547-ff40c63fe5fa_4.webp', 'Palm Suite', true, 0),
+(116, 'ROOM', 36, 'rooms/36/photo-1566073771259-6a8506099945_4.webp', 'Royal Penthouse', true, 0),
+(117, 'ROOM', 37, 'rooms/37/photo-1584132967334-10e028bd69f7_3.webp', 'Bay View Queen', true, 0),
+(118, 'ROOM', 38, 'rooms/38/photo-1611892440504-42a792e24d32_3.webp', 'Gardens Suite', true, 0),
+(119, 'ROOM', 39, 'rooms/39/photo-1618773928121-c32242e63f39_4.webp', 'Courtyard Room', true, 0),
+(120, 'ROOM', 40, 'rooms/40/photo-1629140727571-9b5c6f6267b4_7.webp', 'Old Town Double', true, 0),
+(121, 'ROOM', 41, 'rooms/41/photo-1631049307264-da0ec9d70304_4.webp', 'Astronomical Suite', true, 0),
+(122, 'ROOM', 42, 'rooms/42/premium_photo-1661929519129-7a76946c1d38_3.webp', 'Riverside Room', true, 0),
+(123, 'ROOM', 43, 'rooms/43/premium_photo-1661964071015-d97428970584_2.webp', 'Canal View Room', true, 0),
+(124, 'ROOM', 44, 'rooms/44/premium_photo-1661964402307-02267d1423f5_4.webp', 'Garden Cottage Room', true, 0),
+(125, 'ROOM', 45, 'rooms/45/premium_photo-1675745329954-9639d3b74bbf_6.webp', 'Beachfront Balcony Room', true, 0),
+(126, 'ROOM', 46, 'rooms/46/premium_photo-1687960116497-0dc41e1808a2_3.webp', 'Gangnam Standard', true, 0),
+(127, 'ROOM', 47, 'rooms/47/photo-1445019980597-93fa8acb246c_3.webp', 'Rooftop King', true, 0),
+(128, 'ROOM', 48, 'rooms/48/photo-1455587734955-081b22074882_4.webp', 'Executive Suite', true, 0),
+(129, 'ROOM', 49, 'rooms/49/photo-1495365200479-c4ed1d35e1aa.webp', 'Park View Room', true, 0),
+(130, 'ROOM', 50, 'rooms/50/photo-1496417263034-38ec4f0b665a_3.webp', 'Royal Mile Room', true, 0),
+(131, 'ROOM', 51, 'rooms/51/photo-1520250497591-112f2f40a3f4_3.webp', 'Courtyard Suite', true, 0),
+(132, 'ROOM', 52, 'rooms/52/photo-1535827841776-24afc1e255ac_6.webp', 'Danube View Double', true, 0),
+(133, 'ROOM', 53, 'rooms/53/photo-1542314831-068cd1dbfeeb_3.webp', 'Castle View Suite', true, 0),
+(134, 'ROOM', 54, 'rooms/54/photo-1549294413-26f195200c16_4.webp', 'Remarkables View Room', true, 0),
+(135, 'ROOM', 55, 'rooms/55/photo-1551882547-ff40c63fe5fa_4.webp', 'Patio Room', true, 0),
+(136, 'ROOM', 56, 'rooms/56/photo-1566073771259-6a8506099945_4.webp', 'Market Square Double', true, 0),
+(137, 'ROOM', 57, 'rooms/57/photo-1584132967334-10e028bd69f7_3.webp', 'Basilica View Suite', true, 0)
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('media', 'id'), COALESCE(MAX(id), 1)) FROM media;

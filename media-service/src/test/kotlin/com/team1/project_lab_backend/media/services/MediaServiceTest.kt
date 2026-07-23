@@ -7,6 +7,7 @@ import com.team1.project_lab_backend.media.repositories.MediaRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockMultipartFile
@@ -23,11 +24,13 @@ class MediaServiceTest {
         ownerType: MediaOwnerType = MediaOwnerType.STAY,
         ownerId: Int = 10,
         isPrimary: Boolean = false,
+        thumbnailUrl: String? = null,
     ) = Media(
         id = id,
         ownerType = ownerType,
         ownerId = ownerId,
         url = "stays/$ownerId/photo.jpg",
+        thumbnailUrl = thumbnailUrl,
         caption = null,
         isPrimary = isPrimary,
         displayOrder = 0,
@@ -104,6 +107,36 @@ class MediaServiceTest {
         assertEquals(5, result.ownerId)
     }
 
+    @Test
+    fun addMediaPersistsGeneratedThumbnailKey() {
+        val file = imageFile()
+        Mockito.`when`(storageService.save(file, "rooms/5")).thenReturn("rooms/5/photo.jpg")
+        Mockito.`when`(storageService.saveThumbnail(file, "rooms/5")).thenReturn("rooms/5/photo_thumb.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo.jpg")).thenReturn("http://localhost:8080/uploads/rooms/5/photo.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo_thumb.jpg"))
+            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_thumb.jpg")
+        val mediaCaptor = ArgumentCaptor.forClass(Media::class.java)
+        Mockito.`when`(mediaRepository.save(mediaCaptor.capture())).thenAnswer { it.arguments[0] }
+
+        val result = service.addMedia(MediaOwnerType.ROOM, 5, file, null, false, 0)
+
+        assertEquals("rooms/5/photo_thumb.jpg", mediaCaptor.value.thumbnailUrl)
+        assertEquals("http://localhost:8080/uploads/rooms/5/photo_thumb.jpg", result.thumbnailUrl)
+    }
+
+    @Test
+    fun addMediaFallsBackToFullSizeUrlWhenThumbnailGenerationFails() {
+        val file = imageFile()
+        Mockito.`when`(storageService.save(file, "rooms/5")).thenReturn("rooms/5/photo.jpg")
+        Mockito.`when`(storageService.saveThumbnail(file, "rooms/5")).thenReturn(null)
+        Mockito.`when`(storageService.toUrl("rooms/5/photo.jpg")).thenReturn("http://localhost:8080/uploads/rooms/5/photo.jpg")
+        Mockito.`when`(mediaRepository.save(Mockito.any(Media::class.java))).thenAnswer { it.arguments[0] }
+
+        val result = service.addMedia(MediaOwnerType.ROOM, 5, file, null, false, 0)
+
+        assertEquals(result.url, result.thumbnailUrl)
+    }
+
     // ---- updateMedia ----
 
     @Test
@@ -176,6 +209,17 @@ class MediaServiceTest {
 
         Mockito.verify(mediaRepository).deleteById(1)
         Mockito.verify(storageService).delete(existing.url)
+    }
+
+    @Test
+    fun deleteMediaAlsoDeletesThumbnailWhenPresent() {
+        val existing = media(id = 1, thumbnailUrl = "stays/10/photo_thumb.jpg")
+        Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 10, 1)).thenReturn(existing)
+
+        service.deleteMedia(MediaOwnerType.STAY, 10, 1)
+
+        Mockito.verify(storageService).delete(existing.url)
+        Mockito.verify(storageService).delete("stays/10/photo_thumb.jpg")
     }
 
     // ---- listForOwners (bulk, backs the batch resolver) ----

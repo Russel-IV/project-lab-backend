@@ -110,6 +110,8 @@ input StayFilterInput {
     regionId: Int
     "Limit results to a specific property category."
     propertyType: PropertyType
+    "Limit results to properties eligible for a full refund on cancellation."
+    isRefundable: Boolean
     "Require at least one room with a nightly rate at or below this amount."
     maxPricePerNight: BigDecimal
     "Require at least one room with a nightly rate at or above this amount."

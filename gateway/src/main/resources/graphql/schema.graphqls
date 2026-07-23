@@ -23,7 +23,7 @@ type Query {
     host(id: Int!): Host
 
     "Returns a paginated list of stays, with optional search filters."
-    stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): [Stay!]!
+    stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): StayConnection!
     "Returns a single stay by ID."
     stay(id: Int!): Stay
     "Returns distinct city/country pairs currently in use by stay addresses, optionally filtered by a case-insensitive, typo- and diacritic-tolerant city search."

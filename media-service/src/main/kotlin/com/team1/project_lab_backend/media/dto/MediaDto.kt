@@ -5,6 +5,7 @@ data class MediaResponse(
     val ownerType: String,
     val ownerId: Int,
     val url: String,
+    val thumbnailUrl: String,
     val caption: String?,
     val isPrimary: Boolean,
     val displayOrder: Int,

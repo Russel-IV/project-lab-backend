@@ -49,12 +49,15 @@ class MediaService(
         if (isPrimary && mediaRepository.existsByOwnerTypeAndOwnerIdAndIsPrimary(ownerType, ownerId, true)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "a primary picture already exists for this ${ownerType.folderNoun()}")
         }
-        val key = storageService.save(file, "${ownerType.folderNoun()}s/$ownerId")
+        val folder = "${ownerType.folderNoun()}s/$ownerId"
+        val key = storageService.save(file, folder)
+        val thumbnailKey = storageService.saveThumbnail(file, folder)
         val media =
             Media(
                 ownerType = ownerType,
                 ownerId = ownerId,
                 url = key,
+                thumbnailUrl = thumbnailKey,
                 caption = caption,
                 isPrimary = isPrimary,
                 displayOrder = displayOrder,
@@ -63,6 +66,7 @@ class MediaService(
             return mediaRepository.save(media).toResponse()
         } catch (e: Exception) {
             runCatching { storageService.delete(key) }
+            thumbnailKey?.let { runCatching { storageService.delete(it) } }
             throw e
         }
     }
@@ -99,6 +103,7 @@ class MediaService(
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "picture not found")
         mediaRepository.deleteById(id)
         storageService.delete(existing.url)
+        existing.thumbnailUrl?.let { storageService.delete(it) }
     }
 
     private fun validateImageFile(file: MultipartFile) {
@@ -121,6 +126,7 @@ class MediaService(
             ownerType = ownerType.name,
             ownerId = ownerId,
             url = storageService.toUrl(url),
+            thumbnailUrl = thumbnailUrl?.let { storageService.toUrl(it) } ?: storageService.toUrl(url),
             caption = caption,
             isPrimary = isPrimary,
             displayOrder = displayOrder,

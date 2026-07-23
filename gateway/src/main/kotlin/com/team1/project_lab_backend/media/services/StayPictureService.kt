@@ -86,8 +86,24 @@ class StayPictureService(
     }
 
     private fun MediaResponse.toStayPicture() =
-        StayPicture(id = id, stayId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
+        StayPicture(
+            id = id,
+            stayId = ownerId,
+            url = url,
+            thumbnailUrl = thumbnailUrl,
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 
     private fun MediaResponse.toStayPictureResponse() =
-        StayPictureResponse(id = id, stayId = ownerId, url = url, caption = caption, isPrimary = isPrimary, displayOrder = displayOrder)
+        StayPictureResponse(
+            id = id,
+            stayId = ownerId,
+            url = url,
+            thumbnailUrl = thumbnailUrl,
+            caption = caption,
+            isPrimary = isPrimary,
+            displayOrder = displayOrder,
+        )
 }

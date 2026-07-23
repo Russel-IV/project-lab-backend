@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.inventory.services
 
+import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
@@ -22,7 +23,7 @@ class StayService(private val stayFeignClient: StayFeignClient) {
         filter: StayFilter,
         page: Int = 0,
         size: Int = 20,
-    ): List<Stay> =
+    ): StayConnection =
         try {
             stayFeignClient.search(filter, page, size)
         } catch (e: WebClientResponseException.BadRequest) {

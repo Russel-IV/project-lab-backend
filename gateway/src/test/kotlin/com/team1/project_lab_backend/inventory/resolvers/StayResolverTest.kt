@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.resolvers
 
 import com.team1.project_lab_backend.identity.models.User
+import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
@@ -42,13 +43,13 @@ class StayResolverTest {
     @Test
     fun staysPassesPageAndSizeToService() =
         runTest {
-            val stays = listOf(sampleStay())
-            Mockito.`when`(stayService.searchStays(anyArg(), eqArg(2), eqArg(5))).thenReturn(stays)
+            val connection = StayConnection(items = listOf(sampleStay()), totalCount = 1, hasNextPage = false)
+            Mockito.`when`(stayService.searchStays(anyArg(), eqArg(2), eqArg(5))).thenReturn(connection)
 
             val result = resolver.stays(null, 2, 5)
 
-        assertEquals(1, result.size)
-        assertEquals("Cozy Cabin", result[0].name)
+        assertEquals(1, result.items.size)
+        assertEquals("Cozy Cabin", result.items[0].name)
         Mockito.verify(stayService).searchStays(anyArg(), eqArg(2), eqArg(5))
     }
 
@@ -56,7 +57,8 @@ class StayResolverTest {
     fun staysPassesRegionIdFilterToService() =
         runTest {
             val expectedFilter = StayFilter(regionId = 3)
-            Mockito.`when`(stayService.searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))).thenReturn(emptyList())
+            val connection = StayConnection(items = emptyList(), totalCount = 0, hasNextPage = false)
+            Mockito.`when`(stayService.searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))).thenReturn(connection)
 
             resolver.stays(StayFilterInput(regionId = 3), 0, 20)
 
@@ -66,11 +68,13 @@ class StayResolverTest {
     @Test
     fun staysReturnsEmptyListWhenNoResults() =
         runTest {
-            Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(emptyList())
+            val connection = StayConnection(items = emptyList(), totalCount = 0, hasNextPage = false)
+            Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(connection)
 
             val result = resolver.stays(null, 0, 20)
 
-            assertEquals(0, result.size)
+            assertEquals(0, result.items.size)
+            assertEquals(0, result.totalCount)
         }
 
     @Test
