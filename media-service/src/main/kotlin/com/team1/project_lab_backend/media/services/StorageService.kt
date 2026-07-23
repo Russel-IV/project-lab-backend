@@ -8,11 +8,11 @@ interface StorageService {
         folder: String,
     ): String
 
-    /** Returns the thumbnail's storage key, or null if the source format couldn't be decoded/resized. */
-    fun saveThumbnail(
+    /** Returns each generated variant's storage key by width, e.g. {1024: "...", 512: "...", 248: "..."}. */
+    fun saveVariants(
         file: MultipartFile,
         folder: String,
-    ): String?
+    ): Map<Int, String>
 
     fun delete(key: String)
 

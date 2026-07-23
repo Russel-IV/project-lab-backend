@@ -41,6 +41,24 @@ class S3StorageService(
         return key
     }
 
+    override fun saveVariants(
+        file: MultipartFile,
+        folder: String,
+    ): Map<Int, String> {
+        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
+        val variants = file.inputStream.use { ImageResizer.resizeAll(it, ext) }
+        return variants.mapValues { (width, bytes) ->
+            val key = "$folder/${UUID.randomUUID()}_$width.$ext"
+            val putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(file.contentType ?: "application/octet-stream")
+                .build()
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
+            key
+        }
+    }
+
     override fun delete(key: String) {
         try {
             val deleteObjectRequest = DeleteObjectRequest.builder()

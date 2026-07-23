@@ -51,13 +51,15 @@ class MediaService(
         }
         val folder = "${ownerType.folderNoun()}s/$ownerId"
         val key = storageService.save(file, folder)
-        val thumbnailKey = storageService.saveThumbnail(file, folder)
+        val variants = storageService.saveVariants(file, folder)
         val media =
             Media(
                 ownerType = ownerType,
                 ownerId = ownerId,
                 url = key,
-                thumbnailUrl = thumbnailKey,
+                thumbnailUrl = variants[248],
+                url1024 = variants[1024],
+                url512 = variants[512],
                 caption = caption,
                 isPrimary = isPrimary,
                 displayOrder = displayOrder,
@@ -66,7 +68,7 @@ class MediaService(
             return mediaRepository.save(media).toResponse()
         } catch (e: Exception) {
             runCatching { storageService.delete(key) }
-            thumbnailKey?.let { runCatching { storageService.delete(it) } }
+            variants.values.forEach { runCatching { storageService.delete(it) } }
             throw e
         }
     }
@@ -104,6 +106,8 @@ class MediaService(
         mediaRepository.deleteById(id)
         storageService.delete(existing.url)
         existing.thumbnailUrl?.let { storageService.delete(it) }
+        existing.url1024?.let { storageService.delete(it) }
+        existing.url512?.let { storageService.delete(it) }
     }
 
     private fun validateImageFile(file: MultipartFile) {
@@ -127,6 +131,8 @@ class MediaService(
             ownerId = ownerId,
             url = storageService.toUrl(url),
             thumbnailUrl = thumbnailUrl?.let { storageService.toUrl(it) } ?: storageService.toUrl(url),
+            url1024 = url1024?.let { storageService.toUrl(it) },
+            url512 = url512?.let { storageService.toUrl(it) },
             caption = caption,
             isPrimary = isPrimary,
             displayOrder = displayOrder,

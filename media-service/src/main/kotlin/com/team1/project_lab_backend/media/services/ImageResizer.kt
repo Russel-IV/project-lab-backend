@@ -8,27 +8,41 @@ import java.io.InputStream
 import javax.imageio.ImageIO
 
 /**
- * Stock JDK ImageIO can't decode webp/avif — [resize] returns null for those (and any
- * other undecodable input) rather than throwing, so callers can fall back to the
+ * Stock JDK ImageIO can't decode webp/avif — [resizeAll] returns an empty map for those
+ * (and any other undecodable input) rather than throwing, so callers can fall back to the
  * full-size image instead of failing the upload.
  */
 object ImageResizer {
-    private const val TARGET_WIDTH = 400
+    val TARGET_WIDTHS = listOf(1024, 512, 248)
 
-    fun resize(
+    /**
+     * Resizes to every width in [widths] that is narrower than the source, keyed by that width.
+     * Widths at or above the source's own width are skipped — that variant would be no smaller
+     * than the original, which is already stored separately.
+     */
+    fun resizeAll(
         input: InputStream,
         formatName: String,
+        widths: List<Int> = TARGET_WIDTHS,
+    ): Map<Int, ByteArray> {
+        val source = ImageIO.read(input) ?: return emptyMap()
+        return widths.filter { it < source.width }
+            .associateWith { width -> resizeTo(source, width, formatName) }
+            .filterValues { it != null }
+            .mapValues { it.value!! }
+    }
+
+    private fun resizeTo(
+        source: BufferedImage,
+        targetWidth: Int,
+        formatName: String,
     ): ByteArray? {
-        val source = ImageIO.read(input) ?: return null
-        if (source.width <= TARGET_WIDTH) {
-            return encode(source, formatName)
-        }
-        val targetHeight = (source.height.toDouble() * TARGET_WIDTH / source.width).toInt().coerceAtLeast(1)
-        val scaled = BufferedImage(TARGET_WIDTH, targetHeight, BufferedImage.TYPE_INT_ARGB)
+        val targetHeight = (source.height.toDouble() * targetWidth / source.width).toInt().coerceAtLeast(1)
+        val scaled = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
         scaled.createGraphics().apply {
             setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
             setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            drawImage(source, 0, 0, TARGET_WIDTH, targetHeight, null)
+            drawImage(source, 0, 0, targetWidth, targetHeight, null)
             dispose()
         }
         return encode(scaled, formatName)

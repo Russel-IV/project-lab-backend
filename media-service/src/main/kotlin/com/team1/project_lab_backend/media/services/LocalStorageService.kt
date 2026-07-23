@@ -35,18 +35,19 @@ class LocalStorageService(
         return key
     }
 
-    override fun saveThumbnail(
+    override fun saveVariants(
         file: MultipartFile,
         folder: String,
-    ): String? {
+    ): Map<Int, String> {
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val resized = file.inputStream.use { ImageResizer.resize(it, ext) } ?: return null
-        val filename = "${UUID.randomUUID()}_thumb.$ext"
-        val key = "$folder/$filename"
+        val variants = file.inputStream.use { ImageResizer.resizeAll(it, ext) }
         val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
-        Files.write(dir.resolve(filename), resized)
-        return key
+        return variants.mapValues { (width, bytes) ->
+            val filename = "${UUID.randomUUID()}_$width.$ext"
+            Files.write(dir.resolve(filename), bytes)
+            "$folder/$filename"
+        }
     }
 
     override fun delete(key: String) {

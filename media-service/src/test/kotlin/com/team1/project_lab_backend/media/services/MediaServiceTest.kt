@@ -108,33 +108,43 @@ class MediaServiceTest {
     }
 
     @Test
-    fun addMediaPersistsGeneratedThumbnailKey() {
+    fun addMediaPersistsGeneratedVariantKeys() {
         val file = imageFile()
         Mockito.`when`(storageService.save(file, "rooms/5")).thenReturn("rooms/5/photo.jpg")
-        Mockito.`when`(storageService.saveThumbnail(file, "rooms/5")).thenReturn("rooms/5/photo_thumb.jpg")
+        Mockito.`when`(storageService.saveVariants(file, "rooms/5")).thenReturn(
+            mapOf(1024 to "rooms/5/photo_1024.jpg", 512 to "rooms/5/photo_512.jpg", 248 to "rooms/5/photo_248.jpg"),
+        )
         Mockito.`when`(storageService.toUrl("rooms/5/photo.jpg")).thenReturn("http://localhost:8080/uploads/rooms/5/photo.jpg")
-        Mockito.`when`(storageService.toUrl("rooms/5/photo_thumb.jpg"))
-            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_thumb.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo_1024.jpg"))
+            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_1024.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo_512.jpg"))
+            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_512.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo_248.jpg"))
+            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_248.jpg")
         val mediaCaptor = ArgumentCaptor.forClass(Media::class.java)
         Mockito.`when`(mediaRepository.save(mediaCaptor.capture())).thenAnswer { it.arguments[0] }
 
         val result = service.addMedia(MediaOwnerType.ROOM, 5, file, null, false, 0)
 
-        assertEquals("rooms/5/photo_thumb.jpg", mediaCaptor.value.thumbnailUrl)
-        assertEquals("http://localhost:8080/uploads/rooms/5/photo_thumb.jpg", result.thumbnailUrl)
+        assertEquals("rooms/5/photo_248.jpg", mediaCaptor.value.thumbnailUrl)
+        assertEquals("http://localhost:8080/uploads/rooms/5/photo_248.jpg", result.thumbnailUrl)
+        assertEquals("http://localhost:8080/uploads/rooms/5/photo_1024.jpg", result.url1024)
+        assertEquals("http://localhost:8080/uploads/rooms/5/photo_512.jpg", result.url512)
     }
 
     @Test
-    fun addMediaFallsBackToFullSizeUrlWhenThumbnailGenerationFails() {
+    fun addMediaFallsBackToFullSizeUrlWhenVariantGenerationFails() {
         val file = imageFile()
         Mockito.`when`(storageService.save(file, "rooms/5")).thenReturn("rooms/5/photo.jpg")
-        Mockito.`when`(storageService.saveThumbnail(file, "rooms/5")).thenReturn(null)
+        Mockito.`when`(storageService.saveVariants(file, "rooms/5")).thenReturn(emptyMap())
         Mockito.`when`(storageService.toUrl("rooms/5/photo.jpg")).thenReturn("http://localhost:8080/uploads/rooms/5/photo.jpg")
         Mockito.`when`(mediaRepository.save(Mockito.any(Media::class.java))).thenAnswer { it.arguments[0] }
 
         val result = service.addMedia(MediaOwnerType.ROOM, 5, file, null, false, 0)
 
         assertEquals(result.url, result.thumbnailUrl)
+        assertEquals(null, result.url1024)
+        assertEquals(null, result.url512)
     }
 
     // ---- updateMedia ----

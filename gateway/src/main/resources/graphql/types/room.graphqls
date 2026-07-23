@@ -26,8 +26,12 @@ type RoomPicture {
     roomId: Int!
     "Public URL of the image."
     url: String!
-    "Public URL of a resized (max ~400px wide) variant, for grid/thumbnail display. Falls back to the full-size url if no thumbnail could be generated."
+    "Public URL of a resized (max ~248px wide) variant, for grid/thumbnail display. Falls back to the full-size url if no thumbnail could be generated."
     thumbnailUrl: String!
+    "Public URL of a resized (max ~1024px wide) variant, for hero/gallery display. Null if the source is already narrower than 1024px or no variant could be generated."
+    url1024: String
+    "Public URL of a resized (max ~512px wide) variant, for card/grid display. Null if the source is already narrower than 512px or no variant could be generated."
+    url512: String
     "Optional descriptive caption."
     caption: String
     "Whether this is the main cover photo shown for the room."

@@ -9,6 +9,8 @@ data class RoomPicture(
     val roomId: Int,
     val url: String,
     val thumbnailUrl: String,
+    val url1024: String? = null,
+    val url512: String? = null,
     val caption: String? = null,
     val isPrimary: Boolean = false,
     val displayOrder: Int = 0,

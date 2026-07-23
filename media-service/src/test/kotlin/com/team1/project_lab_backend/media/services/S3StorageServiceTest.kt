@@ -10,6 +10,9 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 
 class S3StorageServiceTest {
     private val s3Client = Mockito.mock(S3Client::class.java)
@@ -44,6 +47,21 @@ class S3StorageServiceTest {
         assertEquals("test-bucket", putRequest.bucket())
         assertEquals(key, putRequest.key())
         assertEquals("image/jpeg", putRequest.contentType())
+    }
+
+    @Test
+    fun saveVariantsUploadsOneObjectPerGeneratedWidth() {
+        val source = BufferedImage(300, 200, BufferedImage.TYPE_INT_RGB)
+        val bytes = ByteArrayOutputStream().also { ImageIO.write(source, "jpg", it) }.toByteArray()
+        val file = MockMultipartFile("file", "test.jpg", "image/jpeg", bytes)
+
+        val variants = service.saveVariants(file, "stays/10")
+
+        assertEquals(setOf(248), variants.keys)
+        val captor = ArgumentCaptor.forClass(PutObjectRequest::class.java)
+        Mockito.verify(s3Client).putObject(captor.capture(), Mockito.any(RequestBody::class.java))
+        assertEquals("stays/10", captor.value.key().substringBeforeLast('/'))
+        assertTrue(captor.value.key().endsWith("_248.jpg"))
     }
 
     @Test
