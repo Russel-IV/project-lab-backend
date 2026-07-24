@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.media.services
 
+import com.team1.project_lab_backend.media.util.Uuid7
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -8,7 +9,6 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
-import java.util.UUID
 
 /**
  * Direct backend AWS S3 object storage implementation of [StorageService].
@@ -22,20 +22,20 @@ class S3StorageService(
     @Value("\${cloud.aws.s3.region:us-east-1}") private val region: String,
     @Value("\${cloud.aws.s3.endpoint:}") private val endpoint: String,
 ) : StorageService {
-
     override fun save(
         file: MultipartFile,
         folder: String,
     ): String {
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val filename = "${UUID.randomUUID()}.$ext"
+        val filename = "${Uuid7.randomUUID()}.$ext"
         val key = "$folder/$filename"
 
-        val putObjectRequest = PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .contentType(file.contentType ?: "application/octet-stream")
-            .build()
+        val putObjectRequest =
+            PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(file.contentType ?: "application/octet-stream")
+                .build()
 
         s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.inputStream, file.size))
         return key
@@ -48,12 +48,13 @@ class S3StorageService(
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
         val variants = file.inputStream.use { ImageResizer.resizeAll(it, ext) }
         return variants.mapValues { (width, bytes) ->
-            val key = "$folder/${UUID.randomUUID()}_$width.$ext"
-            val putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .contentType(file.contentType ?: "application/octet-stream")
-                .build()
+            val key = "$folder/${Uuid7.randomUUID()}_$width.$ext"
+            val putObjectRequest =
+                PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentType(file.contentType ?: "application/octet-stream")
+                    .build()
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
             key
         }
@@ -61,10 +62,11 @@ class S3StorageService(
 
     override fun delete(key: String) {
         try {
-            val deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build()
+            val deleteObjectRequest =
+                DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
             s3Client.deleteObject(deleteObjectRequest)
         } catch (_: Exception) {
         }

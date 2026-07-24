@@ -7,23 +7,30 @@
 # tables (everything was extracted into per-service databases and
 # dropped from gateway's own Flyway history, see gateway's
 # V18-V22__drop_*.sql). This script replaces that pair: it loads
-# scripts/sql/{identity,inventory,media,booking,review}.sql into their
-# respective containers, in the dependency order the seed data's ids
-# actually require (see each fragment's own header comment).
+# scripts/sql/{identity,inventory,booking,review}.sql into their respective
+# containers, in the dependency order the seed data's ids actually require
+# (see each fragment's own header comment), plus scripts/seed-media.sh (see
+# below) in place of a media.sql fragment.
 #
 # There is no `user_favorite` fragment: that table was dropped outright
 # in gateway's V20__drop_identity_tables.sql and never recreated by any
 # service (it was already an orphaned/unmapped table before the split —
 # no JPA entity referenced it even in the monolith). Nothing ports it.
 #
-# Before loading media.sql, this also runs scripts/seed-images.sh, which
-# copies the real images in scripts/images/ into the shared uploads volume
-# at the exact keys media.sql's rows reference — the DB rows are meaningless
-# without the actual files existing for the Gateway's /uploads/** handler to
-# serve.
+# There is no media.sql fragment: media rows are seeded by
+# scripts/seed-media.sh instead, which POSTs the original images in
+# scripts/images/ straight to media-service's own upload endpoint (see that
+# script's header) so its real StorageService/ImageResizer pipeline runs —
+# storing the original, generating resized variants, and writing to
+# whichever storage backend (local disk or S3) the container is configured
+# for. Run in the same slot media.sql used to occupy, once identity/
+# inventory ids exist.
 #
-# Safe to run multiple times: every fragment uses explicit ids with
-# ON CONFLICT DO NOTHING and resets its own sequences.
+# Safe to run multiple times: every SQL fragment uses explicit ids with
+# ON CONFLICT DO NOTHING and resets its own sequences; scripts/seed-media.sh
+# has its own re-run guard (see that script's header) since real uploads get
+# server-generated ids rather than the fixed ones a SQL fragment could rely
+# on ON CONFLICT DO NOTHING for.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -40,15 +47,17 @@ POSTGRES_DB="${POSTGRES_DB:-postgres}"
 
 # service name -> container name -> sql fragment, in dependency order
 # (identity/inventory seed the ids booking/review/media reference).
-FRAGMENTS=(
+FRAGMENTS_BEFORE_MEDIA=(
     "identity-database:scripts/sql/identity.sql"
     "inventory-database:scripts/sql/inventory.sql"
-    "media-database:scripts/sql/media.sql"
+)
+FRAGMENTS_AFTER_MEDIA=(
     "booking-database:scripts/sql/booking.sql"
     "review-database:scripts/sql/review.sql"
 )
 
-for entry in "${FRAGMENTS[@]}"; do
+load_fragment() {
+    local entry="$1" container sql_file
     container="${entry%%:*}"
     sql_file="${entry#*:}"
 
@@ -62,12 +71,18 @@ for entry in "${FRAGMENTS[@]}"; do
         exit 1
     fi
 
-    if [ "$sql_file" = "scripts/sql/media.sql" ]; then
-        ./scripts/seed-images.sh
-    fi
-
     echo "Loading ${sql_file} into ${container} (db: ${POSTGRES_DB}, user: ${POSTGRES_USER})..."
     docker exec -i "$container" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$sql_file"
+}
+
+for entry in "${FRAGMENTS_BEFORE_MEDIA[@]}"; do
+    load_fragment "$entry"
+done
+
+./scripts/seed-media.sh
+
+for entry in "${FRAGMENTS_AFTER_MEDIA[@]}"; do
+    load_fragment "$entry"
 done
 
 echo "Done."

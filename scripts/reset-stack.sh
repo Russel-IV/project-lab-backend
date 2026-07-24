@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Wipes every Postgres volume + the shared uploads volume and brings the
 # stack back up from nothing: lift-stack.sh (build + staggered start) then
-# populate-db.sh (which seeds all 5 per-service databases and copies
-# scripts/images/ into the uploads volume via seed-images.sh).
+# populate-db.sh (which seeds all 5 per-service databases, including media
+# rows via scripts/seed-media.sh -- real uploads through media-service's own
+# endpoint, not a raw file copy).
 #
 # Use this instead of typing `docker compose down -v` by hand -- see
 # feedback_resource_constrained_dev_box: this box has 7.4GB RAM, so bringing

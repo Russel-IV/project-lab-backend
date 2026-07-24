@@ -1,0 +1,138 @@
+# ownerType	ownerId	imageHash	caption	isPrimary	displayOrder
+STAY	1	photo-1445019980597-93fa8acb246c	Ocean-facing exterior	true	0
+STAY	1	photo-1455587734955-081b22074882	Open-plan living area	false	1
+STAY	1	photo-1495365200479-c4ed1d35e1aa	Master bedroom	false	2
+STAY	2	photo-1496417263034-38ec4f0b665a	Hotel lobby	true	0
+STAY	2	photo-1520250497591-112f2f40a3f4	Standard King room	false	1
+STAY	2	photo-1535827841776-24afc1e255ac	Deluxe Suite living area	false	2
+STAY	2	photo-1542314831-068cd1dbfeeb	Executive Penthouse view	false	3
+STAY	3	photo-1549294413-26f195200c16	Cabin surrounded by pines	true	0
+STAY	3	photo-1551882547-ff40c63fe5fa	Interior with fireplace	false	1
+STAY	4	photo-1566073771259-6a8506099945	Building facade	true	0
+STAY	4	photo-1584132967334-10e028bd69f7	Classic Double room	false	1
+STAY	5	photo-1611892440504-42a792e24d32	Pool villa from the garden	true	0
+STAY	5	photo-1618773928121-c32242e63f39	Private infinity pool	false	1
+STAY	6	photo-1629140727571-9b5c6f6267b4	Cliffside villa at sunset	true	0
+STAY	6	photo-1631049307264-da0ec9d70304	Infinity pool over the caldera	false	1
+STAY	6	premium_photo-1661929519129-7a76946c1d38	Whitewashed bedroom suite	false	2
+STAY	7	premium_photo-1661964071015-d97428970584	Midtown hotel lobby	true	0
+STAY	7	premium_photo-1661964402307-02267d1423f5	Skyline King room	false	1
+STAY	7	premium_photo-1675745329954-9639d3b74bbf	Rooftop bar at night	false	2
+STAY	8	premium_photo-1687960116497-0dc41e1808a2	Stone cottage exterior	true	0
+STAY	8	photo-1445019980597-93fa8acb246c	View of the Cuillin mountains	false	1
+STAY	9	photo-1455587734955-081b22074882	Central courtyard with plunge pool	true	0
+STAY	9	photo-1495365200479-c4ed1d35e1aa	Rooftop terrace at dusk	false	1
+STAY	9	photo-1496417263034-38ec4f0b665a	Riad Suite interior	false	2
+STAY	10	photo-1520250497591-112f2f40a3f4	Timber chalet with Matterhorn backdrop	true	0
+STAY	10	photo-1535827841776-24afc1e255ac	Cozy alpine living room	false	1
+STAY	10	photo-1542314831-068cd1dbfeeb	Heated ski boot room	false	2
+STAY	11	photo-1549294413-26f195200c16	Modernist facade on Passeig de Gràcia	true	0
+STAY	11	photo-1551882547-ff40c63fe5fa	Passeig de Gràcia Suite	false	1
+STAY	11	photo-1566073771259-6a8506099945	Seasonal rooftop pool	false	2
+STAY	12	photo-1584132967334-10e028bd69f7	Direct beach access	true	0
+STAY	12	photo-1611892440504-42a792e24d32	Table Mountain view from the deck	false	1
+STAY	13	photo-1618773928121-c32242e63f39	Harbour view from the lobby	true	0
+STAY	13	photo-1629140727571-9b5c6f6267b4	Opera House King room	false	1
+STAY	13	photo-1631049307264-da0ec9d70304	Executive Suite living area	false	2
+STAY	14	premium_photo-1661929519129-7a76946c1d38	Glass-roofed cabin exterior	true	0
+STAY	14	premium_photo-1661964071015-d97428970584	Northern lights above the cabin	false	1
+STAY	15	premium_photo-1661964402307-02267d1423f5	Canal house facade at golden hour	true	0
+STAY	15	premium_photo-1675745329954-9639d3b74bbf	Canal View Double room	false	1
+STAY	15	premium_photo-1687960116497-0dc41e1808a2	Breakfast room overlooking the canal	false	2
+ROOM	1	photo-1445019980597-93fa8acb246c	Beachfront Suite	true	0
+ROOM	2	photo-1455587734955-081b22074882	Standard King	true	0
+ROOM	3	photo-1495365200479-c4ed1d35e1aa	Deluxe Suite	true	0
+ROOM	4	photo-1496417263034-38ec4f0b665a	Executive Penthouse	true	0
+ROOM	5	photo-1520250497591-112f2f40a3f4	Mountain Loft	true	0
+ROOM	6	photo-1535827841776-24afc1e255ac	Classic Double	true	0
+ROOM	7	photo-1542314831-068cd1dbfeeb	Superior Suite	true	0
+ROOM	8	photo-1549294413-26f195200c16	Jungle Pool Villa	true	0
+ROOM	9	photo-1551882547-ff40c63fe5fa	Cliffside Suite	true	0
+ROOM	10	photo-1566073771259-6a8506099945	City View Queen	true	0
+ROOM	11	photo-1584132967334-10e028bd69f7	Skyline King	true	0
+ROOM	12	photo-1611892440504-42a792e24d32	Penthouse Loft	true	0
+ROOM	13	photo-1618773928121-c32242e63f39	Highland Cottage	true	0
+ROOM	14	photo-1629140727571-9b5c6f6267b4	Riad Suite	true	0
+ROOM	15	photo-1631049307264-da0ec9d70304	Rooftop Suite	true	0
+ROOM	16	premium_photo-1661929519129-7a76946c1d38	Alpine Chalet	true	0
+ROOM	17	premium_photo-1661964071015-d97428970584	Gothic Quarter Double	true	0
+ROOM	18	premium_photo-1661964402307-02267d1423f5	Passeig de Gràcia Suite	true	0
+ROOM	19	premium_photo-1675745329954-9639d3b74bbf	Rooftop Terrace Room	true	0
+ROOM	20	premium_photo-1687960116497-0dc41e1808a2	Ocean Lodge Room	true	0
+ROOM	21	photo-1445019980597-93fa8acb246c	Harbour View Twin	true	0
+ROOM	22	photo-1455587734955-081b22074882	Opera House King	true	0
+ROOM	23	photo-1495365200479-c4ed1d35e1aa	Executive Suite	true	0
+ROOM	24	photo-1496417263034-38ec4f0b665a	Aurora Cabin	true	0
+ROOM	25	photo-1520250497591-112f2f40a3f4	Canal View Double	true	0
+ROOM	26	photo-1535827841776-24afc1e255ac	Canal House Suite	true	0
+STAY	16	photo-1445019980597-93fa8acb246c	Tiled house exterior in Alfama	true	0
+STAY	16	photo-1455587734955-081b22074882	Private terrace over the Tagus	false	1
+STAY	17	photo-1495365200479-c4ed1d35e1aa	Machiya hotel entrance	true	0
+STAY	17	photo-1496417263034-38ec4f0b665a	Tatami interior with garden view	false	1
+STAY	18	photo-1520250497591-112f2f40a3f4	Palermo Soho loft building	true	0
+STAY	18	photo-1535827841776-24afc1e255ac	Open-plan living space	false	1
+STAY	19	photo-1542314831-068cd1dbfeeb	Ringstrasse hotel facade	true	0
+STAY	19	photo-1549294413-26f195200c16	Opera View Double room	false	1
+STAY	20	photo-1551882547-ff40c63fe5fa	Palm Jumeirah tower at dusk	true	0
+STAY	20	photo-1566073771259-6a8506099945	Private beach club	false	1
+STAY	21	photo-1584132967334-10e028bd69f7	Marina Bay infinity pool	true	0
+STAY	21	photo-1611892440504-42a792e24d32	Gardens by the Bay view	false	1
+STAY	22	photo-1618773928121-c32242e63f39	Colonial courtyard entrance	true	0
+STAY	22	photo-1629140727571-9b5c6f6267b4	View toward Sacsayhuamán	false	1
+STAY	23	photo-1631049307264-da0ec9d70304	Baroque building facade	true	0
+STAY	23	premium_photo-1661929519129-7a76946c1d38	Astronomical Clock view	false	1
+STAY	24	premium_photo-1661964071015-d97428970584	Teak house on the river	true	0
+STAY	24	premium_photo-1661964402307-02267d1423f5	Private longtail boat dock	false	1
+STAY	25	premium_photo-1675745329954-9639d3b74bbf	Nyhavn canal house facade	true	0
+STAY	25	premium_photo-1687960116497-0dc41e1808a2	Canal view from the window	false	1
+STAY	26	photo-1445019980597-93fa8acb246c	Garden cottage exterior	true	0
+STAY	26	photo-1455587734955-081b22074882	Lush Karen garden	false	1
+STAY	27	photo-1495365200479-c4ed1d35e1aa	Copacabana beachfront balcony	true	0
+STAY	27	photo-1496417263034-38ec4f0b665a	Wraparound balcony view	false	1
+STAY	28	photo-1520250497591-112f2f40a3f4	Gangnam tower exterior	true	0
+STAY	28	photo-1535827841776-24afc1e255ac	Rooftop bar at night	false	1
+STAY	29	photo-1542314831-068cd1dbfeeb	Cedar cabin exterior	true	0
+STAY	29	photo-1549294413-26f195200c16	Deck with harbor views	false	1
+STAY	30	photo-1551882547-ff40c63fe5fa	Stone flat on the Royal Mile	true	0
+STAY	30	photo-1566073771259-6a8506099945	Living room with castle view	false	1
+STAY	31	photo-1584132967334-10e028bd69f7	Old Quarter tube house facade	true	0
+STAY	31	photo-1611892440504-42a792e24d32	Hidden interior courtyard	false	1
+STAY	32	photo-1618773928121-c32242e63f39	Danube-bank hotel facade	true	0
+STAY	32	photo-1629140727571-9b5c6f6267b4	Buda Castle view	false	1
+STAY	33	photo-1631049307264-da0ec9d70304	Timber lodge on Lake Wakatipu	true	0
+STAY	33	premium_photo-1661929519129-7a76946c1d38	View of the Remarkables	false	1
+STAY	34	premium_photo-1661964071015-d97428970584	Colonial house facade in Habana Vieja	true	0
+STAY	34	premium_photo-1661964402307-02267d1423f5	Plant-filled interior patio	false	1
+STAY	35	premium_photo-1675745329954-9639d3b74bbf	Market Square hotel facade	true	0
+STAY	35	premium_photo-1687960116497-0dc41e1808a2	View of St. Mary's Basilica	false	1
+ROOM	27	photo-1445019980597-93fa8acb246c	Tagus View Room	true	0
+ROOM	28	photo-1455587734955-081b22074882	Tatami Twin	true	0
+ROOM	29	photo-1495365200479-c4ed1d35e1aa	Zen Garden Suite	true	0
+ROOM	30	photo-1496417263034-38ec4f0b665a	Machiya Penthouse	true	0
+ROOM	31	photo-1520250497591-112f2f40a3f4	Palermo Loft Room	true	0
+ROOM	32	photo-1535827841776-24afc1e255ac	Opera View Double	true	0
+ROOM	33	photo-1542314831-068cd1dbfeeb	Ringstrasse Suite	true	0
+ROOM	34	photo-1549294413-26f195200c16	Marina View King	true	0
+ROOM	35	photo-1551882547-ff40c63fe5fa	Palm Suite	true	0
+ROOM	36	photo-1566073771259-6a8506099945	Royal Penthouse	true	0
+ROOM	37	photo-1584132967334-10e028bd69f7	Bay View Queen	true	0
+ROOM	38	photo-1611892440504-42a792e24d32	Gardens Suite	true	0
+ROOM	39	photo-1618773928121-c32242e63f39	Courtyard Room	true	0
+ROOM	40	photo-1629140727571-9b5c6f6267b4	Old Town Double	true	0
+ROOM	41	photo-1631049307264-da0ec9d70304	Astronomical Suite	true	0
+ROOM	42	premium_photo-1661929519129-7a76946c1d38	Riverside Room	true	0
+ROOM	43	premium_photo-1661964071015-d97428970584	Canal View Room	true	0
+ROOM	44	premium_photo-1661964402307-02267d1423f5	Garden Cottage Room	true	0
+ROOM	45	premium_photo-1675745329954-9639d3b74bbf	Beachfront Balcony Room	true	0
+ROOM	46	premium_photo-1687960116497-0dc41e1808a2	Gangnam Standard	true	0
+ROOM	47	photo-1445019980597-93fa8acb246c	Rooftop King	true	0
+ROOM	48	photo-1455587734955-081b22074882	Executive Suite	true	0
+ROOM	49	photo-1495365200479-c4ed1d35e1aa	Park View Room	true	0
+ROOM	50	photo-1496417263034-38ec4f0b665a	Royal Mile Room	true	0
+ROOM	51	photo-1520250497591-112f2f40a3f4	Courtyard Suite	true	0
+ROOM	52	photo-1535827841776-24afc1e255ac	Danube View Double	true	0
+ROOM	53	photo-1542314831-068cd1dbfeeb	Castle View Suite	true	0
+ROOM	54	photo-1549294413-26f195200c16	Remarkables View Room	true	0
+ROOM	55	photo-1551882547-ff40c63fe5fa	Patio Room	true	0
+ROOM	56	photo-1566073771259-6a8506099945	Market Square Double	true	0
+ROOM	57	photo-1584132967334-10e028bd69f7	Basilica View Suite	true	0

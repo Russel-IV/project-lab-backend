@@ -1,12 +1,12 @@
 package com.team1.project_lab_backend.media.services
 
+import com.team1.project_lab_backend.media.util.Uuid7
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.UUID
 
 /**
  * Writes to the same `uploads` Docker volume the Gateway mounts and serves static
@@ -27,7 +27,7 @@ class LocalStorageService(
         folder: String,
     ): String {
         val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val filename = "${UUID.randomUUID()}.$ext"
+        val filename = "${Uuid7.randomUUID()}.$ext"
         val key = "$folder/$filename"
         val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
@@ -44,7 +44,7 @@ class LocalStorageService(
         val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
         return variants.mapValues { (width, bytes) ->
-            val filename = "${UUID.randomUUID()}_$width.$ext"
+            val filename = "${Uuid7.randomUUID()}_$width.$ext"
             Files.write(dir.resolve(filename), bytes)
             "$folder/$filename"
         }
