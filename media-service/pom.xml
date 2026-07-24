@@ -83,6 +83,13 @@
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
 		</dependency>
+		<!-- WebP encoding (org.sejda.imageio:webp-imageio, the previous obvious
+		     choice, is archived/unmaintained) -->
+		<dependency>
+			<groupId>dev.matrixlab.webp4j</groupId>
+			<artifactId>webp4j-core</artifactId>
+			<version>2.5.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>

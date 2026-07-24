@@ -26,12 +26,12 @@ class LocalStorageService(
         file: MultipartFile,
         folder: String,
     ): String {
-        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val filename = "${Uuid7.randomUUID()}.$ext"
+        val original = resolveOriginalToStore(file)
+        val filename = "${Uuid7.randomUUID()}.${original.extension}"
         val key = "$folder/$filename"
         val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
-        file.inputStream.use { Files.copy(it, dir.resolve(filename)) }
+        Files.write(dir.resolve(filename), original.bytes)
         return key
     }
 
@@ -39,12 +39,11 @@ class LocalStorageService(
         file: MultipartFile,
         folder: String,
     ): Map<Int, String> {
-        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val variants = file.inputStream.use { ImageResizer.resizeAll(it, ext) }
+        val variants = file.inputStream.use { ImageResizer.resizeAll(it) }
         val dir = Path.of(uploadDir).toAbsolutePath().resolve(folder)
         Files.createDirectories(dir)
         return variants.mapValues { (width, bytes) ->
-            val filename = "${Uuid7.randomUUID()}_$width.$ext"
+            val filename = "${Uuid7.randomUUID()}_$width.webp"
             Files.write(dir.resolve(filename), bytes)
             "$folder/$filename"
         }

@@ -26,18 +26,18 @@ class S3StorageService(
         file: MultipartFile,
         folder: String,
     ): String {
-        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val filename = "${Uuid7.randomUUID()}.$ext"
+        val original = resolveOriginalToStore(file)
+        val filename = "${Uuid7.randomUUID()}.${original.extension}"
         val key = "$folder/$filename"
 
         val putObjectRequest =
             PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                .contentType(file.contentType ?: "application/octet-stream")
+                .contentType(original.contentType)
                 .build()
 
-        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.inputStream, file.size))
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(original.bytes))
         return key
     }
 
@@ -45,15 +45,14 @@ class S3StorageService(
         file: MultipartFile,
         folder: String,
     ): Map<Int, String> {
-        val ext = file.originalFilename?.substringAfterLast('.', "bin")?.ifBlank { "bin" } ?: "bin"
-        val variants = file.inputStream.use { ImageResizer.resizeAll(it, ext) }
+        val variants = file.inputStream.use { ImageResizer.resizeAll(it) }
         return variants.mapValues { (width, bytes) ->
-            val key = "$folder/${Uuid7.randomUUID()}_$width.$ext"
+            val key = "$folder/${Uuid7.randomUUID()}_$width.webp"
             val putObjectRequest =
                 PutObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType(file.contentType ?: "application/octet-stream")
+                    .contentType("image/webp")
                     .build()
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
             key
