@@ -3,7 +3,9 @@
 -- ============================================================
 -- Tables: view, amenity, accessibility, meal_plan, payment_type,
 -- property_brand, traveler_experience, region, address, stay, room, plus
--- the six stay-attribute bridge tables.
+-- the six stay-attribute bridge tables and room_amenity (room-level, not a
+-- stay attribute, but seeded here right after each ROOMS section since it
+-- references room ids from that section).
 -- Safe to run multiple times: all inserts use explicit IDs with
 -- ON CONFLICT DO NOTHING. Sequences are reset after each table.
 --
@@ -333,6 +335,27 @@ INSERT INTO room (id, stay_id, name, price, sleeps, bedroom_amount, bathrooms, s
 (26, 15, 'Canal House Suite',          380.00, 3, 1, 1.5,  40.0)
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('room', 'id'), COALESCE(MAX(id), 1)) FROM room;
+
+-- Room-level amenities: the ROOM_AMENITY-typed subset of each stay's
+-- stay_amenity rows below, attached to one of that stay's actual rooms
+-- (for a multi-room stay, split across rooms rather than all on one) so
+-- StayFilterInput.roomAmenityIds' "somewhere on the property" semantics
+-- (StayService.hasAllRoomAmenities) has something real to aggregate over.
+INSERT INTO room_amenity (room_id, amenity_id) VALUES
+(1, 2), (1, 4),   -- Stay 1
+(2, 2),           -- Stay 2
+(5, 4), (5, 9),   -- Stay 3
+(6, 2),           -- Stay 4
+(8, 4),           -- Stay 5
+(10, 2), (11, 14),-- Stay 7 (split across rooms)
+(13, 4), (13, 9), -- Stay 8
+(16, 4), (16, 9), (16, 12), -- Stay 10
+(17, 2),          -- Stay 11
+(20, 7),          -- Stay 12
+(21, 2),          -- Stay 13
+(24, 9),          -- Stay 14
+(25, 2)           -- Stay 15
+ON CONFLICT DO NOTHING;
 
 
 -- ============================================================
@@ -724,6 +747,30 @@ INSERT INTO room (id, stay_id, name, price, sleeps, bedroom_amount, bathrooms, s
 (57, 35, 'Basilica View Suite',      210.00, 3, 1, 1.5,  42.0)
 ON CONFLICT (id) DO NOTHING;
 SELECT setval(pg_get_serial_sequence('room', 'id'), COALESCE(MAX(id), 1)) FROM room;
+
+-- Room-level amenities, same rationale as section 3's room_amenity block.
+INSERT INTO room_amenity (room_id, amenity_id) VALUES
+(27, 4), (27, 7), -- Stay 16
+(28, 2), (29, 14),-- Stay 17 (split across rooms)
+(31, 4),          -- Stay 18
+(32, 2),          -- Stay 19
+(34, 2),          -- Stay 20
+(37, 2),          -- Stay 21
+(39, 9),          -- Stay 22
+(40, 2),          -- Stay 23
+(42, 4),          -- Stay 24
+(43, 4),          -- Stay 25
+(44, 4), (44, 7), -- Stay 26
+(45, 7),          -- Stay 27
+(46, 2),          -- Stay 28
+(49, 4), (49, 9), -- Stay 29
+(50, 9),          -- Stay 30
+(51, 4),          -- Stay 31
+(52, 2),          -- Stay 32
+(54, 9),          -- Stay 33
+(55, 4),          -- Stay 34
+(56, 2)           -- Stay 35
+ON CONFLICT DO NOTHING;
 
 
 -- ============================================================
