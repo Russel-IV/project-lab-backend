@@ -131,6 +131,7 @@ classDiagram
     Stay "1" --> "0..*" Room : stayId
     Stay "0..*" --> "0..*" View : views
     Stay "0..*" --> "0..*" Amenity : amenities
+    Room "0..*" --> "0..*" Amenity : amenities
     Stay "0..*" --> "0..*" Accessibility : accessibilities
     Stay "0..*" --> "0..*" MealPlan : mealPlans
     Stay "0..*" --> "0..*" PaymentType : paymentTypes
