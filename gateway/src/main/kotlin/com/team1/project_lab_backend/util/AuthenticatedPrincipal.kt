@@ -4,8 +4,9 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
-data class AuthenticatedPrincipal(val id: Int)
+data class AuthenticatedPrincipal(val id: Int, val publicId: UUID)
 
 /**
  * docs/adr/0025: ReactiveSecurityContextHolder threads the SecurityContext through

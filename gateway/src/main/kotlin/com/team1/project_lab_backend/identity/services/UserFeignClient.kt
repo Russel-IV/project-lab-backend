@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import java.util.UUID
 
 @Component
 class UserFeignClient(
@@ -20,6 +21,9 @@ class UserFeignClient(
 
     suspend fun get(id: Int): User =
         webClient.get().uri("/internal/users/{id}", id).retrieve().awaitBody()
+
+    suspend fun getByPublicId(publicId: UUID): User =
+        webClient.get().uri("/internal/users/by-public-id/{publicId}", publicId).retrieve().awaitBody()
 
     suspend fun create(request: UserUpsertRequest): User =
         webClient.post().uri("/internal/users").bodyValue(request).retrieve().awaitBody()

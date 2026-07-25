@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.inventory.dto
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 data class StayRequest(
     val name: String,
@@ -78,6 +79,7 @@ data class StayPriceStats(
  */
 data class StayResponse(
     val id: Int,
+    val publicId: UUID,
     val name: String,
     val about: String?,
     val propertyType: PropertyType,

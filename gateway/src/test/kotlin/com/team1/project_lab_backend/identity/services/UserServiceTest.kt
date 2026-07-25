@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 class UserServiceTest {
     private val userFeignClient = Mockito.mock(UserFeignClient::class.java)
@@ -29,12 +30,34 @@ class UserServiceTest {
     fun createUserReturnsPersistedUser() =
         runTest {
             Mockito.`when`(userFeignClient.create(UserUpsertRequest(name = "Alice")))
-                .thenReturn(User(id = 1, name = "Alice", email = null))
+                .thenReturn(User(id = 1, publicId = UUID.randomUUID(), name = "Alice", email = null))
 
             val response = userService.createUser(UserRequest(name = "Alice"))
 
             assertEquals(1, response.id)
             assertEquals("Alice", response.name)
+        }
+
+    @Test
+    fun getUserByPublicIdReturnsNotFoundWhenMissing() =
+        runTest {
+            val publicId = UUID.randomUUID()
+            Mockito.`when`(userFeignClient.getByPublicId(publicId)).thenThrow(webClientException(404))
+
+            val exception = assertThrowsSuspend<ResponseStatusException> { userService.getUserByPublicId(publicId) }
+            assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
+        }
+
+    @Test
+    fun getUserByPublicIdDelegatesToFeignClient() =
+        runTest {
+            val publicId = UUID.randomUUID()
+            Mockito.`when`(userFeignClient.getByPublicId(publicId))
+                .thenReturn(User(id = 1, publicId = publicId, name = "Alice", email = null))
+
+            val result = userService.getUserByPublicId(publicId)
+
+            assertEquals(publicId, result.publicId)
         }
 
     @Test
@@ -62,7 +85,7 @@ class UserServiceTest {
     fun updateUserReturnsUpdatedUser() =
         runTest {
             Mockito.`when`(userFeignClient.update(1, 1, UserUpsertRequest(name = "Bob")))
-                .thenReturn(User(id = 1, name = "Bob", email = null))
+                .thenReturn(User(id = 1, publicId = UUID.randomUUID(), name = "Bob", email = null))
 
             val result = userService.updateUser(1, UserRequest(name = "Bob"), 1)
 

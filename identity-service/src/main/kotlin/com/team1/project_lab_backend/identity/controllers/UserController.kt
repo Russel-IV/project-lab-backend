@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @RequestMapping("/internal/users")
@@ -22,6 +23,11 @@ class UserController(private val userService: UserService) {
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
     ): List<User> = if (ids != null) userService.getUsersByIds(ids) else userService.getAllUsers()
+
+    @GetMapping("/by-public-id/{publicId}")
+    fun getByPublicId(
+        @PathVariable publicId: UUID,
+    ): User = userService.getUserByPublicId(publicId)
 
     @GetMapping("/{id}")
     fun get(

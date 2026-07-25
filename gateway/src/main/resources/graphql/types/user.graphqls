@@ -1,6 +1,8 @@
 "A registered user of the platform."
 type User {
     id: Int!
+    "Opaque, stable public identifier — prefer this over id in client-facing links/URLs."
+    publicId: ID!
     "Display name of the user."
     name: String!
     "Email address. Only visible to the authenticated user."

@@ -22,6 +22,7 @@ import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
+import com.team1.project_lab_backend.inventory.util.Uuid7
 import com.team1.project_lab_backend.util.orBadRequest
 import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
@@ -48,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 private val GEOMETRY_FACTORY = GeometryFactory(PrecisionModel(), 4326)
 
@@ -128,6 +130,10 @@ class StayService(
     @Transactional(readOnly = true)
     fun getStaysByIds(ids: List<Int>): List<StayResponse> = stayRepository.findAllById(ids).map { it.toResponse() }
 
+    @Transactional(readOnly = true)
+    fun getStayByPublicId(publicId: UUID): StayResponse =
+        stayRepository.findByPublicId(publicId).orNotFound("stay not found").toResponse()
+
     @Transactional
     fun createStay(
         request: StayRequest,
@@ -152,7 +158,9 @@ class StayService(
         if (existingStay.hostId != requestingUserId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
-        return stayRepository.save(buildStay(id, request, existingAddressId = existingStay.address.id)).toResponse()
+        return stayRepository.save(
+            buildStay(id, request, existingAddressId = existingStay.address.id, existingPublicId = existingStay.publicId),
+        ).toResponse()
     }
 
     @Transactional
@@ -202,6 +210,7 @@ class StayService(
         id: Int,
         request: StayRequest,
         existingAddressId: Int = 0,
+        existingPublicId: UUID? = null,
     ): Stay {
         // Host lives in identity-service (docs/adr/0002, docs/adr/0011) — a real Feign
         // call, not a DB join. Host is a genuine opt-in specialization of User (not
@@ -241,6 +250,7 @@ class StayService(
             )
         return Stay(
             id = id,
+            publicId = existingPublicId ?: Uuid7.randomUUID(),
             name = request.name,
             about = request.about,
             propertyType = request.propertyType,
@@ -499,6 +509,7 @@ class StayService(
     private fun Stay.toResponse() =
         StayResponse(
             id = id,
+            publicId = publicId,
             name = name,
             about = about,
             propertyType = propertyType,

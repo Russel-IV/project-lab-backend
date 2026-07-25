@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.util.Optional
+import java.util.UUID
 
 class StayServiceTest {
     private val stayRepository = Mockito.mock(StayRepository::class.java)
@@ -535,5 +536,46 @@ class StayServiceTest {
 
         assertEquals(first.id, second.id)
         assertEquals(first.name, second.name)
+    }
+
+    @Test
+    fun updateStayPreservesPublicId() {
+        val request = baseRequest()
+        val host = stubHost()
+        val address = Address(id = 5, streetAddress = "123 Main", city = "Testville", countryCode = "US", region = sampleRegion())
+        val existingStay =
+            Stay(
+                id = 20,
+                name = request.name,
+                propertyType = request.propertyType,
+                address = address,
+                hostId = host.id,
+            )
+        Mockito.`when`(stayRepository.findById(20)).thenReturn(Optional.of(existingStay))
+        Mockito.`when`(stayRepository.save(Mockito.any(Stay::class.java))).thenAnswer { it.arguments[0] }
+
+        val result = stayService.updateStay(20, request, 1)
+
+        assertEquals(existingStay.publicId, result.publicId)
+    }
+
+    @Test
+    fun getStayByPublicIdReturnsNotFoundWhenMissing() {
+        val publicId = UUID.randomUUID()
+        Mockito.`when`(stayRepository.findByPublicId(publicId)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(ResponseStatusException::class.java) { stayService.getStayByPublicId(publicId) }
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun getStayByPublicIdDelegatesToRepository() {
+        val stay = sampleStayEntity(10)
+        Mockito.`when`(stayRepository.findByPublicId(stay.publicId)).thenReturn(Optional.of(stay))
+
+        val result = stayService.getStayByPublicId(stay.publicId)
+
+        assertEquals(stay.publicId, result.publicId)
     }
 }

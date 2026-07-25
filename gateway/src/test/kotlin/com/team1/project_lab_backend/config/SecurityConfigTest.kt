@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.Date
+import java.util.UUID
 
 private const val SECRET = "test-secret-key-must-be-at-least-256-bits-long-for-hs256"
 
@@ -25,11 +26,13 @@ class SecurityConfigTest {
 
     private fun tokenFor(
         userId: Int,
+        publicId: UUID,
         email: String,
     ): String {
         val key = Keys.hmacShaKeyFor(SECRET.toByteArray())
         return Jwts.builder()
-            .subject(userId.toString())
+            .subject(publicId.toString())
+            .claim("uid", userId)
             .claim("email", email)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + jwtProperties.expiryMs))
@@ -39,20 +42,22 @@ class SecurityConfigTest {
 
     @Test
     fun tokenShapedLikeIdentityServicesDecodesUnderResourceServerConfig() {
-        val token = tokenFor(42, "ada@example.com")
+        val publicId = UUID.randomUUID()
+        val token = tokenFor(42, publicId, "ada@example.com")
 
         val jwt = decoder.decode(token).block()!!
 
-        assertEquals("42", jwt.subject)
+        assertEquals(publicId.toString(), jwt.subject)
         assertEquals("ada@example.com", jwt.getClaimAsString("email"))
     }
 
     @Test
     fun decodedTokenConvertsToAuthenticatedPrincipal() {
-        val jwt = decoder.decode(tokenFor(7, "grace@example.com")).block()!!
+        val publicId = UUID.randomUUID()
+        val jwt = decoder.decode(tokenFor(7, publicId, "grace@example.com")).block()!!
 
         val authentication = securityConfig.jwtAuthenticationConverter().convert(jwt)?.block()
 
-        assertEquals(AuthenticatedPrincipal(7), authentication?.principal)
+        assertEquals(AuthenticatedPrincipal(7, publicId), authentication?.principal)
     }
 }

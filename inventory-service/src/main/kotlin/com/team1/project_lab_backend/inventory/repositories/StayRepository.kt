@@ -4,8 +4,12 @@ import com.team1.project_lab_backend.inventory.models.Stay
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
+import java.util.Optional
+import java.util.UUID
 
 interface StayRepository : JpaRepository<Stay, Int>, JpaSpecificationExecutor<Stay> {
+    fun findByPublicId(publicId: UUID): Optional<Stay>
+
     @Query("SELECT DISTINCT s FROM Stay s LEFT JOIN FETCH s.propertyBrand WHERE s.id IN :ids")
     fun findByIdInWithPropertyBrand(ids: List<Int>): List<Stay>
 

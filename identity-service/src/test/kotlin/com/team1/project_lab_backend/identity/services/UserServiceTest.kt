@@ -10,6 +10,7 @@ import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.util.Optional
+import java.util.UUID
 
 class UserServiceTest {
     private val userRepository = Mockito.mock(UserRepository::class.java)
@@ -49,12 +50,39 @@ class UserServiceTest {
 
     @Test
     fun updateUserRejectsUnknownUser() {
-        Mockito.`when`(userRepository.existsById(1)).thenReturn(false)
+        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.empty())
         val ex =
             assertThrows(ResponseStatusException::class.java) {
                 service.updateUser(1, UserRequest(name = "New"), requestingUserId = 1)
             }
         assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun updateUserPreservesPublicId() {
+        val existing = User(id = 1, name = "Old", email = "ada@example.com")
+        Mockito.`when`(userRepository.findById(1)).thenReturn(Optional.of(existing))
+        Mockito.`when`(userRepository.save(Mockito.any(User::class.java))).thenAnswer { it.arguments[0] }
+
+        val result = service.updateUser(1, UserRequest(name = "New"), requestingUserId = 1)
+
+        assertEquals(existing.publicId, result.publicId)
+    }
+
+    @Test
+    fun getUserByPublicIdReturnsNotFoundWhenMissing() {
+        val publicId = UUID.randomUUID()
+        Mockito.`when`(userRepository.findByPublicId(publicId)).thenReturn(Optional.empty())
+        val ex = assertThrows(ResponseStatusException::class.java) { service.getUserByPublicId(publicId) }
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
+    fun getUserByPublicIdDelegatesToRepository() {
+        val user = User(id = 1, name = "Ada")
+        Mockito.`when`(userRepository.findByPublicId(user.publicId)).thenReturn(Optional.of(user))
+        val result = service.getUserByPublicId(user.publicId)
+        assertEquals(1, result.id)
     }
 
     @Test

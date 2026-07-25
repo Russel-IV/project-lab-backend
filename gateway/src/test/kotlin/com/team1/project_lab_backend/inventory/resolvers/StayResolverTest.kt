@@ -17,6 +17,7 @@ import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import java.util.UUID
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> anyArg(): T {
@@ -31,14 +32,17 @@ class StayResolverTest {
     private val resolver = StayResolver(stayService)
     private val authenticatedUserId = 1
 
-    private fun sampleStay(id: Int = 1) =
-        Stay(
-            id = id,
-            name = "Cozy Cabin",
-            propertyType = PropertyType.HOME,
-            hostId = 42,
-            address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US", regionId = 1),
-        )
+    private fun sampleStay(
+        id: Int = 1,
+        publicId: UUID = UUID.randomUUID(),
+    ) = Stay(
+        id = id,
+        publicId = publicId,
+        name = "Cozy Cabin",
+        propertyType = PropertyType.HOME,
+        hostId = 42,
+        address = Address(id = 1, streetAddress = "1 Main St", city = "Springfield", countryCode = "US", regionId = 1),
+    )
 
     // ---- queries ----
 
@@ -123,6 +127,17 @@ class StayResolverTest {
             )
 
             assertThrowsSuspend<ResponseStatusException> { resolver.stay(99) }
+        }
+
+    @Test
+    fun stayByPublicIdDelegatesToService() =
+        runTest {
+            val publicId = UUID.randomUUID()
+            Mockito.`when`(stayService.getStayByPublicId(publicId)).thenReturn(sampleStay(publicId = publicId))
+
+            val result = resolver.stayByPublicId(publicId)
+
+            assertEquals(publicId, result?.publicId)
         }
 
     // ---- mutations ----

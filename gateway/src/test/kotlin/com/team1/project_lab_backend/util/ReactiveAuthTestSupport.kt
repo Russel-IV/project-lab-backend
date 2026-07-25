@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
+import java.util.UUID
 
 /**
  * docs/adr/0025: replaces the old `SecurityContextHolder.getContext().authentication =
@@ -15,11 +16,17 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder
 suspend fun <T> withAuthenticatedUser(
     userId: Int,
     block: suspend () -> T,
+): T = withAuthenticatedUser(userId, UUID.randomUUID(), block)
+
+suspend fun <T> withAuthenticatedUser(
+    userId: Int,
+    publicId: UUID,
+    block: suspend () -> T,
 ): T =
     withContext(
         ReactorContext(
             ReactiveSecurityContextHolder.withAuthentication(
-                UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(userId), null, emptyList()),
+                UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(userId, publicId), null, emptyList()),
             ),
         ),
     ) {

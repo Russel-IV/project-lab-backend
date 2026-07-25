@@ -1,6 +1,8 @@
 "A property listing available for booking."
 type Stay {
     id: Int!
+    "Opaque, stable public identifier — prefer this over id in client-facing links/URLs."
+    publicId: ID!
     "Display name of the property."
     name: String!
     "Description of the property."

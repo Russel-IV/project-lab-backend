@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import java.util.UUID
 
 @Component
 class StayFeignClient(
@@ -24,6 +25,9 @@ class StayFeignClient(
 
     suspend fun get(id: Int): Stay =
         webClient.get().uri("/internal/stays/{id}", id).retrieve().awaitBody()
+
+    suspend fun getByPublicId(publicId: UUID): Stay =
+        webClient.get().uri("/internal/stays/by-public-id/{publicId}", publicId).retrieve().awaitBody()
 
     suspend fun search(
         filter: StayFilter,

@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.models
 
 import java.math.BigDecimal
+import java.util.UUID
 
 enum class PropertyType {
     HOTEL,
@@ -19,6 +20,7 @@ enum class PropertyType {
  */
 data class Stay(
     val id: Int,
+    val publicId: UUID,
     val name: String,
     val about: String? = null,
     val propertyType: PropertyType,

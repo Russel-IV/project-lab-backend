@@ -16,6 +16,7 @@ import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 @Controller
 class StayResolver(private val stayService: StayService) {
@@ -30,6 +31,11 @@ class StayResolver(private val stayService: StayService) {
     suspend fun stay(
         @Argument id: Int,
     ): Stay? = stayService.getStayById(id)
+
+    @QueryMapping
+    suspend fun stayByPublicId(
+        @Argument publicId: UUID,
+    ): Stay? = stayService.getStayByPublicId(publicId)
 
     @QueryMapping
     suspend fun stayPriceStats(

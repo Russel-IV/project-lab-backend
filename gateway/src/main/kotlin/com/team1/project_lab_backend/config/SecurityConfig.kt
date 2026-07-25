@@ -29,6 +29,7 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import javax.crypto.spec.SecretKeySpec
 
 /**
@@ -103,18 +104,26 @@ class SecurityConfig(
     }
 
     /**
-     * Maps the decoded JWT's `sub` claim (the user id, per JwtService.generateToken) to
-     * util.AuthenticatedPrincipal, so requireAuthenticated() is unchanged regardless of
-     * which filter populates the SecurityContext. JwtSpec requires a Mono-returning
-     * Converter (unlike the servlet-stack Converter<Jwt, AbstractAuthenticationToken>).
+     * `sub` carries the user's opaque publicId (per JwtService.generateToken) so a
+     * decoded token doesn't disclose the raw internal id; `uid` carries that internal
+     * id in a separate claim so per-request internal plumbing (ownership checks, Feign
+     * calls) doesn't need a network round trip to resolve one from the other. `uid` is
+     * only ever readable by the token's own holder, so this isn't a new leak to anyone
+     * else. JwtSpec requires a Mono-returning Converter (unlike the servlet-stack
+     * Converter<Jwt, AbstractAuthenticationToken>).
      */
     @Bean
     fun jwtAuthenticationConverter(): Converter<Jwt, Mono<AbstractAuthenticationToken>> =
         Converter { jwt ->
-            val id =
-                jwt.subject.toIntOrNull()
+            val publicId =
+                runCatching { UUID.fromString(jwt.subject) }.getOrNull()
                     ?: throw BadCredentialsException("invalid subject claim")
-            Mono.just(UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(id), jwt.tokenValue, emptyList()))
+            val id =
+                (jwt.claims["uid"] as? Number)?.toInt()
+                    ?: throw BadCredentialsException("invalid uid claim")
+            Mono.just(
+                UsernamePasswordAuthenticationToken(AuthenticatedPrincipal(id, publicId), jwt.tokenValue, emptyList()),
+            )
         }
 
     @Bean

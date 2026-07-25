@@ -23,7 +23,8 @@ class JwtService(private val jwtProperties: JwtProperties) {
 
     fun generateToken(user: User): String =
         Jwts.builder()
-            .subject(user.id.toString())
+            .subject(user.publicId.toString())
+            .claim("uid", user.id)
             .claim("email", user.email)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + jwtProperties.expiryMs))

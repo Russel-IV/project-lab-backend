@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 class RoomServiceTest {
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
@@ -51,6 +52,7 @@ class RoomServiceTest {
         hostId: Int = 1,
     ) = Stay(
         id = stayId,
+        publicId = UUID.randomUUID(),
         name = "Test Stay",
         propertyType = PropertyType.HOME,
         hostId = hostId,

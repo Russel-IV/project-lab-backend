@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 /**
  * Orchestration shim (docs/adr/0005): User CRUD and its validation now live in
@@ -18,6 +19,13 @@ class UserService(private val userFeignClient: UserFeignClient) {
     suspend fun getUserById(id: Int): User =
         try {
             userFeignClient.get(id)
+        } catch (e: WebClientResponseException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+
+    suspend fun getUserByPublicId(publicId: UUID): User =
+        try {
+            userFeignClient.getByPublicId(publicId)
         } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }

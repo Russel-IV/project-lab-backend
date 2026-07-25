@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.identity.models
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.team1.project_lab_backend.identity.util.Uuid7
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -10,6 +11,7 @@ import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "\"user\"")
@@ -17,6 +19,8 @@ open class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     open val id: Int = 0,
+    @Column(name = "public_id", nullable = false, unique = true)
+    open val publicId: UUID = Uuid7.randomUUID(),
     @Column(name = "name", nullable = false, length = 255)
     @field:NotBlank
     @field:Size(max = 255)

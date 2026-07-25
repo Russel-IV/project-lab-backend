@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 /**
  * Orchestration shim (docs/adr/0005): Stay CRUD, search, and the amenity/room-price
@@ -44,6 +45,13 @@ class StayService(private val stayFeignClient: StayFeignClient) {
     suspend fun getStayById(id: Int): Stay =
         try {
             stayFeignClient.get(id)
+        } catch (e: WebClientResponseException.NotFound) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
+        }
+
+    suspend fun getStayByPublicId(publicId: UUID): Stay =
+        try {
+            stayFeignClient.getByPublicId(publicId)
         } catch (e: WebClientResponseException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "stay not found")
         }

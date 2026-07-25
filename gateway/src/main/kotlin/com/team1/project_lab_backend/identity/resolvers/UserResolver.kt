@@ -11,6 +11,7 @@ import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.stereotype.Controller
+import java.util.UUID
 
 @Controller
 class UserResolver(private val userService: UserService) {
@@ -21,6 +22,11 @@ class UserResolver(private val userService: UserService) {
     suspend fun user(
         @Argument id: Int,
     ): User = userService.getUserById(id)
+
+    @QueryMapping
+    suspend fun userByPublicId(
+        @Argument publicId: UUID,
+    ): User = userService.getUserByPublicId(publicId)
 
     @SchemaMapping(typeName = "User", field = "email")
     suspend fun email(user: User): String? {

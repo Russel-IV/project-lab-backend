@@ -1,5 +1,6 @@
 package com.team1.project_lab_backend.inventory.models
 
+import com.team1.project_lab_backend.inventory.util.Uuid7
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -25,6 +26,7 @@ import org.hibernate.annotations.OnDeleteAction
 import org.hibernate.type.SqlTypes
 import org.locationtech.jts.geom.Point
 import java.math.BigDecimal
+import java.util.UUID
 
 enum class PropertyType {
     HOTEL,
@@ -37,6 +39,8 @@ open class Stay(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     open val id: Int = 0,
+    @Column(name = "public_id", nullable = false, unique = true)
+    open val publicId: UUID = Uuid7.randomUUID(),
     @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     @field:NotBlank
     open val name: String,

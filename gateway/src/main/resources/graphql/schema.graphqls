@@ -16,6 +16,8 @@ type Query {
     users: [User!]!
     "Returns a single user by ID."
     user(id: Int!): User
+    "Returns a single user by its opaque public identifier."
+    userByPublicId(publicId: ID!): User
 
     "Returns all hosts."
     hosts: [Host!]!
@@ -26,6 +28,8 @@ type Query {
     stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): StayConnection!
     "Returns a single stay by ID."
     stay(id: Int!): Stay
+    "Returns a single stay by its opaque public identifier."
+    stayByPublicId(publicId: ID!): Stay
     "Returns price-distribution stats (min/max/histogram) over the full set of stays matching `filter`, independent of pagination — for a search filter panel's price slider/histogram without fetching full Stay objects."
     stayPriceStats(filter: StayFilterInput, bins: Int = 40): StayPriceStats!
     "Returns distinct city/country pairs currently in use by stay addresses, optionally filtered by a case-insensitive, typo- and diacritic-tolerant city search."

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 @Service
 class UserService(
@@ -22,6 +23,10 @@ class UserService(
     @Transactional(readOnly = true)
     fun getUsersByIds(ids: List<Int>): List<User> = userRepository.findAllById(ids)
 
+    @Transactional(readOnly = true)
+    fun getUserByPublicId(publicId: UUID): User =
+        userRepository.findByPublicId(publicId).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+
     @Transactional
     fun createUser(request: UserRequest): User {
         if (request.name.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
@@ -36,8 +41,8 @@ class UserService(
     ): User {
         if (id != requestingUserId) throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         if (request.name.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
-        if (!userRepository.existsById(id)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
-        return userRepository.save(User(id = id, name = request.name))
+        val existing = userRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "user not found") }
+        return userRepository.save(User(id = id, publicId = existing.publicId, name = request.name))
     }
 
     @Transactional

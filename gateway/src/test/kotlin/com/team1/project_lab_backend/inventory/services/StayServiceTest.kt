@@ -17,6 +17,7 @@ import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import java.util.UUID
 
 class StayServiceTest {
     private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
@@ -30,14 +31,17 @@ class StayServiceTest {
             hostId = 1,
         )
 
-    private fun sampleStay(id: Int = 10) =
-        Stay(
-            id = id,
-            name = "Test Stay",
-            propertyType = PropertyType.HOME,
-            hostId = 1,
-            address = Address(id = 1, streetAddress = "123 Main", city = "Testville", countryCode = "US", regionId = 1),
-        )
+    private fun sampleStay(
+        id: Int = 10,
+        publicId: UUID = UUID.randomUUID(),
+    ) = Stay(
+        id = id,
+        publicId = publicId,
+        name = "Test Stay",
+        propertyType = PropertyType.HOME,
+        hostId = 1,
+        address = Address(id = 1, streetAddress = "123 Main", city = "Testville", countryCode = "US", regionId = 1),
+    )
 
     // ---- searchStays ----
 
@@ -116,6 +120,30 @@ class StayServiceTest {
             val result = stayService.getStayById(10)
 
             assertEquals(10, result.id)
+        }
+
+    // ---- getStayByPublicId ----
+
+    @Test
+    fun getStayByPublicIdReturnsNotFoundWhenMissing() =
+        runTest {
+            val publicId = UUID.randomUUID()
+            Mockito.`when`(stayFeignClient.getByPublicId(publicId)).thenThrow(webClientException(404))
+
+            val ex = assertThrowsSuspend<ResponseStatusException> { stayService.getStayByPublicId(publicId) }
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        }
+
+    @Test
+    fun getStayByPublicIdDelegatesToFeignClient() =
+        runTest {
+            val publicId = UUID.randomUUID()
+            Mockito.`when`(stayFeignClient.getByPublicId(publicId)).thenReturn(sampleStay(publicId = publicId))
+
+            val result = stayService.getStayByPublicId(publicId)
+
+            assertEquals(publicId, result.publicId)
         }
 
     // ---- createStay ----

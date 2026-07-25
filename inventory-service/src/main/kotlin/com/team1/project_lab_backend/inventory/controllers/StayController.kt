@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 /**
  * Internal-only API (docs/adr/0005) — the Gateway's StayFeignClient is the only
@@ -30,6 +31,11 @@ class StayController(private val stayService: StayService) {
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
     ): List<StayResponse> = if (ids != null) stayService.getStaysByIds(ids) else emptyList()
+
+    @GetMapping("/by-public-id/{publicId}")
+    fun getByPublicId(
+        @PathVariable publicId: UUID,
+    ): StayResponse = stayService.getStayByPublicId(publicId)
 
     @GetMapping("/{id}")
     fun get(

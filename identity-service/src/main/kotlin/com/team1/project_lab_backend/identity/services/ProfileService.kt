@@ -55,6 +55,7 @@ class ProfileService(
         return userRepository.save(
             User(
                 id = userId,
+                publicId = existing.publicId,
                 name = request.name,
                 email = request.email,
                 passwordHash = existing.passwordHash,
@@ -75,6 +76,7 @@ class ProfileService(
         return userRepository.save(
             User(
                 id = userId,
+                publicId = existing.publicId,
                 name = existing.name,
                 email = existing.email,
                 passwordHash = existing.passwordHash,
@@ -105,6 +107,7 @@ class ProfileService(
         userRepository.save(
             User(
                 id = userId,
+                publicId = existing.publicId,
                 name = existing.name,
                 email = existing.email,
                 passwordHash = passwordEncoder.encode(request.newPassword),
@@ -122,6 +125,7 @@ class ProfileService(
         userRepository.save(
             User(
                 id = userId,
+                publicId = existing.publicId,
                 name = existing.name,
                 email = existing.email,
                 passwordHash = existing.passwordHash,
