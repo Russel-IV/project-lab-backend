@@ -166,7 +166,7 @@ services:
             context: .
             dockerfile: media-service/Dockerfile
         container_name: media-service
-        mem_limit: 600m
+        mem_limit: 768m
         ports:
             - "8085:8085"
         # Same named volume project-lab-backend mounts — media-service writes files
