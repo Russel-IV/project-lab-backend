@@ -12,6 +12,7 @@ No domain tables — everything was dropped by `V18`–`V22__drop_*.sql` during 
 erDiagram
     USER {
         int id PK
+        uuid public_id UK
         string name
         string email UK
         string password_hash
@@ -79,6 +80,7 @@ erDiagram
     }
     STAY {
         int id PK
+        uuid public_id UK
         string name
         string about
         enum property_type "HOME | HOTEL"

@@ -8,6 +8,7 @@ One diagram per service, reflecting the actual current JPA entity classes (`src/
 classDiagram
     class User {
         +Int id
+        +UUID publicId
         +String name
         +String? email
         -String? passwordHash
@@ -51,6 +52,7 @@ classDiagram
 classDiagram
     class Stay {
         +Int id
+        +UUID publicId
         +String name
         +String? about
         +PropertyType propertyType
