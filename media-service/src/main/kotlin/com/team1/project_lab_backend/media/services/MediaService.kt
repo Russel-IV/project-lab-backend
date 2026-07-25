@@ -59,6 +59,7 @@ class MediaService(
                 url = key,
                 thumbnailUrl = variants[248],
                 url1024 = variants[1024],
+                url768 = variants[768],
                 url512 = variants[512],
                 caption = caption,
                 isPrimary = isPrimary,
@@ -107,6 +108,7 @@ class MediaService(
         storageService.delete(existing.url)
         existing.thumbnailUrl?.let { storageService.delete(it) }
         existing.url1024?.let { storageService.delete(it) }
+        existing.url768?.let { storageService.delete(it) }
         existing.url512?.let { storageService.delete(it) }
     }
 
@@ -132,6 +134,7 @@ class MediaService(
             url = storageService.toUrl(url),
             thumbnailUrl = thumbnailUrl?.let { storageService.toUrl(it) } ?: storageService.toUrl(url),
             url1024 = url1024?.let { storageService.toUrl(it) },
+            url768 = url768?.let { storageService.toUrl(it) },
             url512 = url512?.let { storageService.toUrl(it) },
             caption = caption,
             isPrimary = isPrimary,

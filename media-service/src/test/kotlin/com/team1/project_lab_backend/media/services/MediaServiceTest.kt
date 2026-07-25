@@ -25,12 +25,14 @@ class MediaServiceTest {
         ownerId: Int = 10,
         isPrimary: Boolean = false,
         thumbnailUrl: String? = null,
+        url768: String? = null,
     ) = Media(
         id = id,
         ownerType = ownerType,
         ownerId = ownerId,
         url = "stays/$ownerId/photo.jpg",
         thumbnailUrl = thumbnailUrl,
+        url768 = url768,
         caption = null,
         isPrimary = isPrimary,
         displayOrder = 0,
@@ -112,11 +114,18 @@ class MediaServiceTest {
         val file = imageFile()
         Mockito.`when`(storageService.save(file, "rooms/5")).thenReturn("rooms/5/photo.jpg")
         Mockito.`when`(storageService.saveVariants(file, "rooms/5")).thenReturn(
-            mapOf(1024 to "rooms/5/photo_1024.jpg", 512 to "rooms/5/photo_512.jpg", 248 to "rooms/5/photo_248.jpg"),
+            mapOf(
+                1024 to "rooms/5/photo_1024.jpg",
+                768 to "rooms/5/photo_768.jpg",
+                512 to "rooms/5/photo_512.jpg",
+                248 to "rooms/5/photo_248.jpg",
+            ),
         )
         Mockito.`when`(storageService.toUrl("rooms/5/photo.jpg")).thenReturn("http://localhost:8080/uploads/rooms/5/photo.jpg")
         Mockito.`when`(storageService.toUrl("rooms/5/photo_1024.jpg"))
             .thenReturn("http://localhost:8080/uploads/rooms/5/photo_1024.jpg")
+        Mockito.`when`(storageService.toUrl("rooms/5/photo_768.jpg"))
+            .thenReturn("http://localhost:8080/uploads/rooms/5/photo_768.jpg")
         Mockito.`when`(storageService.toUrl("rooms/5/photo_512.jpg"))
             .thenReturn("http://localhost:8080/uploads/rooms/5/photo_512.jpg")
         Mockito.`when`(storageService.toUrl("rooms/5/photo_248.jpg"))
@@ -129,6 +138,7 @@ class MediaServiceTest {
         assertEquals("rooms/5/photo_248.jpg", mediaCaptor.value.thumbnailUrl)
         assertEquals("http://localhost:8080/uploads/rooms/5/photo_248.jpg", result.thumbnailUrl)
         assertEquals("http://localhost:8080/uploads/rooms/5/photo_1024.jpg", result.url1024)
+        assertEquals("http://localhost:8080/uploads/rooms/5/photo_768.jpg", result.url768)
         assertEquals("http://localhost:8080/uploads/rooms/5/photo_512.jpg", result.url512)
     }
 
@@ -144,6 +154,7 @@ class MediaServiceTest {
 
         assertEquals(result.url, result.thumbnailUrl)
         assertEquals(null, result.url1024)
+        assertEquals(null, result.url768)
         assertEquals(null, result.url512)
     }
 
@@ -230,6 +241,17 @@ class MediaServiceTest {
 
         Mockito.verify(storageService).delete(existing.url)
         Mockito.verify(storageService).delete("stays/10/photo_thumb.jpg")
+    }
+
+    @Test
+    fun deleteMediaAlsoDeletesUrl768WhenPresent() {
+        val existing = media(id = 1, url768 = "stays/10/photo_768.jpg")
+        Mockito.`when`(mediaRepository.findByOwnerTypeAndOwnerIdAndId(MediaOwnerType.STAY, 10, 1)).thenReturn(existing)
+
+        service.deleteMedia(MediaOwnerType.STAY, 10, 1)
+
+        Mockito.verify(storageService).delete(existing.url)
+        Mockito.verify(storageService).delete("stays/10/photo_768.jpg")
     }
 
     // ---- listForOwners (bulk, backs the batch resolver) ----

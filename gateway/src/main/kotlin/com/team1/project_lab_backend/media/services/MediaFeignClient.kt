@@ -84,6 +84,7 @@ data class MediaResponse(
     val url: String,
     val thumbnailUrl: String,
     val url1024: String?,
+    val url768: String? = null,
     val url512: String?,
     val caption: String?,
     val isPrimary: Boolean,

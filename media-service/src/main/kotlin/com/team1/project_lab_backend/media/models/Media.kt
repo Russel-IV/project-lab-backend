@@ -28,6 +28,8 @@ data class Media(
     val thumbnailUrl: String? = null,
     @Column(name = "url_1024", columnDefinition = "TEXT")
     val url1024: String? = null,
+    @Column(name = "url_768", columnDefinition = "TEXT")
+    val url768: String? = null,
     @Column(name = "url_512", columnDefinition = "TEXT")
     val url512: String? = null,
     @Column(name = "caption", columnDefinition = "TEXT")

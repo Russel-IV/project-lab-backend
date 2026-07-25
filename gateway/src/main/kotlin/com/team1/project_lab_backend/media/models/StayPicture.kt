@@ -10,6 +10,7 @@ data class StayPicture(
     val url: String,
     val thumbnailUrl: String,
     val url1024: String? = null,
+    val url768: String? = null,
     val url512: String? = null,
     val caption: String? = null,
     val isPrimary: Boolean = false,

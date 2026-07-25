@@ -15,7 +15,7 @@ import javax.imageio.ImageIO
  * upload.
  */
 object ImageResizer {
-    val TARGET_WIDTHS = listOf(1024, 512, 248)
+    val TARGET_WIDTHS = listOf(1024, 768, 512, 248)
     private const val QUALITY = 80f
 
     /**

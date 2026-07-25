@@ -30,6 +30,8 @@ type RoomPicture {
     thumbnailUrl: String!
     "Public URL of a resized (max ~1024px wide) variant, for hero/gallery display. Null if the source is already narrower than 1024px or no variant could be generated."
     url1024: String
+    "Public URL of a resized (max ~768px wide) variant, for the mid-size srcSet slot between card and hero display. Null if the source is already narrower than 768px or no variant could be generated."
+    url768: String
     "Public URL of a resized (max ~512px wide) variant, for card/grid display. Null if the source is already narrower than 512px or no variant could be generated."
     url512: String
     "Optional descriptive caption."

@@ -25,6 +25,7 @@ class RoomPictureServiceTest {
         id: Int = 1,
         roomId: Int = 20,
         isPrimary: Boolean = false,
+        url768: String? = null,
     ) = MediaResponse(
         id = id,
         ownerType = "ROOM",
@@ -32,6 +33,7 @@ class RoomPictureServiceTest {
         url = "http://localhost:8080/uploads/rooms/$roomId/photo.jpg",
         thumbnailUrl = "http://localhost:8080/uploads/rooms/$roomId/photo.jpg",
         url1024 = null,
+        url768 = url768,
         url512 = null,
         caption = null,
         isPrimary = isPrimary,
@@ -65,12 +67,14 @@ class RoomPictureServiceTest {
     fun addPictureReturnsMappedResponseOnSuccess() =
         runTest {
             val file = imageFile()
-            Mockito.`when`(mediaFeignClient.upload("ROOM", 20, file, "caption", false, 0)).thenReturn(mediaResponse())
+            Mockito.`when`(mediaFeignClient.upload("ROOM", 20, file, "caption", false, 0))
+                .thenReturn(mediaResponse(url768 = "http://localhost:8080/uploads/rooms/20/photo_768.jpg"))
 
             val result = service.addPicture(20, file, "caption", false, 0)
 
             assertEquals(1, result.id)
             assertEquals(20, result.roomId)
+            assertEquals("http://localhost:8080/uploads/rooms/20/photo_768.jpg", result.url768)
         }
 
     // ---- updatePictureMetadata ----
