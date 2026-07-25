@@ -68,6 +68,7 @@ data class CreateRoomInput(
     val bedroomAmount: Int,
     val bathrooms: BigDecimal,
     val size: BigDecimal? = null,
+    val amenityIds: Set<Int> = emptySet(),
 ) {
     fun toRequest() =
         RoomRequest(
@@ -77,6 +78,7 @@ data class CreateRoomInput(
             bedroomAmount = bedroomAmount,
             bathrooms = bathrooms,
             size = size,
+            amenityIds = amenityIds,
         )
 }
 
@@ -87,6 +89,7 @@ data class UpdateRoomInput(
     val bedroomAmount: Int,
     val bathrooms: BigDecimal,
     val size: BigDecimal? = null,
+    val amenityIds: Set<Int> = emptySet(),
 ) {
     fun toRequest() =
         RoomRequest(
@@ -96,5 +99,6 @@ data class UpdateRoomInput(
             bedroomAmount = bedroomAmount,
             bathrooms = bathrooms,
             size = size,
+            amenityIds = amenityIds,
         )
 }

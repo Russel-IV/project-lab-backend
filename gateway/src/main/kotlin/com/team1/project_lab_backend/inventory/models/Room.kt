@@ -4,9 +4,9 @@ import java.math.BigDecimal
 
 /**
  * Owned by inventory-service (docs/adr/0002, Phase 5) — this is just the
- * GraphQL-facing DTO shape, not a JPA entity. Room has no relations of its own (no
- * batch-resolved fields besides pictures, which media-service already Feign-fetches
- * independently), so unlike Stay this mirrors inventory-service's entity 1:1.
+ * GraphQL-facing DTO shape, not a JPA entity. pictures is Feign-fetched independently
+ * by media-service; amenities is batch-resolved from amenityIds via RoomBatchResolver,
+ * same pattern as Stay.amenities/StayBatchResolver.
  */
 data class Room(
     val id: Int,
@@ -17,4 +17,5 @@ data class Room(
     val bedroomAmount: Int,
     val bathrooms: BigDecimal,
     val size: BigDecimal? = null,
+    val amenityIds: Set<Int> = emptySet(),
 )

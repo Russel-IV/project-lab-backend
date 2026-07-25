@@ -9,6 +9,7 @@ data class RoomRequest(
     val bedroomAmount: Int,
     val bathrooms: BigDecimal,
     val size: BigDecimal? = null,
+    val amenityIds: Set<Int> = emptySet(),
 )
 
 data class RoomResponse(

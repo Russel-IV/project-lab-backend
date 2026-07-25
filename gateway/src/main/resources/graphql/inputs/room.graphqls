@@ -12,6 +12,8 @@ input CreateRoomInput {
     bathrooms: BigDecimal!
     "Room size in square metres."
     size: BigDecimal
+    "IDs of in-room amenities (must reference ROOM_AMENITY-typed amenities)."
+    amenityIds: [Int!]! = []
 }
 
 "Input for updating a room's details."
@@ -28,6 +30,8 @@ input UpdateRoomInput {
     bathrooms: BigDecimal!
     "Updated room size in square metres."
     size: BigDecimal
+    "IDs of in-room amenities (must reference ROOM_AMENITY-typed amenities)."
+    amenityIds: [Int!]! = []
 }
 
 "Input for updating a room picture's metadata. Does not replace the image file."

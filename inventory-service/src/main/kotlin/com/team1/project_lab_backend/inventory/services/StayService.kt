@@ -480,7 +480,7 @@ class StayService(
             }
 
             filter.roomAmenityIds?.takeIf { it.isNotEmpty() }?.let {
-                predicates += hasAllAmenities(root, query!!, cb, it)
+                predicates += hasAllRoomAmenities(root, query!!, cb, it)
             }
 
             if (predicates.isEmpty()) null else cb.and(*predicates.toTypedArray())
@@ -497,6 +497,26 @@ class StayService(
         val amenityJoin = staySub.join<Stay, Amenity>("amenities")
         sub.select(cb.countDistinct(amenityJoin.get<Int>("id"))).where(
             cb.equal(staySub.get<Int>("id"), root.get<Int>("id")),
+            amenityJoin.get<Int>("id").`in`(amenityIds),
+        )
+        return cb.equal(sub, amenityIds.distinct().size.toLong())
+    }
+
+    // "roomAmenityIds" means "somewhere on the property" (StayFilterInput.roomAmenityIds
+    // doc), not "one room has all of these" — so this aggregates across every room of
+    // the stay via room_amenity, same countDistinct-against-requested-size trick as
+    // hasAllAmenities, just correlated on room.stayId instead of stay.id.
+    private fun hasAllRoomAmenities(
+        root: Root<Stay>,
+        query: CriteriaQuery<*>,
+        cb: CriteriaBuilder,
+        amenityIds: List<Int>,
+    ): Predicate {
+        val sub = query.subquery(Long::class.java)
+        val roomSub = sub.from(Room::class.java)
+        val amenityJoin = roomSub.join<Room, Amenity>("amenities")
+        sub.select(cb.countDistinct(amenityJoin.get<Int>("id"))).where(
+            cb.equal(roomSub.get<Int>("stayId"), root.get<Int>("id")),
             amenityJoin.get<Int>("id").`in`(amenityIds),
         )
         return cb.equal(sub, amenityIds.distinct().size.toLong())

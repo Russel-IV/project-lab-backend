@@ -17,6 +17,8 @@ type Room {
     size: BigDecimal
     "Photos of this room."
     pictures: [RoomPicture!]!
+    "In-room amenities (e.g. air conditioning, kitchen, balcony)."
+    amenities: [Amenity!]!
 }
 
 "A photo associated with a room."
