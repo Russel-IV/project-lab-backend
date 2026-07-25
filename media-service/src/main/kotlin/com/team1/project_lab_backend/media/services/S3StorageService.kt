@@ -9,6 +9,7 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import java.util.concurrent.CompletableFuture
 
 /**
  * Direct backend AWS S3 object storage implementation of [StorageService].
@@ -47,18 +48,25 @@ class S3StorageService(
         folder: String,
     ): Map<Int, String> {
         val variants = file.inputStream.use { ImageResizer.resizeAll(it) }
-        return variants.mapValues { (width, bytes) ->
-            val key = "$folder/${Uuid7.randomUUID()}_$width.webp"
-            val putObjectRequest =
-                PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .contentType("image/webp")
-                    .cacheControl(CACHE_CONTROL)
-                    .build()
-            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
-            key
-        }
+        // Resizing/encoding above is CPU-bound and stays sequential; only the actual
+        // network upload of each already-computed variant runs concurrently, since
+        // each PUT is otherwise a full blocking round-trip to S3 for no CPU benefit.
+        val uploads =
+            variants.map { (width, bytes) ->
+                val key = "$folder/${Uuid7.randomUUID()}_$width.webp"
+                val putObjectRequest =
+                    PutObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .contentType("image/webp")
+                        .cacheControl(CACHE_CONTROL)
+                        .build()
+                CompletableFuture.supplyAsync {
+                    s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
+                    width to key
+                }
+            }
+        return uploads.map { it.join() }.toMap()
     }
 
     override fun delete(key: String) {

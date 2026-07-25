@@ -25,9 +25,19 @@
 # where the original and the (now-unused-for-seeding) compressed .webp
 # don't share an exact filename.
 #
-# Safe to run multiple times: before uploading a row, the owner's existing
-# pictures are fetched once (GET /api/v1/media/{ownerType}/{ownerId}) and
-# the row is skipped if a picture with that exact caption already exists.
+# Safe to run multiple times: before uploading a row, that owner's existing
+# pictures are fetched (GET /api/v1/media/{ownerType}/{ownerId}) and the row
+# is skipped if a picture with that exact caption already exists.
+#
+# Rows are processed by up to SEED_MEDIA_CONCURRENCY (default 3) concurrent
+# background uploads -- each is a real multipart upload plus media-service's
+# own resize/WebP/S3-or-disk pipeline, so doing this fully sequentially (as
+# this script used to) made a full reseed take 10+ minutes. Concurrency is
+# per-row rather than per-owner, so each background row does its own
+# existing-captions GET rather than sharing one cached lookup per owner (as
+# the old sequential version did) -- a few extra cheap GETs, traded for not
+# needing cross-process shared state. See feedback_resource_constrained_dev_box:
+# keep this modest, this box has 7.4GB RAM.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -43,6 +53,7 @@ IMAGES_DIR="scripts/images"
 MANIFEST="scripts/sql/media-seed.tsv"
 CONTAINER="media-service"
 MEDIA_SERVICE_URL="${MEDIA_SERVICE_URL:-http://localhost:8085}"
+CONCURRENCY="${SEED_MEDIA_CONCURRENCY:-3}"
 
 if [ ! -d "$IMAGES_DIR" ]; then
     echo "Error: $IMAGES_DIR not found" >&2
@@ -59,23 +70,20 @@ if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
     exit 1
 fi
 
-declare -A caption_cache
+RESULTS_DIR="$(mktemp -d)"
+trap 'rm -rf "$RESULTS_DIR"' EXIT
 
 owner_has_caption() {
     local owner_type="$1" owner_id="$2" caption="$3"
-    local key="${owner_type}:${owner_id}"
-
-    if [ -z "${caption_cache[$key]+set}" ]; then
-        caption_cache[$key]="$(
-            curl -sf "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" | python3 -c '
+    local existing
+    existing="$(
+        curl -sf "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" | python3 -c '
 import json, sys
 for m in json.load(sys.stdin):
     print(m.get("caption") or "")
 '
-        )" || caption_cache[$key]=""
-    fi
-
-    grep -qxF "$caption" <<<"${caption_cache[$key]}"
+    )" || existing=""
+    grep -qxF "$caption" <<<"$existing"
 }
 
 resolve_source_file() {
@@ -84,30 +92,35 @@ resolve_source_file() {
 
     if [ ! -e "${matches[0]}" ]; then
         echo "Error: no original image found for hash '${image_hash}' in $IMAGES_DIR" >&2
-        exit 1
+        return 1
     fi
     if [ "${#matches[@]}" -ne 1 ]; then
         echo "Error: ambiguous match for hash '${image_hash}': ${matches[*]}" >&2
-        exit 1
+        return 1
     fi
     printf '%s' "${matches[0]}"
 }
 
-uploaded=0
-skipped=0
-
-while IFS=$'\t' read -r owner_type owner_id image_hash caption is_primary display_order; do
-    [[ "$owner_type" == \#* || -z "$owner_type" ]] && continue
+# Runs in a background subshell -- reports its outcome via a per-row file in
+# RESULTS_DIR rather than mutating shared counters, since counter writes
+# from a background job wouldn't be visible to the parent shell.
+process_row() {
+    local owner_type="$1" owner_id="$2" image_hash="$3" caption="$4" is_primary="$5" display_order="$6" result_id="$7"
 
     if owner_has_caption "$owner_type" "$owner_id" "$caption"; then
         echo "Skipping ${owner_type} ${owner_id} '${caption}' (already seeded)"
-        skipped=$((skipped + 1))
-        continue
+        echo "SKIPPED" >"$RESULTS_DIR/$result_id"
+        return 0
     fi
 
-    src="$(resolve_source_file "$image_hash")"
+    local src
+    src="$(resolve_source_file "$image_hash")" || {
+        echo "ERROR" >"$RESULTS_DIR/$result_id"
+        return 1
+    }
     echo "Uploading ${src} -> ${owner_type} ${owner_id} '${caption}'..."
 
+    local response http_code body
     response="$(curl -s -w '\n%{http_code}' -X POST "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" \
         -F "file=@${src};type=image/jpeg" \
         -F "caption=${caption}" \
@@ -118,13 +131,45 @@ while IFS=$'\t' read -r owner_type owner_id image_hash caption is_primary displa
 
     if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
         echo "Error: upload failed (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}': ${body}" >&2
-        exit 1
+        echo "ERROR" >"$RESULTS_DIR/$result_id"
+        return 1
     fi
 
-    # Keep the per-owner caption cache in sync so later rows for the same
-    # owner in this run see the picture that was just uploaded.
-    caption_cache["${owner_type}:${owner_id}"]+=$'\n'"${caption}"
-    uploaded=$((uploaded + 1))
+    echo "UPLOADED" >"$RESULTS_DIR/$result_id"
+}
+
+row_id=0
+pids=()
+
+while IFS=$'\t' read -r owner_type owner_id image_hash caption is_primary display_order; do
+    [[ "$owner_type" == \#* || -z "$owner_type" ]] && continue
+
+    while [ "$(jobs -rp | wc -l)" -ge "$CONCURRENCY" ]; do
+        wait -n
+    done
+
+    row_id=$((row_id + 1))
+    process_row "$owner_type" "$owner_id" "$image_hash" "$caption" "$is_primary" "$display_order" "$row_id" &
+    pids+=("$!")
 done < <(grep -v '^#' "$MANIFEST")
 
+failed=0
+for pid in "${pids[@]}"; do
+    wait "$pid" || failed=1
+done
+
+uploaded=0
+skipped=0
+for f in "$RESULTS_DIR"/*; do
+    case "$(cat "$f")" in
+        UPLOADED) uploaded=$((uploaded + 1)) ;;
+        SKIPPED) skipped=$((skipped + 1)) ;;
+    esac
+done
+
 echo "Done seeding media: ${uploaded} uploaded, ${skipped} skipped (already present)."
+
+if [ "$failed" -ne 0 ]; then
+    echo "Error: one or more uploads failed (see above)." >&2
+    exit 1
+fi
