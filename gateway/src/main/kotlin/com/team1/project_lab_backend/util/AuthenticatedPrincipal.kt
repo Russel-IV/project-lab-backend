@@ -14,5 +14,12 @@ data class AuthenticatedPrincipal(val id: Int, val publicId: UUID)
  * (17 resolver files) must itself be a suspend fun for the context to propagate.
  */
 suspend fun requireAuthenticated(): AuthenticatedPrincipal =
+    currentUserOrNull() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "authentication required")
+
+/**
+ * Non-throwing counterpart to [requireAuthenticated], for the handful of call sites
+ * (e.g. StayResolver's favoritesOnly filter) that need to behave differently for an
+ * anonymous caller rather than reject the whole request outright.
+ */
+suspend fun currentUserOrNull(): AuthenticatedPrincipal? =
     ReactiveSecurityContextHolder.getContext().awaitSingleOrNull()?.authentication?.principal as? AuthenticatedPrincipal
-        ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "authentication required")

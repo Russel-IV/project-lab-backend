@@ -47,6 +47,13 @@ data class StayFilter(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
+    // Internal-only, not part of the public GraphQL StayFilterInput — the Gateway
+    // resolves favoritesOnly into this concrete id list (via review-service's
+    // favorites) before forwarding the filter here, same "bake an id set into the
+    // predicate" shape checkIn/checkOut's conflictingRoomIds already uses. Non-null
+    // means "id must be in this set" (an empty list matches nothing); null means no
+    // restriction.
+    val stayIds: List<Int>? = null,
 )
 
 data class StaySearchResult(

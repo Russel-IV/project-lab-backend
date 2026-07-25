@@ -45,6 +45,12 @@ data class StayFilter(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
+    // Internal-only, not part of the public GraphQL StayFilterInput — StayResolver
+    // resolves favoritesOnly into this concrete id list (via FavoriteService) before
+    // building this DTO, since inventory-service has no notion of "the caller" or
+    // favorites. See inventory-service's own StayFilter (its copy of this field) for
+    // the predicate this bakes into.
+    val stayIds: List<Int>? = null,
 )
 
 data class StayConnection(

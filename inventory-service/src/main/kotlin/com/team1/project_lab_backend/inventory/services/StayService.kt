@@ -373,6 +373,10 @@ class StayService(
         Specification { root, query, cb ->
             val predicates = mutableListOf<Predicate>()
 
+            filter.stayIds?.let { ids ->
+                predicates += if (ids.isEmpty()) cb.disjunction() else root.get<Int>("id").`in`(ids)
+            }
+
             if (filter.city != null || filter.countryCode != null || filter.regionId != null) {
                 val address = root.join<Stay, Address>("address", JoinType.INNER)
                 filter.city?.let {

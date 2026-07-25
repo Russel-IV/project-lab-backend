@@ -130,6 +130,8 @@ input StayFilterInput {
     propertyAmenityIds: [Int!]
     "Limit results to properties offering ALL of these in-room amenities (e.g. air conditioning, kitchen, balcony, private bathroom, washer) somewhere on the property."
     roomAmenityIds: [Int!]
+    "Limit results to stays the authenticated caller has favorited. Combined with every other filter field via AND, same as isRefundable. Requires authentication to have any effect — an unauthenticated caller gets zero results rather than a GraphQL error."
+    favoritesOnly: Boolean
 }
 
 "Input for updating a stay picture's metadata. Does not replace the image file."

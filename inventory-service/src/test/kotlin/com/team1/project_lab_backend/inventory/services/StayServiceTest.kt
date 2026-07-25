@@ -20,6 +20,7 @@ import com.team1.project_lab_backend.inventory.repositories.ViewRepository
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Path
+import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -500,6 +501,56 @@ class StayServiceTest {
         spec.toPredicate(root, query, cb)
 
         Mockito.verify(cb).equal(path, true)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun searchStaysBuildsStayIdsInPredicateWhenFilterSet() {
+        val page = PageImpl<Stay>(emptyList())
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>(), Mockito.any(Pageable::class.java)))
+            .thenReturn(page)
+
+        stayService.searchStays(StayFilter(stayIds = listOf(5, 6)))
+
+        val specCaptor = ArgumentCaptor.forClass(Specification::class.java) as ArgumentCaptor<Specification<Stay>>
+        Mockito.verify(stayRepository).findAll(specCaptor.capture(), Mockito.any(Pageable::class.java))
+        val spec = specCaptor.value
+
+        val root = Mockito.mock(Root::class.java) as Root<Stay>
+        val query = Mockito.mock(CriteriaQuery::class.java) as CriteriaQuery<Stay>
+        val cb = Mockito.mock(CriteriaBuilder::class.java)
+        val idPath = Mockito.mock(Path::class.java) as Path<Int>
+        val inPredicate = Mockito.mock(Predicate::class.java)
+        Mockito.`when`(root.get<Int>("id")).thenReturn(idPath)
+        Mockito.`when`(idPath.`in`(listOf(5, 6))).thenReturn(inPredicate)
+
+        spec.toPredicate(root, query, cb)
+
+        Mockito.verify(cb).and(inPredicate)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test
+    fun searchStaysBuildsAlwaysFalsePredicateWhenStayIdsEmpty() {
+        val page = PageImpl<Stay>(emptyList())
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>(), Mockito.any(Pageable::class.java)))
+            .thenReturn(page)
+
+        stayService.searchStays(StayFilter(stayIds = emptyList()))
+
+        val specCaptor = ArgumentCaptor.forClass(Specification::class.java) as ArgumentCaptor<Specification<Stay>>
+        Mockito.verify(stayRepository).findAll(specCaptor.capture(), Mockito.any(Pageable::class.java))
+        val spec = specCaptor.value
+
+        val root = Mockito.mock(Root::class.java) as Root<Stay>
+        val query = Mockito.mock(CriteriaQuery::class.java) as CriteriaQuery<Stay>
+        val cb = Mockito.mock(CriteriaBuilder::class.java)
+        val disjunction = Mockito.mock(Predicate::class.java)
+        Mockito.`when`(cb.disjunction()).thenReturn(disjunction)
+
+        spec.toPredicate(root, query, cb)
+
+        Mockito.verify(cb).and(disjunction)
     }
 
     @Test

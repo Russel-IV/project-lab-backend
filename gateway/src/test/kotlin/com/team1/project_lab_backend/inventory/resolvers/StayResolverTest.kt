@@ -8,6 +8,7 @@ import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.inventory.services.StayService
+import com.team1.project_lab_backend.review.services.FavoriteService
 import com.team1.project_lab_backend.util.assertThrowsSuspend
 import com.team1.project_lab_backend.util.withAuthenticatedUser
 import kotlinx.coroutines.test.runTest
@@ -29,7 +30,8 @@ private fun <T> eqArg(value: T): T = Mockito.eq(value) ?: value
 
 class StayResolverTest {
     private val stayService = Mockito.mock(StayService::class.java)
-    private val resolver = StayResolver(stayService)
+    private val favoriteService = Mockito.mock(FavoriteService::class.java)
+    private val resolver = StayResolver(stayService, favoriteService)
     private val authenticatedUserId = 1
 
     private fun sampleStay(
@@ -81,6 +83,47 @@ class StayResolverTest {
 
             assertEquals(0, result.items.size)
             assertEquals(0, result.totalCount)
+        }
+
+    @Test
+    fun staysAppliesFavoritesOnlyForAuthenticatedUser() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val expectedFilter = StayFilter(stayIds = listOf(5, 6))
+                val connection = StayConnection(items = emptyList(), totalCount = 0, hasNextPage = false)
+                Mockito.`when`(favoriteService.getMyFavoriteStayIds(authenticatedUserId)).thenReturn(listOf(5, 6))
+                Mockito.`when`(stayService.searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))).thenReturn(connection)
+
+                resolver.stays(StayFilterInput(favoritesOnly = true), 0, 20)
+
+                Mockito.verify(stayService).searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))
+            }
+        }
+
+    @Test
+    fun staysFavoritesOnlyWithoutAuthResolvesToNoResultsWithoutCallingFavoriteService() =
+        runTest {
+            val expectedFilter = StayFilter(stayIds = emptyList())
+            val connection = StayConnection(items = emptyList(), totalCount = 0, hasNextPage = false)
+            Mockito.`when`(stayService.searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))).thenReturn(connection)
+
+            resolver.stays(StayFilterInput(favoritesOnly = true), 0, 20)
+
+            Mockito.verify(stayService).searchStays(eqArg(expectedFilter), eqArg(0), eqArg(20))
+            Mockito.verify(favoriteService, Mockito.never()).getMyFavoriteStayIds(Mockito.anyInt())
+        }
+
+    @Test
+    fun staysWithoutFavoritesOnlyNeverCallsFavoriteService() =
+        runTest {
+            withAuthenticatedUser(authenticatedUserId) {
+                val connection = StayConnection(items = emptyList(), totalCount = 0, hasNextPage = false)
+                Mockito.`when`(stayService.searchStays(anyArg(), eqArg(0), eqArg(20))).thenReturn(connection)
+
+                resolver.stays(StayFilterInput(regionId = 3), 0, 20)
+
+                Mockito.verify(favoriteService, Mockito.never()).getMyFavoriteStayIds(Mockito.anyInt())
+            }
         }
 
     @Test

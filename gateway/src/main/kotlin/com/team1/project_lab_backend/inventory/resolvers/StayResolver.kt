@@ -8,6 +8,8 @@ import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.inventory.services.StayService
+import com.team1.project_lab_backend.review.services.FavoriteService
+import com.team1.project_lab_backend.util.currentUserOrNull
 import com.team1.project_lab_backend.util.requireAuthenticated
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
@@ -19,13 +21,16 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Controller
-class StayResolver(private val stayService: StayService) {
+class StayResolver(
+    private val stayService: StayService,
+    private val favoriteService: FavoriteService,
+) {
     @QueryMapping
     suspend fun stays(
         @Argument filter: StayFilterInput?,
         @Argument page: Int?,
         @Argument size: Int?,
-    ): StayConnection = stayService.searchStays(filter?.toFilter() ?: StayFilter(), page ?: 0, size ?: 20)
+    ): StayConnection = stayService.searchStays(resolveFilter(filter), page ?: 0, size ?: 20)
 
     @QueryMapping
     suspend fun stay(
@@ -41,7 +46,25 @@ class StayResolver(private val stayService: StayService) {
     suspend fun stayPriceStats(
         @Argument filter: StayFilterInput?,
         @Argument bins: Int?,
-    ): StayPriceStats = stayService.getPriceStats(filter?.toFilter() ?: StayFilter(), bins ?: 40)
+    ): StayPriceStats = stayService.getPriceStats(resolveFilter(filter), bins ?: 40)
+
+    /**
+     * favoritesOnly can't be folded into StayFilterInput.toFilter() directly — it
+     * needs an auth-derived userId and a Feign round trip to review-service to turn
+     * into something inventory-service's Specification can actually filter on
+     * (StayFilter.stayIds). Shared by stays/stayPriceStats so the price histogram
+     * shown alongside a favorites-only result list is computed over that same set,
+     * not the unfiltered one. No valid JWT + favoritesOnly:true resolves to
+     * stayIds = emptyList() (matches nothing) rather than a GraphQL error — the
+     * frontend never sends this combination (the control is hidden for anonymous
+     * users), so this is a defensive default, not a real user path.
+     */
+    private suspend fun resolveFilter(filter: StayFilterInput?): StayFilter {
+        val base = filter?.toFilter() ?: StayFilter()
+        if (filter?.favoritesOnly != true) return base
+        val userId = currentUserOrNull()?.id ?: return base.copy(stayIds = emptyList())
+        return base.copy(stayIds = favoriteService.getMyFavoriteStayIds(userId))
+    }
 
     @MutationMapping
     suspend fun createStay(
@@ -210,6 +233,8 @@ data class StayFilterInput(
     val bedrooms: List<Int>? = null,
     val propertyAmenityIds: List<Int>? = null,
     val roomAmenityIds: List<Int>? = null,
+    // Deliberately not mapped in toFilter() below — see StayResolver.resolveFilter().
+    val favoritesOnly: Boolean? = null,
 ) {
     fun toFilter() =
         StayFilter(
