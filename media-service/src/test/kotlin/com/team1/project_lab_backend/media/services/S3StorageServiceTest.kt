@@ -62,6 +62,7 @@ class S3StorageServiceTest {
         assertEquals("test-bucket", putRequest.bucket())
         assertEquals(key, putRequest.key())
         assertEquals("image/webp", putRequest.contentType())
+        assertEquals("public, max-age=31536000, immutable", putRequest.cacheControl())
     }
 
     @Test
@@ -101,6 +102,7 @@ class S3StorageServiceTest {
         assertEquals("stays/10", putRequest.key().substringBeforeLast('/'))
         assertTrue(putRequest.key().endsWith("_248.webp"))
         assertEquals("image/webp", putRequest.contentType())
+        assertEquals("public, max-age=31536000, immutable", putRequest.cacheControl())
     }
 
     @Test

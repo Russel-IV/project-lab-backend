@@ -35,6 +35,7 @@ class S3StorageService(
                 .bucket(bucket)
                 .key(key)
                 .contentType(original.contentType)
+                .cacheControl(CACHE_CONTROL)
                 .build()
 
         s3Client.putObject(putObjectRequest, RequestBody.fromBytes(original.bytes))
@@ -53,6 +54,7 @@ class S3StorageService(
                     .bucket(bucket)
                     .key(key)
                     .contentType("image/webp")
+                    .cacheControl(CACHE_CONTROL)
                     .build()
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(bytes))
             key
@@ -77,5 +79,11 @@ class S3StorageService(
         } else {
             "https://$bucket.s3.$region.amazonaws.com/$key"
         }
+    }
+
+    companion object {
+        // Every key is a fresh UUIDv7 (see save()/saveVariants()) and is never overwritten in
+        // place, so objects are safe to cache aggressively and indefinitely.
+        private const val CACHE_CONTROL = "public, max-age=31536000, immutable"
     }
 }
