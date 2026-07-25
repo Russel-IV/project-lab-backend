@@ -26,6 +26,8 @@ type Query {
     stays(filter: StayFilterInput, page: Int = 0, size: Int = 20): StayConnection!
     "Returns a single stay by ID."
     stay(id: Int!): Stay
+    "Returns price-distribution stats (min/max/histogram) over the full set of stays matching `filter`, independent of pagination — for a search filter panel's price slider/histogram without fetching full Stay objects."
+    stayPriceStats(filter: StayFilterInput, bins: Int = 40): StayPriceStats!
     "Returns distinct city/country pairs currently in use by stay addresses, optionally filtered by a case-insensitive, typo- and diacritic-tolerant city search."
     destinations(search: String, limit: Int = 20): [Destination!]!
     "Returns curated destinations for the empty-query state, padded with the most-booked destinations if fewer than `limit` are explicitly curated."

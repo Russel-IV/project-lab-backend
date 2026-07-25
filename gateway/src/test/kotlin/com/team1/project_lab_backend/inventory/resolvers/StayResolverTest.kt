@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.inventory.resolvers
 import com.team1.project_lab_backend.identity.models.User
 import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> anyArg(): T {
@@ -75,6 +77,31 @@ class StayResolverTest {
 
             assertEquals(0, result.items.size)
             assertEquals(0, result.totalCount)
+        }
+
+    @Test
+    fun stayPriceStatsPassesFilterAndBinsToService() =
+        runTest {
+            val expectedFilter = StayFilter(regionId = 3)
+            val stats = StayPriceStats(min = BigDecimal("10"), max = BigDecimal("90"), count = 2, histogram = listOf(1, 1))
+            Mockito.`when`(stayService.getPriceStats(eqArg(expectedFilter), eqArg(10))).thenReturn(stats)
+
+            val result = resolver.stayPriceStats(StayFilterInput(regionId = 3), 10)
+
+            assertEquals(BigDecimal("10"), result.min)
+            assertEquals(2, result.count)
+            Mockito.verify(stayService).getPriceStats(eqArg(expectedFilter), eqArg(10))
+        }
+
+    @Test
+    fun stayPriceStatsDefaultsBinsTo40WhenOmitted() =
+        runTest {
+            val stats = StayPriceStats(min = null, max = null, count = 0, histogram = List(40) { 0 })
+            Mockito.`when`(stayService.getPriceStats(anyArg(), eqArg(40))).thenReturn(stats)
+
+            resolver.stayPriceStats(null, null)
+
+            Mockito.verify(stayService).getPriceStats(anyArg(), eqArg(40))
         }
 
     @Test

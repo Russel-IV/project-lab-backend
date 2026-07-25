@@ -13,6 +13,7 @@ import com.team1.project_lab_backend.inventory.repositories.MealPlanRepository
 import com.team1.project_lab_backend.inventory.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.inventory.repositories.PropertyBrandRepository
 import com.team1.project_lab_backend.inventory.repositories.RegionRepository
+import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
@@ -47,6 +48,7 @@ class StayServiceTest {
     private val paymentTypeRepository = Mockito.mock(PaymentTypeRepository::class.java)
     private val travelerExperienceRepository = Mockito.mock(TravelerExperienceRepository::class.java)
     private val regionRepository = Mockito.mock(RegionRepository::class.java)
+    private val roomRepository = Mockito.mock(RoomRepository::class.java)
     private val stayService =
         StayService(
             stayRepository,
@@ -60,6 +62,7 @@ class StayServiceTest {
             paymentTypeRepository,
             travelerExperienceRepository,
             regionRepository,
+            roomRepository,
         )
 
     init {
@@ -357,6 +360,95 @@ class StayServiceTest {
         val ex =
             assertThrows(ResponseStatusException::class.java) {
                 stayService.searchStays(StayFilter(guests = 0))
+            }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    // ---- getPriceStats ----
+
+    @Test
+    fun getPriceStatsBucketsPricesAcrossEqualWidthBins() {
+        val stays = listOf(sampleStayEntity(1), sampleStayEntity(2), sampleStayEntity(3), sampleStayEntity(4))
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>())).thenReturn(stays)
+        // One value comfortably inside each of the 4 equal-width buckets over [10, 90]
+        // ([10,30), [30,50), [50,70), [70,90]) -- the last ("90", the max itself) lands
+        // exactly on `bins` before being clamped into the final bucket, which is the
+        // deliberate coerceIn behavior under test, not incidental.
+        val prices = listOf(BigDecimal("10"), BigDecimal("35"), BigDecimal("60"), BigDecimal("90"))
+        Mockito.`when`(roomRepository.findMinPricePerStay(listOf(1, 2, 3, 4))).thenReturn(prices)
+
+        val result = stayService.getPriceStats(StayFilter(), bins = 4)
+
+        assertEquals(BigDecimal("10"), result.min)
+        assertEquals(BigDecimal("90"), result.max)
+        assertEquals(4, result.count)
+        assertEquals(listOf(1, 1, 1, 1), result.histogram)
+    }
+
+    @Test
+    fun getPriceStatsReturnsEmptyStatsWhenNoStaysMatch() {
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>())).thenReturn(emptyList())
+
+        val result = stayService.getPriceStats(StayFilter(), bins = 10)
+
+        assertEquals(null, result.min)
+        assertEquals(null, result.max)
+        assertEquals(0, result.count)
+        assertEquals(List(10) { 0 }, result.histogram)
+        Mockito.verify(roomRepository, Mockito.never()).findMinPricePerStay(Mockito.anyList())
+    }
+
+    @Test
+    fun getPriceStatsReturnsEmptyStatsWhenMatchingStaysHaveNoRooms() {
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>())).thenReturn(listOf(sampleStayEntity(1)))
+        Mockito.`when`(roomRepository.findMinPricePerStay(listOf(1))).thenReturn(emptyList())
+
+        val result = stayService.getPriceStats(StayFilter(), bins = 10)
+
+        assertEquals(null, result.min)
+        assertEquals(null, result.max)
+        assertEquals(0, result.count)
+        assertEquals(List(10) { 0 }, result.histogram)
+    }
+
+    @Test
+    fun getPriceStatsPutsAllPricesInBucketZeroWhenAllEqual() {
+        Mockito.`when`(stayRepository.findAll(Mockito.any<Specification<Stay>>()))
+            .thenReturn(listOf(sampleStayEntity(1), sampleStayEntity(2)))
+        Mockito.`when`(roomRepository.findMinPricePerStay(listOf(1, 2)))
+            .thenReturn(listOf(BigDecimal("50"), BigDecimal("50")))
+
+        val result = stayService.getPriceStats(StayFilter(), bins = 5)
+
+        assertEquals(BigDecimal("50"), result.min)
+        assertEquals(BigDecimal("50"), result.max)
+        assertEquals(2, result.count)
+        assertEquals(listOf(2, 0, 0, 0, 0), result.histogram)
+    }
+
+    @Test
+    fun getPriceStatsRejectsBinsLessThanOne() {
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                stayService.getPriceStats(StayFilter(), bins = 0)
+            }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun getPriceStatsRejectsBinsAboveMax() {
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                stayService.getPriceStats(StayFilter(), bins = 1001)
+            }
+        assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+    }
+
+    @Test
+    fun getPriceStatsReusesFilterValidation() {
+        val ex =
+            assertThrows(ResponseStatusException::class.java) {
+                stayService.getPriceStats(StayFilter(minPricePerNight = BigDecimal("-1")), bins = 10)
             }
         assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
     }

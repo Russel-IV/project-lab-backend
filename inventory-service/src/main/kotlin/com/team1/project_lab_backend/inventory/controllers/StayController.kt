@@ -1,6 +1,7 @@
 package com.team1.project_lab_backend.inventory.controllers
 
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.dto.StayResponse
 import com.team1.project_lab_backend.inventory.dto.StaySearchResult
@@ -41,6 +42,12 @@ class StayController(private val stayService: StayService) {
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): StaySearchResult = stayService.searchStays(filter, page, size)
+
+    @PostMapping("/price-stats")
+    fun priceStats(
+        @RequestBody filter: StayFilter,
+        @RequestParam(defaultValue = "40") bins: Int,
+    ): StayPriceStats = stayService.getPriceStats(filter, bins)
 
     @PostMapping
     fun create(

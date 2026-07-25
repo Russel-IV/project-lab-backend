@@ -55,6 +55,18 @@ data class StaySearchResult(
 )
 
 /**
+ * Price-distribution stats over a filtered set of stays, independent of pagination.
+ * `histogram` always has length `bins` (all zeros when `count == 0`); `min`/`max` are
+ * null only when `count == 0` (no matching stay has a room, so no price exists).
+ */
+data class StayPriceStats(
+    val min: BigDecimal?,
+    val max: BigDecimal?,
+    val count: Int,
+    val histogram: List<Int>,
+)
+
+/**
  * Stay itself (unlike Room/Amenity/etc.) can't be serialized as the raw JPA entity:
  * address/propertyBrand/amenities/views/... are lazy relations, and by the time
  * Jackson writes the HTTP response the @Transactional session that could load them is

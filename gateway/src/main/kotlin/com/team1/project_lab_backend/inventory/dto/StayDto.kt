@@ -52,3 +52,15 @@ data class StayConnection(
     val totalCount: Int,
     val hasNextPage: Boolean,
 )
+
+/**
+ * Mirrors inventory-service's dto.StayPriceStats field-for-field — bridged across the
+ * Feign/REST boundary by Jackson field-name matching, same as every other cross-service
+ * DTO pair in this migration (no shared DTO module).
+ */
+data class StayPriceStats(
+    val min: BigDecimal?,
+    val max: BigDecimal?,
+    val count: Int,
+    val histogram: List<Int>,
+)

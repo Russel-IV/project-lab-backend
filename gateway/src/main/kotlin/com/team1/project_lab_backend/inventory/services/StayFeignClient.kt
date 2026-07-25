@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
 import org.springframework.beans.factory.annotation.Qualifier
@@ -31,6 +32,16 @@ class StayFeignClient(
     ): StayConnection =
         webClient.post()
             .uri { b -> b.path("/internal/stays/search").queryParam("page", page).queryParam("size", size).build() }
+            .bodyValue(filter)
+            .retrieve()
+            .awaitBody()
+
+    suspend fun priceStats(
+        filter: StayFilter,
+        bins: Int,
+    ): StayPriceStats =
+        webClient.post()
+            .uri { b -> b.path("/internal/stays/price-stats").queryParam("bins", bins).build() }
             .bodyValue(filter)
             .retrieve()
             .awaitBody()

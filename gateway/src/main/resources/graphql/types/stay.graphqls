@@ -55,6 +55,18 @@ type StayConnection {
     hasNextPage: Boolean!
 }
 
+"Price-distribution stats for a filtered set of stays, independent of pagination."
+type StayPriceStats {
+    "Lowest matching price. Null if no stays match the filter."
+    min: BigDecimal
+    "Highest matching price. Null if no stays match the filter."
+    max: BigDecimal
+    "Number of matching stays included in the stats (i.e. stays with at least one room)."
+    count: Int!
+    "Per-bucket counts across `bins` equal-width buckets between min and max. Always has length `bins`, even when count is 0 (all zeros)."
+    histogram: [Int!]!
+}
+
 "WGS-84 geographic coordinates (latitude/longitude)."
 type Location {
     "Latitude in decimal degrees (-90 to 90)."

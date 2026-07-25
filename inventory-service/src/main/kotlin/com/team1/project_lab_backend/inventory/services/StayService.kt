@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.AddressResponse
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.dto.StayResponse
 import com.team1.project_lab_backend.inventory.dto.StaySearchResult
@@ -17,6 +18,7 @@ import com.team1.project_lab_backend.inventory.repositories.MealPlanRepository
 import com.team1.project_lab_backend.inventory.repositories.PaymentTypeRepository
 import com.team1.project_lab_backend.inventory.repositories.PropertyBrandRepository
 import com.team1.project_lab_backend.inventory.repositories.RegionRepository
+import com.team1.project_lab_backend.inventory.repositories.RoomRepository
 import com.team1.project_lab_backend.inventory.repositories.StayRepository
 import com.team1.project_lab_backend.inventory.repositories.TravelerExperienceRepository
 import com.team1.project_lab_backend.inventory.repositories.ViewRepository
@@ -62,6 +64,7 @@ class StayService(
     private val paymentTypeRepository: PaymentTypeRepository,
     private val travelerExperienceRepository: TravelerExperienceRepository,
     private val regionRepository: RegionRepository,
+    private val roomRepository: RoomRepository,
 ) {
     @Transactional(readOnly = true)
     fun searchStays(
@@ -78,6 +81,42 @@ class StayService(
             totalCount = result.totalElements,
             hasNextPage = result.hasNext(),
         )
+    }
+
+    /**
+     * Reuses [validateFilter] and [buildSpec] unchanged so "which stays match" is always
+     * identical to what [searchStays] returns for the same filter — the whole point of
+     * this being a stats endpoint over the real filtered set, not an approximation.
+     */
+    @Transactional(readOnly = true)
+    fun getPriceStats(
+        filter: StayFilter,
+        bins: Int,
+    ): StayPriceStats {
+        validateFilter(filter)
+        if (bins < 1 || bins > MAX_PRICE_STATS_BINS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "bins must be between 1 and $MAX_PRICE_STATS_BINS")
+        }
+        val stayIds = stayRepository.findAll(buildSpec(filter)).map { it.id }
+        val prices = if (stayIds.isEmpty()) emptyList() else roomRepository.findMinPricePerStay(stayIds)
+        if (prices.isEmpty()) {
+            return StayPriceStats(min = null, max = null, count = 0, histogram = List(bins) { 0 })
+        }
+
+        val min = prices.min()
+        val max = prices.max()
+        val range = max - min
+        val histogram = IntArray(bins)
+        for (price in prices) {
+            val bucket =
+                if (range.signum() == 0) {
+                    0
+                } else {
+                    ((price - min).toDouble() / range.toDouble() * bins).toInt().coerceIn(0, bins - 1)
+                }
+            histogram[bucket]++
+        }
+        return StayPriceStats(min = min, max = max, count = prices.size, histogram = histogram.toList())
     }
 
     @Transactional(readOnly = true)
@@ -490,4 +529,8 @@ class StayService(
             latitude = location?.y,
             longitude = location?.x,
         )
+
+    companion object {
+        private const val MAX_PRICE_STATS_BINS = 1000
+    }
 }

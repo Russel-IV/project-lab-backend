@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.inventory.resolvers
 import com.team1.project_lab_backend.inventory.dto.AddressRequest
 import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.PropertyType
 import com.team1.project_lab_backend.inventory.models.Stay
@@ -29,6 +30,12 @@ class StayResolver(private val stayService: StayService) {
     suspend fun stay(
         @Argument id: Int,
     ): Stay? = stayService.getStayById(id)
+
+    @QueryMapping
+    suspend fun stayPriceStats(
+        @Argument filter: StayFilterInput?,
+        @Argument bins: Int?,
+    ): StayPriceStats = stayService.getPriceStats(filter?.toFilter() ?: StayFilter(), bins ?: 40)
 
     @MutationMapping
     suspend fun createStay(

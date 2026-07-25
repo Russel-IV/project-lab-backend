@@ -2,6 +2,7 @@ package com.team1.project_lab_backend.inventory.services
 
 import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Stay
 import com.team1.project_lab_backend.util.webClientErrorMessage
@@ -28,6 +29,16 @@ class StayService(private val stayFeignClient: StayFeignClient) {
             stayFeignClient.search(filter, page, size)
         } catch (e: WebClientResponseException.BadRequest) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid search filter")
+        }
+
+    suspend fun getPriceStats(
+        filter: StayFilter,
+        bins: Int,
+    ): StayPriceStats =
+        try {
+            stayFeignClient.priceStats(filter, bins)
+        } catch (e: WebClientResponseException.BadRequest) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, webClientErrorMessage(e) ?: "invalid price stats request")
         }
 
     suspend fun getStayById(id: Int): Stay =

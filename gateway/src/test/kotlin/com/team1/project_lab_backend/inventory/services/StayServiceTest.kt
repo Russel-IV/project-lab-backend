@@ -3,6 +3,7 @@ package com.team1.project_lab_backend.inventory.services
 import com.team1.project_lab_backend.inventory.dto.AddressRequest
 import com.team1.project_lab_backend.inventory.dto.StayConnection
 import com.team1.project_lab_backend.inventory.dto.StayFilter
+import com.team1.project_lab_backend.inventory.dto.StayPriceStats
 import com.team1.project_lab_backend.inventory.dto.StayRequest
 import com.team1.project_lab_backend.inventory.models.Address
 import com.team1.project_lab_backend.inventory.models.PropertyType
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 
 class StayServiceTest {
     private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
@@ -64,6 +66,34 @@ class StayServiceTest {
 
             assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
             assertEquals("guests must be at least 1", ex.reason)
+        }
+
+    // ---- getPriceStats ----
+
+    @Test
+    fun getPriceStatsDelegatesToFeignClient() =
+        runTest {
+            val filter = StayFilter()
+            val stats = StayPriceStats(min = BigDecimal("10"), max = BigDecimal("90"), count = 2, histogram = listOf(1, 1))
+            Mockito.`when`(stayFeignClient.priceStats(filter, 40)).thenReturn(stats)
+
+            val result = stayService.getPriceStats(filter, 40)
+
+            assertEquals(BigDecimal("10"), result.min)
+            assertEquals(2, result.count)
+        }
+
+    @Test
+    fun getPriceStatsMapsFeignBadRequest() =
+        runTest {
+            val filter = StayFilter()
+            Mockito.`when`(stayFeignClient.priceStats(filter, 0))
+                .thenThrow(webClientException(400, """{"message":"bins must be between 1 and 1000"}"""))
+
+            val ex = assertThrowsSuspend<ResponseStatusException> { stayService.getPriceStats(filter, 0) }
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.statusCode)
+            assertEquals("bins must be between 1 and 1000", ex.reason)
         }
 
     // ---- getStayById ----
