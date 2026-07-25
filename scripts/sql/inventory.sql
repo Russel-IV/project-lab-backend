@@ -9,7 +9,7 @@
 -- Safe to run multiple times: all inserts use explicit IDs with
 -- ON CONFLICT DO NOTHING. Sequences are reset after each table.
 --
--- 35 stays across 6 continents, 57 rooms. stay.host_id values (1, 3, 4,
+-- 48 stays across 6 continents, 75 rooms. stay.host_id values (1, 3, 4,
 -- 8, 10, 12, 15, 18) reference identity-service's seeded host ids —
 -- there is no database-level FK across services anymore, so
 -- scripts/sql/identity.sql MUST run before this fragment.
@@ -21,6 +21,21 @@
 -- batch — same reused host ids, lookup rows, and scripts/images/ photos as
 -- above, but deliberately with no matching rows in booking.sql/review.sql
 -- (those two stay purely additive against stays 1-15).
+--
+-- Section 8 adds 13 more stays (ids 36-48, rooms 58-75) as a third batch,
+-- reusing existing region rows from sections 2 and 5 (same city/country)
+-- instead of introducing new cities, to give the city distribution a
+-- realistic density skew — most cities host exactly one stay, but a
+-- handful host several. Each stay still needs its own address row (a
+-- distinct street address, new id) since stay.address_id is UNIQUE — one
+-- stay per address is enforced at the schema level (V1__inventory_tables.sql),
+-- so unlike section 5 this batch breaks section 2's "address id N == region
+-- id N" 1:1 assumption on purpose: several new address rows point at the
+-- same region_id. Distribution after this batch: Valparaíso (region 3) has
+-- 5 stays, Tokyo (region 2) and Barcelona (region 11) have 4 each, Paris
+-- (region 4) has 3, Amsterdam (region 15) has 2, every other city still
+-- has 1. Like section 5, these are additive-only — no matching rows in
+-- booking.sql/review.sql.
 -- ============================================================
 
 
@@ -901,4 +916,290 @@ INSERT INTO stay_traveler_experience (stay_id, traveler_experience_id) VALUES
 (33, 4), (33, 6),
 (34, 2), (34, 7),
 (35, 2), (35, 3)
+ON CONFLICT DO NOTHING;
+
+
+-- ============================================================
+-- 8. ADDITIONAL STAYS — SEED BATCH 3 (ids 36-48, reused addresses)
+-- ============================================================
+-- No new region rows here — every address below points at a region_id
+-- already inserted in section 2 or 5, so several cities end up hosting
+-- multiple stays (see the header comment for the exact counts). Each
+-- address does still need its own row and its own street address, since
+-- stay.address_id is UNIQUE (schema-enforced one-stay-per-address).
+
+INSERT INTO address (id, street_address, extended_address, city, state_province, postal_code, country_code, region_id) VALUES
+(36, 'Calle Cerro Alegre 45',     NULL,          'Valparaíso',    'Valparaíso',      '2340001',    'CL', 3),
+(37, 'Paseo Gervasoni 12',        NULL,          'Valparaíso',    'Valparaíso',      '2340002',    'CL', 3),
+(38, 'Avenida Errázuriz 908',     NULL,          'Valparaíso',    'Valparaíso',      '2340003',    'CL', 3),
+(39, 'Calle Templeman 220',       NULL,          'Valparaíso',    'Valparaíso',      '2340004',    'CL', 3),
+(40, 'Shibuya 2-21-1',            NULL,          'Tokyo',         'Tokyo',           '150-0002',   'JP', 2),
+(41, 'Asakusa 1-36-3',            NULL,          'Tokyo',         'Tokyo',           '111-0032',   'JP', 2),
+(42, 'Jingumae 6-12-8',           NULL,          'Tokyo',         'Tokyo',           '150-0001',   'JP', 2),
+(43, 'Carrer del Bisbe 9',        NULL,          'Barcelona',     'Catalonia',       '08002',      'ES', 11),
+(44, 'Carrer de Mallorca 401',    NULL,          'Barcelona',     'Catalonia',       '08013',      'ES', 11),
+(45, 'Passeig de Joan de Borbó 62', NULL,        'Barcelona',     'Catalonia',       '08003',      'ES', 11),
+(46, 'Rue Lepic 22',              NULL,          'Paris',         'Île-de-France',   '75018',      'FR', 4),
+(47, 'Rue des Rosiers 14',        NULL,          'Paris',         'Île-de-France',   '75004',      'FR', 4),
+(48, 'Egelantiersgracht 8',       NULL,          'Amsterdam',     'North Holland',   '1015 CE',    'NL', 15)
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('address', 'id'), COALESCE(MAX(id), 1)) FROM address;
+
+INSERT INTO stay (
+    id, name, about, property_type, is_refundable,
+    star_rating, days_from_booking_cancellation_deadline,
+    policies_text, important_information,
+    host_id, address_id, property_brand_id, location
+) VALUES
+(36,
+    'Cerro Alegre Hillside Apartment',
+    'Bright apartment perched on Cerro Alegre with sweeping views over Valparaíso''s colorful rooftops and the harbor beyond.',
+    'HOME', true, 4.2, 5,
+    'No smoking indoors. Quiet hours 10 PM–8 AM.',
+    'Funicular station 3 minutes on foot. Steep streets nearby, comfortable shoes recommended.',
+    12, 36, 1,
+    ST_GeogFromText('SRID=4326;POINT(-71.6089 -33.0431)')),   -- Valparaíso, CL
+(37,
+    'Cerro Concepción Boutique Hotel',
+    'Restored heritage building turned boutique hotel amid the street art and cafés of Cerro Concepción.',
+    'HOTEL', true, 4.5, 3,
+    'No smoking. No parties.',
+    'Breakfast served 7–10 AM. Funicular access included in stay.',
+    15, 37, 1,
+    ST_GeogFromText('SRID=4326;POINT(-71.6210 -33.0455)')),   -- Valparaíso, CL
+(38,
+    'Valparaíso Portside Loft',
+    'Industrial-chic loft near the harbor, walking distance to the naval museum and dockside seafood market.',
+    'HOME', false, 4.0, 7,
+    'No pets. No loud music.',
+    'Port noise possible in early morning. Market stalls open from 6 AM.',
+    18, 38, 1,
+    ST_GeogFromText('SRID=4326;POINT(-71.6265 -33.0398)')),   -- Valparaíso, CL
+(39,
+    'Bohemian Artist House',
+    'Eclectic house filled with local art in the winding hills, a favorite among backpackers and creatives.',
+    'HOME', true, 4.1, 5,
+    'Respect quiet hours after 10 PM. No smoking indoors.',
+    'Shared kitchen with other guests. Weekly graffiti-tour recommendations from the host.',
+    1, 39, 1,
+    ST_GeogFromText('SRID=4326;POINT(-71.6142 -33.0512)')),   -- Valparaíso, CL
+(40,
+    'Shibuya Capsule Hotel',
+    'Compact, efficient capsule hotel steps from Shibuya Crossing, built for solo travelers on the move.',
+    'HOTEL', false, 4.0, 1,
+    'No smoking. Shared bathroom facilities.',
+    'Luggage storage available. Check-in from 3 PM, capsules locked 24/7 for security.',
+    3, 40, 1,
+    ST_GeogFromText('SRID=4326;POINT(139.7016 35.6595)')),    -- Tokyo, JP
+(41,
+    'Asakusa Traditional Inn',
+    'Family-run ryokan-style inn near Senso-ji Temple, with tatami floors and futon bedding.',
+    'HOME', true, 4.4, 5,
+    'Remove shoes indoors. Quiet hours after 9 PM.',
+    'Yukata robes provided. Temple market 5 minutes on foot.',
+    4, 41, 1,
+    ST_GeogFromText('SRID=4326;POINT(139.7967 35.7118)')),    -- Tokyo, JP
+(42,
+    'Harajuku Design Hotel',
+    'Concept hotel wrapped in rotating local art installations, moments from Takeshita Street.',
+    'HOTEL', true, 4.6, 2,
+    'No smoking. No outside food in rooms.',
+    'Late checkout available for a fee. Rooftop gallery open to guests.',
+    8, 42, 8,
+    ST_GeogFromText('SRID=4326;POINT(139.7028 35.6702)')),    -- Tokyo, JP
+(43,
+    'Gothic Quarter Apartment',
+    'Stone-walled apartment tucked into the medieval lanes of the Barri Gòtic, steps from the cathedral.',
+    'HOME', true, 4.3, 5,
+    'No smoking indoors. Quiet hours 11 PM–8 AM.',
+    'Narrow street, no vehicle access. Cathedral bells audible in the morning.',
+    10, 43, 1,
+    ST_GeogFromText('SRID=4326;POINT(2.1749 41.3833)')),      -- Barcelona, ES
+(44,
+    'Sagrada Família View Hotel',
+    'Modern hotel with rooftop rooms facing Gaudí''s unfinished basilica.',
+    'HOTEL', true, 4.7, 3,
+    'No smoking. No parties.',
+    'Breakfast served 7–10:30 AM. Basilica tickets bookable at the front desk.',
+    12, 44, 4,
+    ST_GeogFromText('SRID=4326;POINT(2.1743 41.4036)')),      -- Barcelona, ES
+(45,
+    'Barceloneta Beach House',
+    'Relaxed beach house a block from the sand, with a rooftop terrace for sunset views over the Mediterranean.',
+    'HOME', false, 4.2, 3,
+    'No parties. No smoking on terrace.',
+    'Beach gear provided. Seafood restaurants line the block.',
+    15, 45, 1,
+    ST_GeogFromText('SRID=4326;POINT(2.1925 41.3784)')),      -- Barcelona, ES
+(46,
+    'Montmartre Artist Studio',
+    'Small studio near Place du Tertre, in the same streets once walked by Picasso and Renoir.',
+    'HOME', true, 4.3, 5,
+    'No smoking indoors. Quiet hours after 10 PM.',
+    'Steep hill up to Sacré-Cœur. Funicular available nearby.',
+    18, 46, 1,
+    ST_GeogFromText('SRID=4326;POINT(2.3431 48.8867)')),      -- Paris, FR
+(47,
+    'Le Marais Boutique Hotel',
+    'Intimate hotel in a converted 17th-century hôtel particulier, in the heart of Le Marais.',
+    'HOTEL', true, 4.6, 3,
+    'No smoking. No pets.',
+    'Breakfast served 7–10 AM. Concierge can arrange gallery tours.',
+    1, 47, 6,
+    ST_GeogFromText('SRID=4326;POINT(2.3620 48.8586)')),      -- Paris, FR
+(48,
+    'Jordaan Canal Apartment',
+    'Cozy apartment on a quiet Jordaan canal, close to local markets and independent boutiques.',
+    'HOME', true, 4.5, 5,
+    'No smoking. Narrow staircase, limited storage for large luggage.',
+    'Bicycle available for guest use. Market held nearby on Mondays and Saturdays.',
+    3, 48, 1,
+    ST_GeogFromText('SRID=4326;POINT(4.8838 52.3745)'))       -- Amsterdam, NL
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('stay', 'id'), COALESCE(MAX(id), 1)) FROM stay;
+
+
+-- ============================================================
+-- 9. ADDITIONAL ROOMS  (ids 58-75, for stays 36-48)
+-- ============================================================
+
+INSERT INTO room (id, stay_id, name, price, sleeps, bedroom_amount, bathrooms, size) VALUES
+-- Stay 36 — HOME
+(58, 36, 'Hillside Studio',           78.00, 2, 1, 1.0,  32.0),
+-- Stay 37 — HOTEL: two rooms
+(59, 37, 'Colorful Facade Double',   130.00, 2, 1, 1.0,  28.0),
+(60, 37, 'Cerro View Suite',         195.00, 3, 1, 1.5,  38.0),
+-- Stay 38 — HOME
+(61, 38, 'Portside Loft Room',        92.00, 2, 1, 1.0,  45.0),
+-- Stay 39 — HOME
+(62, 39, 'Artist Studio Room',        68.00, 2, 1, 1.0,  30.0),
+-- Stay 40 — HOTEL: two rooms
+(63, 40, 'Capsule Pod',               45.00, 1, 1, 0.5,   8.0),
+(64, 40, 'Deluxe Capsule Suite',      95.00, 2, 1, 1.0,  15.0),
+-- Stay 41 — HOME
+(65, 41, 'Tatami Room',               88.00, 2, 1, 1.0,  25.0),
+-- Stay 42 — HOTEL: two rooms
+(66, 42, 'Pop Art Double',           175.00, 2, 1, 1.0,  26.0),
+(67, 42, 'Design Loft Suite',        310.00, 3, 2, 1.5,  48.0),
+-- Stay 43 — HOME
+(68, 43, 'Gothic Quarter Room',      105.00, 3, 1, 1.0,  42.0),
+-- Stay 44 — HOTEL: two rooms
+(69, 44, 'Basilica View Double',     210.00, 2, 1, 1.0,  30.0),
+(70, 44, 'Gaudí Suite',              350.00, 3, 1, 1.5,  45.0),
+-- Stay 45 — HOME
+(71, 45, 'Beach House Room',         145.00, 4, 2, 1.5,  58.0),
+-- Stay 46 — HOME
+(72, 46, 'Artist Studio',             82.00, 2, 1, 1.0,  28.0),
+-- Stay 47 — HOTEL: two rooms
+(73, 47, 'Marais Classic Double',    240.00, 2, 1, 1.0,  26.0),
+(74, 47, 'Marais Suite',             420.00, 3, 1, 1.5,  42.0),
+-- Stay 48 — HOME
+(75, 48, 'Canal View Studio',        165.00, 2, 1, 1.0,  32.0)
+ON CONFLICT (id) DO NOTHING;
+SELECT setval(pg_get_serial_sequence('room', 'id'), COALESCE(MAX(id), 1)) FROM room;
+
+-- Room-level amenities, same rationale as section 3's room_amenity block.
+INSERT INTO room_amenity (room_id, amenity_id) VALUES
+(58, 4),          -- Stay 36
+(59, 2), (60, 14),-- Stay 37 (split across rooms)
+(61, 4),          -- Stay 38
+(64, 2),          -- Stay 40
+(66, 2),          -- Stay 42
+(68, 4),          -- Stay 43
+(69, 2),          -- Stay 44
+(71, 7),          -- Stay 45
+(72, 4),          -- Stay 46
+(73, 2),          -- Stay 47
+(75, 4)           -- Stay 48
+ON CONFLICT DO NOTHING;
+
+
+-- ============================================================
+-- 10. ADDITIONAL STAY ATTRIBUTES  (bridge tables, stays 36-48)
+-- ============================================================
+
+INSERT INTO stay_view (stay_id, view_id) VALUES
+(36, 1),          -- Valparaíso hillside apartment: Ocean View
+(37, 1),          -- Valparaíso boutique hotel: Ocean View
+(38, 1),          -- Valparaíso portside loft: Ocean View
+(39, 3),          -- Valparaíso artist house: City Skyline
+(40, 3),          -- Tokyo capsule hotel: City Skyline
+(41, 4),          -- Tokyo traditional inn: Garden View
+(42, 3),          -- Tokyo design hotel: City Skyline
+(43, 3),          -- Barcelona Gothic Quarter: City Skyline
+(44, 3),          -- Barcelona Sagrada Família hotel: City Skyline
+(45, 1),          -- Barcelona beach house: Ocean View
+(46, 3),          -- Paris Montmartre studio: City Skyline
+(47, 3),          -- Paris Le Marais hotel: City Skyline
+(48, 7)           -- Amsterdam Jordaan apartment: Lake View (canal)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO stay_amenity (stay_id, amenity_id) VALUES
+(36, 1), (36, 4),
+(37, 1), (37, 2), (37, 13),
+(38, 1), (38, 4),
+(39, 1), (39, 9),
+(40, 1), (40, 2),
+(41, 1), (41, 4),
+(42, 1), (42, 2), (42, 13),
+(43, 1), (43, 4),
+(44, 1), (44, 2), (44, 10),
+(45, 1), (45, 3), (45, 7),
+(46, 1), (46, 4),
+(47, 1), (47, 2), (47, 10),
+(48, 1), (48, 4)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO stay_accessibility (stay_id, accessibility_id) VALUES
+(37, 3),
+(40, 3),
+(44, 1), (44, 3)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO stay_meal_plan (stay_id, meal_plan_id) VALUES
+(36, 1),
+(37, 1), (37, 2),
+(38, 1),
+(39, 1),
+(40, 1),
+(41, 1), (41, 2),
+(42, 1), (42, 2),
+(43, 1),
+(44, 1), (44, 2),
+(45, 1),
+(46, 1),
+(47, 1), (47, 2),
+(48, 1)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO stay_payment_type (stay_id, payment_type_id) VALUES
+(36, 1), (36, 2),
+(37, 1), (37, 2), (37, 4),
+(38, 1),
+(39, 1), (39, 5),
+(40, 1), (40, 4),
+(41, 1),
+(42, 1), (42, 2), (42, 4),
+(43, 1), (43, 2),
+(44, 1), (44, 2), (44, 4),
+(45, 1), (45, 2),
+(46, 1),
+(47, 1), (47, 2), (47, 4),
+(48, 1), (48, 2)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO stay_traveler_experience (stay_id, traveler_experience_id) VALUES
+(36, 2), (36, 7),
+(37, 2), (37, 3),
+(38, 5), (38, 7),
+(39, 5), (39, 7),
+(40, 5), (40, 7),
+(41, 2), (41, 4),
+(42, 3), (42, 7),
+(43, 2), (43, 5),
+(44, 2), (44, 3),
+(45, 1), (45, 2),
+(46, 2), (46, 7),
+(47, 2), (47, 3),
+(48, 2), (48, 7)
 ON CONFLICT DO NOTHING;
