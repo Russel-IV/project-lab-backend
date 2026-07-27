@@ -111,7 +111,8 @@ class PaymentIntentServiceTest {
 
     @Test
     fun createPaymentIntentRejectsCheckInInPast() {
-        val request = baseRequest(checkIn = LocalDate.now().minusDays(1))
+        // Beyond the 1-day cross-timezone grace window (see PaymentIntentService.createPaymentIntent).
+        val request = baseRequest(checkIn = LocalDate.now().minusDays(3))
         stubNoExistingIntent(request)
 
         val ex = assertThrows(ResponseStatusException::class.java) { paymentIntentService.createPaymentIntent(request) }

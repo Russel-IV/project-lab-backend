@@ -216,7 +216,8 @@ class BookingServiceTest {
 
     @Test
     fun createBookingRejectsCheckInInPast() {
-        val request = baseRequest(checkIn = LocalDate.now().minusDays(1))
+        // Beyond the 1-day cross-timezone grace window (see BookingService.createBooking).
+        val request = baseRequest(checkIn = LocalDate.now().minusDays(3))
         stubPaymentIntent(request, amount = 10000)
 
         val ex = assertThrows(ResponseStatusException::class.java) { bookingService.createBooking(request) }

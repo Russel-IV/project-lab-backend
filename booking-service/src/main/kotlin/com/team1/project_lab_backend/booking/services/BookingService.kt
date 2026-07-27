@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 private val ACTIVE_STATUSES = listOf(BookingStatus.PENDING, BookingStatus.CONFIRMED)
 
@@ -117,8 +118,12 @@ class BookingService(
         }
         request.roomIds.requireAllPositive("roomIds")
 
-        val today = LocalDate.now()
-        if (request.checkInDate.isBefore(today)) {
+        // checkInDate arrives as a plain (timezone-naive) calendar date computed in the
+        // client's local timezone, compared here against the server's UTC clock — a
+        // client west of UTC (e.g. Chile) can still be "today" locally while UTC has
+        // already rolled to tomorrow. A 1-day grace absorbs any client timezone offset.
+        val today = LocalDate.now(ZoneOffset.UTC)
+        if (request.checkInDate.isBefore(today.minusDays(1))) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "checkInDate must not be in the past")
         }
         if (request.checkInDate.isAfter(today.plusMonths(6))) {
