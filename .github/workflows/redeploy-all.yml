@@ -121,14 +121,23 @@ jobs:
               echo "Starting service $svc..."
               docker compose -f docker-compose.prod.yml up -d "$svc"
               port=$(get_port "$svc")
-              echo "Waiting for $svc on http://localhost:$port/actuator/health..."
-              while true; do
-                if curl -sf "http://localhost:$port/actuator/health" >/dev/null; then
-                  echo "$svc is up and healthy."
+              echo "Waiting for $svc health on internal port $port..."
+              healthy=false
+              for attempt in $(seq 1 30); do
+                if docker exec "$svc" wget -q -O - "http://localhost:$port/actuator/health" 2>/dev/null | grep -q "UP"; then
+                  echo "$svc is up and healthy!"
+                  healthy=true
                   break
                 fi
                 sleep 3
               done
+
+              if [ "$healthy" = "false" ]; then
+                echo "ERROR: $svc failed to report healthy within 90 seconds."
+                docker logs "$svc" --tail 50
+                exit 1
+              fi
+
               echo "Pausing 5 seconds before starting the next service..."
               sleep 5
             done
