@@ -85,4 +85,12 @@ for entry in "${FRAGMENTS_AFTER_MEDIA[@]}"; do
     load_fragment "$entry"
 done
 
+echo "Triggering chatbot knowledge ingestion..."
+CHATBOT_URL="${CHATBOT_URL:-http://localhost:8086}"
+if curl -sf -X POST "${CHATBOT_URL}/internal/chat/ingest" >/dev/null 2>&1; then
+    echo "Chatbot static knowledge successfully ingested."
+else
+    echo "Warning: Chatbot ingestion failed or chatbot-service is not responding." >&2
+fi
+
 echo "Done."
