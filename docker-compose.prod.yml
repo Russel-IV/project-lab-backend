@@ -156,6 +156,8 @@ services:
         container_name: media-service
         mem_limit: 1024m
         restart: "no"
+        ports:
+            - "8085:8085"
         volumes:
             - uploads:/app/uploads
         environment:

@@ -77,10 +77,15 @@ owner_has_caption() {
     local owner_type="$1" owner_id="$2" caption="$3"
     local existing
     existing="$(
-        curl -sf "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" | python3 -c '
+        curl -sf "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" 2>/dev/null | python3 -c '
 import json, sys
-for m in json.load(sys.stdin):
-    print(m.get("caption") or "")
+try:
+    data = json.load(sys.stdin)
+    if isinstance(data, list):
+        for m in data:
+            print(m.get("caption") or "")
+except Exception:
+    pass
 '
     )" || existing=""
     grep -qxF "$caption" <<<"$existing"
