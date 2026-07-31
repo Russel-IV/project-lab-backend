@@ -18,12 +18,14 @@ import org.springframework.context.annotation.Configuration
 class ChatConfig {
 
     /**
-     * Defines an in-memory chat memory store for managing conversational history.
+     * Defines an expiring in-memory chat memory store for managing conversational history (Strategies A & B).
+     *
+     * @param repository the expiring Caffeine-backed repository
      */
     @Bean
-    fun chatMemory(): ChatMemory {
+    fun chatMemory(repository: ExpiringInMemoryChatMemoryRepository): ChatMemory {
         return MessageWindowChatMemory.builder()
-            .chatMemoryRepository(InMemoryChatMemoryRepository())
+            .chatMemoryRepository(repository)
             .build()
     }
 

@@ -18,6 +18,12 @@ class ChatController(private val chatService: ChatService) {
         return chatService.chat(request.message, request.sessionId)
     }
 
+    @DeleteMapping("/{sessionId}")
+    suspend fun clearSession(@PathVariable sessionId: String): org.springframework.http.ResponseEntity<Void> {
+        chatService.clearSession(sessionId)
+        return org.springframework.http.ResponseEntity.noContent().build()
+    }
+
     @PostMapping("/ingest")
     suspend fun ingestData(): Map<String, String> {
         return chatService.ingestData()

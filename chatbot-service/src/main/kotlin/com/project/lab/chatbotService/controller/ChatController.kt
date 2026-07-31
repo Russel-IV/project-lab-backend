@@ -46,6 +46,21 @@ class ChatController(
     }
 
     /**
+     * Endpoint to explicitly clear conversation memory for a session (Strategy A).
+     *
+     * @param sessionId the session identifier to clear
+     * @return 204 No Content response
+     */
+    @DeleteMapping("/{sessionId}")
+    fun clearSession(@PathVariable sessionId: String): ResponseEntity<Void> {
+        if (sessionId.isBlank()) {
+            return ResponseEntity.badRequest().build()
+        }
+        chatService.clearSession(sessionId)
+        return ResponseEntity.noContent().build()
+    }
+
+    /**
      * Endpoint to manually trigger database-to-vector store ingestion.
      *
      * @return response indicating the outcome of the ingestion process

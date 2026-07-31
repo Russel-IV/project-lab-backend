@@ -1,6 +1,7 @@
 package com.project.lab.chatbotService.service
 
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.stereotype.Service
 
 /**
@@ -13,7 +14,11 @@ class ChatService(
      * The ChatClient is the core Spring AI abstraction used to communicate with the LLM (OpenAI model).
      * It is pre-configured in ChatConfig.kt, with default system instructions, advisors (memory and RAG), and tool calling configurations.
      */
-    private val chatClient: ChatClient
+    private val chatClient: ChatClient,
+    /**
+     * The ChatMemory store used to manage and clear conversation sessions.
+     */
+    private val chatMemory: ChatMemory
 ) {
 
     /**
@@ -32,6 +37,15 @@ class ChatService(
             }
             .call()
             .content() ?: "I'm sorry, I could not process that request."
+    }
+
+    /**
+     * Explicitly clears the conversation memory for the given session ID (Strategy A).
+     *
+     * @param sessionId the session identifier to purge
+     */
+    fun clearSession(sessionId: String) {
+        chatMemory.clear(sessionId)
     }
 }
 
