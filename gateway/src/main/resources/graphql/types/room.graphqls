@@ -19,6 +19,8 @@ type Room {
     pictures: [RoomPicture!]!
     "In-room amenities (e.g. air conditioning, kitchen, balcony)."
     amenities: [Amenity!]!
+    "The stay this room belongs to."
+    stay: Stay!
 }
 
 "A photo associated with a room."
