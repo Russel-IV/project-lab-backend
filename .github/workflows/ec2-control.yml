@@ -13,6 +13,11 @@ on:
         options:
           - start
           - stop
+      start_containers:
+        description: 'Start Docker containers after EC2 boots'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   id-token: write  # Required for AWS OIDC authentication
@@ -49,3 +54,38 @@ jobs:
             aws ec2 wait instance-stopped --instance-ids "$INSTANCE_ID"
             echo "EC2 Instance is now stopped!"
           fi
+
+      - name: Log in to Amazon ECR
+        if: ${{ github.event.inputs.action == 'start' && github.event.inputs.start_containers == true }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: SSH and Start Containers
+        if: ${{ github.event.inputs.action == 'start' && github.event.inputs.start_containers == true }}
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          STORAGE_TYPE: ${{ secrets.STORAGE_TYPE }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+          SPRING_AI_OPENAI_API_KEY: ${{ secrets.SPRING_AI_OPENAI_API_KEY }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY,IMAGE_TAG,AWS_REGION,STORAGE_TYPE,AWS_S3_BUCKET,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS,SPRING_AI_OPENAI_API_KEY
+          script: |
+            set -e
+            cd ~/project-lab-backend
+            echo "Logging in to ECR on host..."
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+            echo "Starting Docker containers..."
+            docker compose -f docker-compose.prod.yml up -d
