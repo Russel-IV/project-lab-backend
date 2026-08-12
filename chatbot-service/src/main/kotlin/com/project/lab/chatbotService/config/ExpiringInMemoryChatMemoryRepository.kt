@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Expiring in-memory repository for chat session history.
- * Employs Strategy B (TTL Eviction) using a Caffeine Cache to automatically
+ * Employs TTL Eviction using a Caffeine Cache to automatically
  * evict inactive conversation memory after 30 minutes of inactivity.
  */
 @Component

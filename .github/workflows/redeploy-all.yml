@@ -1,7 +1,7 @@
-name: Redeploy All Services
+name: Redeploy & Reset Stack
 
-# Manual workflow to stop all services on EC2, pull the latest images from ECR,
-# and start them up again. This does not compile or build images from source.
+# Manual workflow to stop/restart services on EC2, pull latest ECR images,
+# and optionally wipe persistent database volumes (-v) & seed fresh data.
 
 on:
   workflow_dispatch:
@@ -11,6 +11,11 @@ on:
         required: true
         default: 'latest'
         type: string
+      reset_data:
+        description: 'Wipe database volumes (-v) and seed fresh data'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   id-token: write  # Required for AWS OIDC authentication
@@ -34,13 +39,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Copy docker-compose.prod.yml to the EC2 host
+      - name: Copy configuration and scripts to EC2 host
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.prod.yml"
+          source: "docker-compose.prod.yml,scripts/**"
           target: "~/project-lab-backend"
           strip_components: 0
 
@@ -49,6 +54,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+          RESET_DATA: ${{ github.event.inputs.reset_data }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
@@ -60,7 +66,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: ECR_REGISTRY,IMAGE_TAG,AWS_REGION,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS,SPRING_AI_OPENAI_API_KEY
+          envs: ECR_REGISTRY,IMAGE_TAG,RESET_DATA,AWS_REGION,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,CORS_ALLOWED_ORIGINS,SPRING_AI_OPENAI_API_KEY
           script: |
             set -e
             cd ~/project-lab-backend
@@ -68,10 +74,15 @@ jobs:
             # Log in to ECR on the host
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            echo "Stopping all running containers..."
-            docker compose -f docker-compose.prod.yml down
+            if [ "$RESET_DATA" = "true" ]; then
+              echo "== Wiping all running containers and persistent volumes (-v) =="
+              docker compose -f docker-compose.prod.yml down -v
+            else
+              echo "== Stopping running containers (preserving persistent volumes) =="
+              docker compose -f docker-compose.prod.yml down
+            fi
 
-            echo "Pulling ECR images with tag: $IMAGE_TAG..."
+            echo "== Pulling ECR images with tag: $IMAGE_TAG =="
             docker compose -f docker-compose.prod.yml pull
 
             # Helper function to get port for each service
@@ -87,7 +98,7 @@ jobs:
               esac
             }
 
-            echo "Starting databases and zipkin..."
+            echo "== Starting databases and zipkin =="
             docker compose -f docker-compose.prod.yml up -d project-lab-database review-database media-database identity-database inventory-database booking-database chatbot-database zipkin
 
             # Wait for all databases to report healthy
@@ -103,7 +114,7 @@ jobs:
               done
             done
 
-            echo "Starting eureka-server..."
+            echo "== Starting eureka-server =="
             docker compose -f docker-compose.prod.yml up -d eureka-server
             echo "Waiting for eureka-server to report healthy..."
             while true; do
@@ -115,7 +126,7 @@ jobs:
               sleep 2
             done
 
-            echo "Starting app services sequentially to avoid CPU throttling..."
+            echo "== Starting app services sequentially to avoid CPU throttling =="
             APP_SERVICES="identity-service inventory-service booking-service review-service media-service chatbot-service project-lab-backend"
             for svc in $APP_SERVICES; do
               echo "Starting service $svc..."
@@ -142,7 +153,13 @@ jobs:
               sleep 5
             done
 
-            echo "Cleaning up old/dangling Docker images..."
+            if [ "$RESET_DATA" = "true" ]; then
+              echo "== Executing database seeding and population =="
+              chmod +x scripts/populate-db.sh scripts/seed-media.sh
+              ./scripts/populate-db.sh
+            fi
+
+            echo "== Cleaning up old/dangling Docker images =="
             docker system prune -f
 
-            echo "Stack has been successfully redeployed sequentially!"
+            echo "Stack redeploy completed successfully!"
