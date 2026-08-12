@@ -169,7 +169,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ needs.changes.outputs.any == 'true' && github.sha || 'latest' }}
+          IMAGE_TAG: latest
           AWS_REGION: ${{ secrets.AWS_REGION }}
           CHANGED_SERVICES: ${{ needs.changes.outputs.modules }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
