@@ -79,7 +79,11 @@ for entry in "${FRAGMENTS_BEFORE_MEDIA[@]}"; do
     load_fragment "$entry"
 done
 
-./scripts/seed-media.sh
+if [ -f "scripts/sql/media.sql" ]; then
+    load_fragment "media-database:scripts/sql/media.sql"
+else
+    ./scripts/seed-media.sh
+fi
 
 for entry in "${FRAGMENTS_AFTER_MEDIA[@]}"; do
     load_fragment "$entry"
