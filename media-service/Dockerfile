@@ -19,7 +19,7 @@ COPY media-service/src media-service/src
 RUN --mount=type=cache,target=/root/.m2,id=m2-cache mvn -pl media-service package -DskipTests
 
 FROM eclipse-temurin:24-jre-alpine
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash gcompat libstdc++
 WORKDIR /app
 COPY --from=build /app/media-service/target/media-service-*.jar app.jar
 EXPOSE 8085
