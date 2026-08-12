@@ -53,7 +53,7 @@ IMAGES_DIR="scripts/images"
 MANIFEST="scripts/sql/media-seed.tsv"
 CONTAINER="media-service"
 MEDIA_SERVICE_URL="${MEDIA_SERVICE_URL:-http://localhost:8085}"
-CONCURRENCY="${SEED_MEDIA_CONCURRENCY:-3}"
+CONCURRENCY="${SEED_MEDIA_CONCURRENCY:-1}"
 
 if [ ! -d "$IMAGES_DIR" ]; then
     echo "Error: $IMAGES_DIR not found" >&2
@@ -125,22 +125,29 @@ process_row() {
     }
     echo "Uploading ${src} -> ${owner_type} ${owner_id} '${caption}'..."
 
-    local response http_code body
-    response="$(curl -s -w '\n%{http_code}' -X POST "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" \
-        -F "file=@${src};type=image/jpeg" \
-        -F "caption=${caption}" \
-        -F "isPrimary=${is_primary}" \
-        -F "displayOrder=${display_order}")"
-    http_code="${response##*$'\n'}"
-    body="${response%$'\n'*}"
+    local response http_code body attempt=1 max_attempts=3
+    while [ "$attempt" -le "$max_attempts" ]; do
+        response="$(curl -s -w '\n%{http_code}' -X POST "$MEDIA_SERVICE_URL/api/v1/media/${owner_type}/${owner_id}" \
+            -F "file=@${src};type=image/jpeg" \
+            -F "caption=${caption}" \
+            -F "isPrimary=${is_primary}" \
+            -F "displayOrder=${display_order}")" || response=""
+        http_code="${response##*$'\n'}"
+        body="${response%$'\n'*}"
 
-    if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-        echo "Error: upload failed (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}': ${body}" >&2
-        echo "ERROR" >"$RESULTS_DIR/$result_id"
-        return 1
-    fi
+        if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "UPLOADED" >"$RESULTS_DIR/$result_id"
+            return 0
+        fi
 
-    echo "UPLOADED" >"$RESULTS_DIR/$result_id"
+        echo "Warning: upload attempt $attempt failed (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}'. Retrying in 2s..." >&2
+        attempt=$((attempt + 1))
+        sleep 2
+    done
+
+    echo "Error: upload failed after $max_attempts attempts (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}': ${body}" >&2
+    echo "ERROR" >"$RESULTS_DIR/$result_id"
+    return 1
 }
 
 row_id=0
