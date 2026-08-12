@@ -134,13 +134,16 @@ process_row() {
             -F "displayOrder=${display_order}")" || response=""
         http_code="${response##*$'\n'}"
         body="${response%$'\n'*}"
+        if ! [[ "$http_code" =~ ^[0-9]+$ ]]; then
+            http_code="000"
+        fi
 
         if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
             echo "UPLOADED" >"$RESULTS_DIR/$result_id"
             return 0
         fi
 
-        echo "Warning: upload attempt $attempt failed (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}'. Retrying in 2s..." >&2
+        echo "Warning: upload attempt $attempt failed (HTTP ${http_code}) for ${owner_type} ${owner_id} '${caption}': ${body}. Retrying in 2s..." >&2
         attempt=$((attempt + 1))
         sleep 2
     done
