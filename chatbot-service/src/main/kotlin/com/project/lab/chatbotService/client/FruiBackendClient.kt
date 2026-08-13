@@ -50,23 +50,29 @@ class FruiBackendClient(
         propertyType: String? = null,
         minPrice: BigDecimal? = null,
         maxPrice: BigDecimal? = null,
-        guests: Int? = null
+        guests: Int? = null,
+        checkIn: String? = null,
+        checkOut: String? = null
     ): List<Stay> {
         val query = """
             query(${'$'}filter: StayFilterInput) {
                 stays(filter: ${'$'}filter, page: 0, size: 15) {
-                    id
-                    name
-                    about
-                    propertyType
-                    isRefundable
-                    starRating
-                    startingFromPrice
-                    address {
-                        streetAddress
-                        city
-                        countryCode
+                    items {
+                        id
+                        name
+                        about
+                        propertyType
+                        isRefundable
+                        starRating
+                        startingFromPrice
+                        address {
+                            streetAddress
+                            city
+                            countryCode
+                        }
                     }
+                    totalCount
+                    hasNextPage
                 }
             }
         """.trimIndent()
@@ -78,6 +84,8 @@ class FruiBackendClient(
         if (minPrice != null) filter["minPricePerNight"] = minPrice
         if (maxPrice != null) filter["maxPricePerNight"] = maxPrice
         if (guests != null) filter["guests"] = guests
+        if (checkIn != null) filter["checkIn"] = checkIn
+        if (checkOut != null) filter["checkOut"] = checkOut
 
         val variables = mapOf("filter" to filter)
 
@@ -95,8 +103,9 @@ class FruiBackendClient(
                 logger.error("GraphQL Search Errors: {}", parsed.errors)
             }
 
-            val staysData = parsed.data?.get("stays") ?: return emptyList()
-            return objectMapper.convertValue(staysData, object : TypeReference<List<Stay>>() {})
+            val staysConnection = parsed.data?.get("stays") as? Map<*, *>
+            val itemsData = staysConnection?.get("items") ?: return emptyList()
+            return objectMapper.convertValue(itemsData, object : TypeReference<List<Stay>>() {})
         } catch (e: Exception) {
             logger.error("Failed to query stays from backend", e)
             return emptyList()

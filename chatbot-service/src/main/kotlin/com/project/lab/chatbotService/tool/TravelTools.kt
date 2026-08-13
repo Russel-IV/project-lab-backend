@@ -13,16 +13,18 @@ import java.math.BigDecimal
 class TravelTools(private val fruiBackendClient: FruiBackendClient) {
 
     /**
-     * Search stays by location, price, and capacity.
+     * Search stays by location, dates, price, and capacity matching searchForm criteria.
      */
-    @Tool(description = "Search stays and accommodations by criteria such as city, country code, property type (HOTEL or HOME), min/max price per night, and number of guests capacity.")
+    @Tool(description = "Search stays and accommodations matching searchForm criteria such as city, checkIn date (YYYY-MM-DD), checkOut date (YYYY-MM-DD), guests capacity, country code, property type (HOTEL or HOME), and min/max price per night.")
     fun searchStays(
         city: String? = null,
         countryCode: String? = null,
         propertyType: String? = null,
         minPrice: BigDecimal? = null,
         maxPrice: BigDecimal? = null,
-        guests: Int? = null
+        guests: Int? = null,
+        checkIn: String? = null,
+        checkOut: String? = null
     ): List<Stay> {
         return fruiBackendClient.searchStays(
             city = city,
@@ -30,7 +32,9 @@ class TravelTools(private val fruiBackendClient: FruiBackendClient) {
             propertyType = propertyType,
             minPrice = minPrice,
             maxPrice = maxPrice,
-            guests = guests
+            guests = guests,
+            checkIn = checkIn,
+            checkOut = checkOut
         )
     }
 
