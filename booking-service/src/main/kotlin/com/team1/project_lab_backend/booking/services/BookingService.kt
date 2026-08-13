@@ -11,6 +11,7 @@ import com.team1.project_lab_backend.util.orNotFound
 import com.team1.project_lab_backend.util.requireAllPositive
 import com.team1.project_lab_backend.util.requireNotBlank
 import com.team1.project_lab_backend.util.requirePositive
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
@@ -30,7 +31,12 @@ class BookingService(
     private val roomFeignClient: RoomFeignClient,
     private val paymentIntentRepository: PaymentIntentRepository,
     private val stripeClient: StripeClient,
+    private val userFeignClient: UserFeignClient,
+    private val stayFeignClient: StayFeignClient,
+    private val emailFeignClient: EmailFeignClient,
 ) {
+    private val logger = LoggerFactory.getLogger(BookingService::class.java)
+
     @Transactional(readOnly = true)
     fun getAllBookings(
         page: Int = 0,
@@ -205,7 +211,35 @@ class BookingService(
                 roomIds = paymentIntent.roomIds,
             ),
         )
+        sendBookingConfirmationEmail(saved, rooms.first().stayId)
         return saved
+    }
+
+    // Best-effort, mirroring identity-service's own EmailService: a notification
+    // failure (Feign timeout, SMTP down, etc.) must never fail booking creation itself.
+    private fun sendBookingConfirmationEmail(
+        booking: Booking,
+        stayId: Int,
+    ) {
+        try {
+            val user = userFeignClient.get(booking.userId)
+            val email = user.email ?: return
+            val stay = stayFeignClient.get(stayId)
+            emailFeignClient.sendBookingConfirmation(
+                BookingConfirmationEmailRequest(
+                    email = email,
+                    name = user.name,
+                    stayName = stay.name,
+                    cityCountry = "${stay.address.city}, ${stay.address.countryCode}",
+                    checkInDate = booking.checkInDate,
+                    checkOutDate = booking.checkOutDate,
+                    totalPrice = booking.totalPrice,
+                    bookingId = booking.id,
+                ),
+            )
+        } catch (e: Exception) {
+            logger.warn("Failed to send booking confirmation email for booking {}", booking.id, e)
+        }
     }
 
     @Transactional

@@ -207,6 +207,11 @@ class AuthServiceTest {
 
         service.confirmAccount("good-token")
 
-        Mockito.verify(userRepository).save(Mockito.argThat { assertNotNull(it.emailConfirmedAt); true })
+        Mockito.verify(userRepository).save(
+            Mockito.argThat {
+                assertNotNull(it.emailConfirmedAt)
+                true
+            },
+        )
     }
 }

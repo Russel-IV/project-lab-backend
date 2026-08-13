@@ -11,6 +11,8 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.springframework.mail.MailSendException
 import org.springframework.mail.javamail.JavaMailSender
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.Properties
 
 class EmailServiceTest {
@@ -83,6 +85,43 @@ class EmailServiceTest {
 
         assertDoesNotThrow {
             service.sendAccountConfirmationEmail("ada@example.com", "Ada", "http://localhost:5173/confirm-account?token=abc")
+        }
+    }
+
+    @Test
+    fun sendBookingConfirmationEmailSendsMessageToRecipient() {
+        service.sendBookingConfirmationEmail(
+            to = "ada@example.com",
+            name = "Ada",
+            stayName = "Sunny Loft",
+            cityCountry = "Lisbon, PT",
+            checkInDate = LocalDate.of(2026, 9, 1),
+            checkOutDate = LocalDate.of(2026, 9, 5),
+            totalPrice = BigDecimal("420.00"),
+            bookingId = 123,
+        )
+
+        val message = capturedMessage()
+        assertTrue(message.allRecipients.any { it.toString() == "ada@example.com" })
+        assertTrue(message.subject.contains("Frui"))
+    }
+
+    @Test
+    fun sendBookingConfirmationEmailSwallowsMailException() {
+        Mockito.`when`(mailSender.send(any(MimeMessage::class.java)))
+            .thenThrow(MailSendException("smtp down"))
+
+        assertDoesNotThrow {
+            service.sendBookingConfirmationEmail(
+                to = "ada@example.com",
+                name = "Ada",
+                stayName = "Sunny Loft",
+                cityCountry = "Lisbon, PT",
+                checkInDate = LocalDate.of(2026, 9, 1),
+                checkOutDate = LocalDate.of(2026, 9, 5),
+                totalPrice = BigDecimal("420.00"),
+                bookingId = 123,
+            )
         }
     }
 }

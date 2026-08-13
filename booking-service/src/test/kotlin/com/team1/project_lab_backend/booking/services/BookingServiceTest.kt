@@ -30,8 +30,20 @@ class BookingServiceTest {
     private val roomFeignClient = Mockito.mock(RoomFeignClient::class.java)
     private val paymentIntentRepository = Mockito.mock(PaymentIntentRepository::class.java)
     private val stripeClient = Mockito.mock(StripeClient::class.java)
+    private val userFeignClient = Mockito.mock(UserFeignClient::class.java)
+    private val stayFeignClient = Mockito.mock(StayFeignClient::class.java)
+    private val emailFeignClient = Mockito.mock(EmailFeignClient::class.java)
 
-    private val bookingService = BookingService(bookingRepository, roomFeignClient, paymentIntentRepository, stripeClient)
+    private val bookingService =
+        BookingService(
+            bookingRepository,
+            roomFeignClient,
+            paymentIntentRepository,
+            stripeClient,
+            userFeignClient,
+            stayFeignClient,
+            emailFeignClient,
+        )
 
     private val tomorrow: LocalDate = LocalDate.now().plusDays(1)
     private val dayAfterTomorrow: LocalDate = LocalDate.now().plusDays(2)
@@ -146,6 +158,56 @@ class BookingServiceTest {
     }
 
     @Test
+    fun createBookingSendsConfirmationEmail() {
+        stubHappyPath()
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
+        Mockito.`when`(userFeignClient.get(1)).thenReturn(UserRef(id = 1, name = "Ada", email = "ada@example.com"))
+        Mockito.`when`(stayFeignClient.get(1)).thenReturn(
+            StayRef(id = 1, name = "Sunny Loft", address = StayAddressRef(city = "Lisbon", countryCode = "PT")),
+        )
+        // ArgumentCaptor.capture() returns null, which trips Kotlin's compiler-inserted
+        // null-check when passed directly into a Kotlin (non-Java-platform-typed)
+        // non-null parameter, as EmailFeignClient's is — capture into a nullable var
+        // via doAnswer instead, which sidesteps that check.
+        var sentRequest: BookingConfirmationEmailRequest? = null
+        Mockito.doAnswer { invocation ->
+            sentRequest = invocation.getArgument(0)
+            null
+        }.`when`(emailFeignClient).sendBookingConfirmation(anyArg())
+
+        bookingService.createBooking(request)
+
+        assertEquals("ada@example.com", sentRequest?.email)
+        assertEquals("Sunny Loft", sentRequest?.stayName)
+        assertEquals(99, sentRequest?.bookingId)
+    }
+
+    @Test
+    fun createBookingStillReturnsBookingWhenEmailFeignClientFails() {
+        stubHappyPath()
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
+        Mockito.`when`(userFeignClient.get(1)).thenThrow(RuntimeException("identity-service unreachable"))
+
+        val result = bookingService.createBooking(request)
+
+        assertEquals(99, result.id)
+    }
+
+    @Test
+    fun createBookingSkipsEmailWhenUserHasNoEmail() {
+        stubHappyPath()
+        val request = baseRequest()
+        stubPaymentIntent(request, amount = 10000)
+        Mockito.`when`(userFeignClient.get(1)).thenReturn(UserRef(id = 1, name = "Ada", email = null))
+
+        bookingService.createBooking(request)
+
+        Mockito.verify(emailFeignClient, Mockito.never()).sendBookingConfirmation(anyArg())
+    }
+
+    @Test
     fun createBookingReplaysExistingBookingWhenPaymentIntentAlreadyConsumed() {
         val request = baseRequest()
         stubPaymentIntent(request, amount = 10000, bookingId = 42)
@@ -166,6 +228,7 @@ class BookingServiceTest {
 
         assertEquals(42, result.id)
         Mockito.verify(bookingRepository, Mockito.never()).save(anyArg())
+        Mockito.verify(emailFeignClient, Mockito.never()).sendBookingConfirmation(anyArg())
     }
 
     @Test
