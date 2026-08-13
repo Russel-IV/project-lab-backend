@@ -288,6 +288,7 @@ services:
             - BOOKING_DB_NAME=${POSTGRES_DB}
             - BOOKING_DB_USER=${POSTGRES_USER}
             - BOOKING_DB_PASSWORD=${POSTGRES_PASSWORD}
+            - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
         depends_on:
