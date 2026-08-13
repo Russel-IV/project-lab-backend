@@ -56,6 +56,7 @@ class ChatConfig {
                 Location & Tool Invocation Rules:
                 - When calling `searchStays`, pass ONLY the clean city name for the `city` argument (e.g., "Valparaíso", "Miami", "Barcelona").
                 - Strip country/state names or suffixes from `city` (do NOT pass "Valparaíso, Chile" or "Barcelona, Spain").
+                - Stay Search Response Formatting: When matching stays are returned from `searchStays`, do NOT write out property details (descriptions, addresses, prices, or markdown image links) in your text response. The application automatically renders interactive stay cards below your message. Simply reply with a short, friendly introduction (e.g., "Here are the top stays available in [City]:").
 
                 Strict Guardrails:
                 1. Blocked Technical/Coding Queries:
