@@ -36,4 +36,6 @@ open class User(
     open val profilePictureUrl: String? = null,
     @Column(name = "deleted_at")
     open val deletedAt: LocalDateTime? = null,
+    @Column(name = "email_confirmed_at")
+    open val emailConfirmedAt: LocalDateTime? = null,
 )

@@ -238,6 +238,9 @@ services:
             - IDENTITY_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+            - GOOGLE_ACCOUNT_EMAIL=${GOOGLE_ACCOUNT_EMAIL}
+            - GOOGLE_APP_PASSWORD=${GOOGLE_APP_PASSWORD}
+            - APP_FRONTEND_URL=${APP_FRONTEND_URL:-http://localhost:5173}
             # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
             # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
             # MaxRAMPercentage only means something because mem_limit above sets a

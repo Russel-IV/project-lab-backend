@@ -15,3 +15,16 @@ data class AuthResponse(
     val token: String,
     val user: ProfileResponse,
 )
+
+data class PasswordResetRequestRequest(
+    val email: String,
+)
+
+data class PasswordResetConfirmRequest(
+    val token: String,
+    val newPassword: String,
+)
+
+data class ConfirmAccountRequest(
+    val token: String,
+)
