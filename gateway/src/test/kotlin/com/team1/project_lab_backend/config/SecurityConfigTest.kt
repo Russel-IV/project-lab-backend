@@ -21,7 +21,8 @@ private const val SECRET = "test-secret-key-must-be-at-least-256-bits-long-for-h
  */
 class SecurityConfigTest {
     private val jwtProperties = JwtProperties(secret = SECRET, expiryMs = 60_000)
-    private val securityConfig = SecurityConfig(jwtProperties, corsAllowedOrigins = "http://localhost:3000")
+    private val securityConfig =
+        SecurityConfig(jwtProperties, RateLimitProperties(), corsAllowedOrigins = "http://localhost:3000")
     private val decoder = securityConfig.jwtDecoder()
 
     private fun tokenFor(

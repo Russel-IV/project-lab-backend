@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken
 import org.springframework.security.oauth2.server.resource.web.server.authentication.ServerBearerTokenAuthenticationConverter
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter
 import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter
@@ -32,20 +33,12 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.crypto.spec.SecretKeySpec
 
-/**
- * WebFlux equivalent of the pre-docs/adr/0025 SecurityConfig — see that ADR for
- * why the gateway (and only the gateway) is reactive. API shapes below were
- * verified against the actual spring-security-{config,oauth2-resource-server}
- * 7.0.5 jars (ServerHttpSecurity.OAuth2ResourceServerSpec, JwtSpec,
- * ServerBearerTokenAuthenticationConverter) rather than assumed symmetric with
- * the servlet-stack API, per this project's established "don't trust it just
- * works" caution around Spring Boot's auto-config splits.
- */
 @Configuration
 @EnableWebFluxSecurity
-@EnableConfigurationProperties(JwtProperties::class)
+@EnableConfigurationProperties(JwtProperties::class, RateLimitProperties::class)
 class SecurityConfig(
     private val jwtProperties: JwtProperties,
+    private val rateLimitProperties: RateLimitProperties,
     @Value("\${app.cors.allowed-origins}") private val corsAllowedOrigins: String,
 ) {
     @Bean
@@ -63,14 +56,10 @@ class SecurityConfig(
                     .bearerTokenConverter(bearerTokenConverter(jwtDecoder))
                     .jwt { jwt -> jwt.jwtDecoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter()) }
             }
+            .addFilterAfter(RateLimitFilter(rateLimitProperties), SecurityWebFiltersOrder.AUTHENTICATION)
         return http.build()
     }
 
-    /**
-     * NimbusReactiveJwtDecoder wired explicitly for the same reason the MVC
-     * config wired NimbusJwtDecoder explicitly — pinned to HS256 to match
-     * JwtService's explicit signWith(key, Jwts.SIG.HS256).
-     */
     @Bean
     fun jwtDecoder(): ReactiveJwtDecoder =
         NimbusReactiveJwtDecoder
@@ -78,18 +67,6 @@ class SecurityConfig(
             .macAlgorithm(MacAlgorithm.HS256)
             .build()
 
-    /**
-     * Reactive equivalent of the MVC config's forgiving BearerTokenResolver.
-     * ServerHttpSecurity has no bearerTokenResolver hook — the reactive resource
-     * server instead takes a ServerAuthenticationConverter that must produce a
-     * full (still-unauthenticated) Authentication, not just a token string,
-     * which JwtSpec's jwtDecoder/jwtAuthenticationConverter then authenticate.
-     * This wraps the stock ServerBearerTokenAuthenticationConverter and
-     * pre-validates the extracted token, resolving to Mono.empty() (not an
-     * error) when it doesn't decode — so a permitAll() route with a bad/expired
-     * token is treated as "no token supplied" rather than rejected outright,
-     * matching the old hand-written JwtAuthFilter's forgiving behavior.
-     */
     private fun bearerTokenConverter(jwtDecoder: ReactiveJwtDecoder): ServerAuthenticationConverter {
         val default = ServerBearerTokenAuthenticationConverter()
         return ServerAuthenticationConverter { exchange ->
@@ -103,15 +80,6 @@ class SecurityConfig(
         }
     }
 
-    /**
-     * `sub` carries the user's opaque publicId (per JwtService.generateToken) so a
-     * decoded token doesn't disclose the raw internal id; `uid` carries that internal
-     * id in a separate claim so per-request internal plumbing (ownership checks, Feign
-     * calls) doesn't need a network round trip to resolve one from the other. `uid` is
-     * only ever readable by the token's own holder, so this isn't a new leak to anyone
-     * else. JwtSpec requires a Mono-returning Converter (unlike the servlet-stack
-     * Converter<Jwt, AbstractAuthenticationToken>).
-     */
     @Bean
     fun jwtAuthenticationConverter(): Converter<Jwt, Mono<AbstractAuthenticationToken>> =
         Converter { jwt ->

@@ -14,17 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's PaymentTypeFeignClient is the
- * only caller.
- */
 @RestController
 @RequestMapping("/internal/payment-types")
 class PaymentTypeController(private val paymentTypeService: PaymentTypeService) {
     @GetMapping
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
-    ): List<PaymentType> = if (ids != null) paymentTypeService.getAllById(ids) else paymentTypeService.getAllPaymentTypes()
+    ): List<PaymentType> =
+        if (ids != null) paymentTypeService.getAllById(ids) else paymentTypeService.getAllPaymentTypes()
 
     @GetMapping("/{id}")
     fun get(

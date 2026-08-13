@@ -28,8 +28,6 @@ open class Address(
     open val postalCode: String? = null,
     @Column(name = "country_code", nullable = false, length = 2)
     open val countryCode: String,
-    // Stable identifier for the (city, country_code) pair (docs/adr/0018) — resolved/
-    // created by StayService.findOrCreateRegion(), not supplied directly by callers.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "region_id", nullable = false)
     open val region: Region,

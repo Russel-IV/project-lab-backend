@@ -14,10 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's ViewFeignClient is the
- * only caller.
- */
 @RestController
 @RequestMapping("/internal/views")
 class ViewController(private val viewService: ViewService) {

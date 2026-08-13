@@ -14,17 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's AccessibilityFeignClient is the
- * only caller.
- */
 @RestController
 @RequestMapping("/internal/accessibilities")
 class AccessibilityController(private val accessibilityService: AccessibilityService) {
     @GetMapping
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
-    ): List<Accessibility> = if (ids != null) accessibilityService.getAllById(ids) else accessibilityService.getAllAccessibility()
+    ): List<Accessibility> =
+        if (ids != null) accessibilityService.getAllById(ids) else accessibilityService.getAllAccessibility()
 
     @GetMapping("/{id}")
     fun get(

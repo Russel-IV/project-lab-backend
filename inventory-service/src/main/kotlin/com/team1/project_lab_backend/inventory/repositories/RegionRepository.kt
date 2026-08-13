@@ -11,20 +11,6 @@ interface RegionRepository : JpaRepository<Region, Int> {
         countryCode: String,
     ): Region?
 
-    // ADR-0020/0023: null search returns everything unfiltered — the additive path the
-    // old no-arg destinations() collapses into. unaccent/similarity are Postgres
-    // extension functions (V3) with no JPQL equivalent, hence nativeQuery. Casting
-    // :search explicitly avoids Postgres failing to infer a type for it when it's only
-    // ever seen inside a function call.
-    //
-    // No ORDER BY/LIMIT here (unlike Phase 3) — ADR-0021 puts ranking in
-    // DestinationService specifically so it's unit-testable without a live Postgres,
-    // so this only fetches candidates + the stay_count each needs to be ranked on;
-    // DestinationService sorts and truncates to `limit` itself. Each address has at
-    // most one stay (address_id is UNIQUE on stay), so COUNT(s.id) needs no DISTINCT.
-    // search(null) also serves as the "everything, with stay_count and curated_rank"
-    // fetch DestinationService.popularDestinations() (docs/adr/0022) partitions and
-    // paginates itself — no separate query needed for that.
     @Query(
         value = """
             SELECT r.id AS id, r.city AS city, r.country_code AS countryCode,

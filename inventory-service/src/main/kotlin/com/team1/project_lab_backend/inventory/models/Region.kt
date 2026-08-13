@@ -19,8 +19,6 @@ open class Region(
     open val countryCode: String,
     @Column(name = "state_province", columnDefinition = "TEXT")
     open val stateProvince: String? = null,
-    // Manually assigned editorial ranking for the empty-query state (docs/adr/0022) —
-    // null means "not curated"; no admin/host-facing way to set this yet, by design.
     @Column(name = "curated_rank")
     open val curatedRank: Int? = null,
 )

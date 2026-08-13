@@ -23,11 +23,6 @@ data class StayRequest(
     val mealPlanIds: Set<Int> = emptySet(),
     val paymentTypeIds: Set<Int> = emptySet(),
     val travelerExperienceIds: Set<Int> = emptySet(),
-    // Not a JTS Point (docs/adr/0010, Phase 5) — this DTO now crosses a real HTTP/JSON
-    // boundary (the Gateway's Feign client), and Point has no Jackson mapping without
-    // an extra datatype module this project doesn't otherwise need. StayService.
-    // buildStay() builds the Point server-side, same GeometryFactory conversion
-    // StayResolver.LocationInput.toPoint() used to do only in the Gateway.
     val latitude: Double? = null,
     val longitude: Double? = null,
 )

@@ -20,10 +20,6 @@ class BookingBatchResolver(
         return bookings.associateWith { loaded[it.userId]!! }
     }
 
-    // Booking is now a plain DTO fully deserialized from booking-service's response
-    // (docs/adr/0002) — its roomIds are already in hand from the parent query, no
-    // extra round trip to booking-service is needed here, only to inventory-service
-    // to resolve those ids into full Room details.
     @BatchMapping
     suspend fun rooms(bookings: List<Booking>): Map<Booking, List<Room>> {
         val allRoomIds = bookings.flatMap { it.roomIds }.distinct()
@@ -31,7 +27,8 @@ class BookingBatchResolver(
             if (allRoomIds.isEmpty()) {
                 emptyMap()
             } else {
-                roomFeignClient.list(ids = allRoomIds, stayId = null, stayIds = null, page = 0, size = 0).associateBy { it.id }
+                roomFeignClient.list(ids = allRoomIds, stayId = null, stayIds = null, page = 0, size = 0)
+                    .associateBy { it.id }
             }
         return bookings.associateWith { booking -> booking.roomIds.mapNotNull { loadedRooms[it] } }
     }

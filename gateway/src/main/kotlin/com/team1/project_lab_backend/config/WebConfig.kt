@@ -12,11 +12,7 @@ import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 import java.nio.file.Path
 
-/**
- * docs/adr/0025: WebFluxConfigurer replaces WebMvcConfigurer. No MultipartConfigElement
- * bean needed — WebFlux streams multipart natively (Part/FilePart), no servlet-style
- * multi-part config to wire.
- */
+
 @Configuration
 class WebConfig(
     @Value("\${app.upload.dir}") private val uploadDir: String,
@@ -28,10 +24,6 @@ class WebConfig(
     }
 }
 
-/**
- * WebFlux has no HandlerInterceptor equivalent for this kind of path-scoped response
- * header — a WebFilter is the standard replacement.
- */
 @Component
 class UploadsContentDispositionFilter : WebFilter {
     override fun filter(

@@ -155,6 +155,21 @@
 			<groupId>org.springframework.modulith</groupId>
 			<artifactId>spring-modulith-api</artifactId>
 		</dependency>
+		<!-- Rate limiting (RateLimitFilter): in-memory token bucket, no distributed
+		     store needed since the gateway runs as a single instance (see
+		     docker-compose.yml's memory budget comment). -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j_jdk17-core</artifactId>
+			<version>8.14.0</version>
+		</dependency>
+		<!-- Bounds RateLimitFilter's per-key bucket cache (expireAfterAccess +
+		     maximumSize) so IP/user churn can't grow memory unboundedly on the
+		     900m-limited gateway container. Version managed by Spring Boot's BOM. -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

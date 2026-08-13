@@ -9,11 +9,6 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
-/**
- * docs/adr/0025: WebFilter replaces OncePerRequestFilter (servlet-only). Same
- * per-request timing/status log line as before; still no hand-written correlation
- * ID (docs/adr/0013 — Micrometer Tracing populates MDC's `traceId`).
- */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 class RequestLoggingFilter : WebFilter {

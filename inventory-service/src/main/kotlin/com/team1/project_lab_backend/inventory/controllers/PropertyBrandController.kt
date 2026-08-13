@@ -14,17 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's PropertyBrandFeignClient is the
- * only caller.
- */
 @RestController
 @RequestMapping("/internal/property-brands")
 class PropertyBrandController(private val propertyBrandService: PropertyBrandService) {
     @GetMapping
     fun list(
         @RequestParam(required = false) ids: List<Int>?,
-    ): List<PropertyBrand> = if (ids != null) propertyBrandService.getAllById(ids) else propertyBrandService.getAllPropertyBrands()
+    ): List<PropertyBrand> =
+        if (ids != null) propertyBrandService.getAllById(ids) else propertyBrandService.getAllPropertyBrands()
 
     @GetMapping("/{id}")
     fun get(

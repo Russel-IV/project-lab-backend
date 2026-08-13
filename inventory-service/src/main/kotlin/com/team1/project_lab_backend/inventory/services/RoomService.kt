@@ -47,11 +47,9 @@ class RoomService(
     @Transactional(readOnly = true)
     fun getRoomsByIds(ids: List<Int>): List<RoomResponse> = roomRepository.findAllById(ids).map { it.toResponse() }
 
-    // Backs the Gateway's StayBatchResolver.rooms()/startingFromPrice() — bulk rooms
-    // across many stays at once (as opposed to getRoomsForStay's single, paginated
-    // stay), same shape as StayRepository's other findByIdInWithX bulk queries.
     @Transactional(readOnly = true)
-    fun getRoomsByStayIds(stayIds: List<Int>): List<RoomResponse> = roomRepository.findByStayIdIn(stayIds).map { it.toResponse() }
+    fun getRoomsByStayIds(stayIds: List<Int>): List<RoomResponse> =
+        roomRepository.findByStayIdIn(stayIds).map { it.toResponse() }
 
     @Transactional
     fun createRoom(
@@ -143,8 +141,10 @@ class RoomService(
         // Room<->Booking availability moved behind a Resilience4j-wrapped Feign call
         // (docs/adr/0010) — see BookingAvailabilityClient/StayService.buildSpec for
         // the same pattern applied to search.
-        val conflictingRoomIds = bookingAvailabilityClient.getConflictingRoomIds(stayRooms.map { it.id }, checkIn, checkOut)
-        return stayRooms.filter { it.id !in conflictingRoomIds && (guests == null || it.sleeps >= guests) }.map { it.toResponse() }
+        val conflictingRoomIds =
+            bookingAvailabilityClient.getConflictingRoomIds(stayRooms.map { it.id }, checkIn, checkOut)
+        return stayRooms.filter { it.id !in conflictingRoomIds && (guests == null || it.sleeps >= guests) }
+            .map { it.toResponse() }
     }
 
     private fun validateRoomRequest(request: RoomRequest) {

@@ -85,11 +85,6 @@ class StayService(
         )
     }
 
-    /**
-     * Reuses [validateFilter] and [buildSpec] unchanged so "which stays match" is always
-     * identical to what [searchStays] returns for the same filter — the whole point of
-     * this being a stats endpoint over the real filtered set, not an approximation.
-     */
     @Transactional(readOnly = true)
     fun getPriceStats(
         filter: StayFilter,
@@ -159,7 +154,12 @@ class StayService(
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
         }
         return stayRepository.save(
-            buildStay(id, request, existingAddressId = existingStay.address.id, existingPublicId = existingStay.publicId),
+            buildStay(
+                id,
+                request,
+                existingAddressId = existingStay.address.id,
+                existingPublicId = existingStay.publicId
+            ),
         ).toResponse()
     }
 
@@ -192,7 +192,10 @@ class StayService(
         request.paymentTypeIds.requireAllPositive("paymentTypeIds")
         request.travelerExperienceIds.requireAllPositive("travelerExperienceIds")
         if ((request.latitude == null) != (request.longitude == null)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "latitude and longitude must both be provided or both omitted")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "latitude and longitude must both be provided or both omitted"
+            )
         }
         request.latitude?.let {
             if (it !in -90.0..90.0) {
@@ -212,11 +215,6 @@ class StayService(
         existingAddressId: Int = 0,
         existingPublicId: UUID? = null,
     ): Stay {
-        // Host lives in identity-service (docs/adr/0002, docs/adr/0011) — a real Feign
-        // call, not a DB join. Host is a genuine opt-in specialization of User (not
-        // every authenticated user has a host profile), so this existence check can't
-        // be dropped as "implied by a valid JWT" the way userId elsewhere in this
-        // migration was.
         try {
             hostFeignClient.get(request.hostId)
         } catch (e: FeignException.NotFound) {
@@ -246,7 +244,11 @@ class StayService(
                 stateProvince = request.address.stateProvince,
                 postalCode = request.address.postalCode,
                 countryCode = request.address.countryCode,
-                region = findOrCreateRegion(request.address.city, request.address.countryCode, request.address.stateProvince),
+                region = findOrCreateRegion(
+                    request.address.city,
+                    request.address.countryCode,
+                    request.address.stateProvince
+                ),
             )
         return Stay(
             id = id,
@@ -277,12 +279,6 @@ class StayService(
         )
     }
 
-    // ADR-0018: region is the stable dedup key for (city, country_code), not the raw
-    // strings — reuse the existing row rather than letting every address write mint a
-    // new one. idx_region_city_country (V5) makes this race-safe under concurrent
-    // creates for a brand-new city: the loser's insert throws a constraint violation
-    // that surfaces as a 500, an acceptable trade-off for how rarely a genuinely new
-    // city is listed for the first time versus building out retry/upsert logic for it.
     private fun findOrCreateRegion(
         city: String,
         countryCode: String,
@@ -422,11 +418,6 @@ class StayService(
                 val checkIn: LocalDate = filter.checkIn
                 val checkOut: LocalDate = filter.checkOut
                 val minSleeps = filter.guests ?: 1
-                // Room<->Booking availability used to be a single correlated SQL
-                // subquery (a live JOIN — Booking lived in the same database). Now
-                // that Booking is a separate service (docs/adr/0010), the conflict
-                // set is fetched once via a Resilience4j-wrapped Feign call and baked
-                // into this predicate as a plain id exclusion list.
                 val conflictingRoomIds = bookingAvailabilityClient.getConflictingRoomIds(null, checkIn, checkOut)
                 val sub = query!!.subquery(Int::class.java)
                 val room = sub.from(Room::class.java)
@@ -506,10 +497,6 @@ class StayService(
         return cb.equal(sub, amenityIds.distinct().size.toLong())
     }
 
-    // "roomAmenityIds" means "somewhere on the property" (StayFilterInput.roomAmenityIds
-    // doc), not "one room has all of these" — so this aggregates across every room of
-    // the stay via room_amenity, same countDistinct-against-requested-size trick as
-    // hasAllAmenities, just correlated on room.stayId instead of stay.id.
     private fun hasAllRoomAmenities(
         root: Root<Stay>,
         query: CriteriaQuery<*>,
@@ -526,10 +513,6 @@ class StayService(
         return cb.equal(sub, amenityIds.distinct().size.toLong())
     }
 
-    // Must run while the @Transactional method that fetched `this` is still open —
-    // address/propertyBrand/the *-to-many collections are lazy, and by the time
-    // Jackson serializes an HTTP response body the session is long closed. See
-    // StayResponse's kdoc.
     private fun Stay.toResponse() =
         StayResponse(
             id = id,

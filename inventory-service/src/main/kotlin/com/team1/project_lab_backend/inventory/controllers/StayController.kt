@@ -18,12 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's StayFeignClient is the only
- * caller. Search takes a POST body (StayFilter has too many optional fields for a
- * clean query-string contract), matching CreateReviewRequest-style plain bodies used
- * elsewhere in this internal API.
- */
 @RestController
 @RequestMapping("/internal/stays")
 class StayController(private val stayService: StayService) {

@@ -15,11 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
-/**
- * Internal-only API (docs/adr/0005) — the Gateway's RoomFeignClient and
- * BookingService (still local until Phase 6, needs room existence/price/capacity
- * data — gateway/booking/services/BookingService.kt) are the only callers.
- */
 @RestController
 @RequestMapping("/internal/rooms")
 class RoomController(private val roomService: RoomService) {
