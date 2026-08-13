@@ -24,10 +24,26 @@ class ChatController(
     )
 
     /**
+     * Compact stay summary DTO for chatbot mini cards.
+     */
+    data class StaySummary(
+        val id: Int,
+        val publicId: String,
+        val name: String,
+        val propertyType: String,
+        val starRating: java.math.BigDecimal? = null,
+        val startingFromPrice: java.math.BigDecimal? = null,
+        val city: String? = null,
+        val countryCode: String? = null,
+        val imageUrl: String? = null
+    )
+
+    /**
      * Data class representing the outgoing chat response.
      */
     data class ChatResponse(
-        val response: String
+        val response: String,
+        val stays: List<StaySummary>? = null
     )
 
     /**
@@ -41,8 +57,8 @@ class ChatController(
         if (request.message.isBlank() || request.sessionId.isBlank()) {
             return ResponseEntity.badRequest().build()
         }
-        val responseText = chatService.chat(request.message, request.sessionId)
-        return ResponseEntity.ok(ChatResponse(responseText))
+        val result = chatService.chat(request.message, request.sessionId)
+        return ResponseEntity.ok(ChatResponse(response = result.text, stays = result.stays.takeIf { it.isNotEmpty() }))
     }
 
     /**

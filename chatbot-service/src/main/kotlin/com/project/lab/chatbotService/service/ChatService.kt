@@ -1,8 +1,18 @@
 package com.project.lab.chatbotService.service
 
+import com.project.lab.chatbotService.context.ChatContext
+import com.project.lab.chatbotService.controller.ChatController.StaySummary
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.stereotype.Service
+
+/**
+ * Result data holder representing response text and stay recommendations.
+ */
+data class ChatResult(
+    val text: String,
+    val stays: List<StaySummary>
+)
 
 /**
  * Service to orchestrate conversational interaction with the LLM.
@@ -18,7 +28,11 @@ class ChatService(
     /**
      * The ChatMemory store used to manage and clear conversation sessions.
      */
-    private val chatMemory: ChatMemory
+    private val chatMemory: ChatMemory,
+    /**
+     * Request-scoped context holder for stay search results.
+     */
+    private val chatContext: ChatContext
 ) {
 
     /**
@@ -27,16 +41,22 @@ class ChatService(
      *
      * @param message the user prompt
      * @param sessionId the conversational session ID
-     * @return the LLM generated response
+     * @return ChatResult containing the LLM text response and stay cards
      */
-    fun chat(message: String, sessionId: String): String {
-        return chatClient.prompt()
+    fun chat(message: String, sessionId: String): ChatResult {
+        chatContext.clear()
+        val content = chatClient.prompt()
             .user(message)
             .advisors { advisorSpec ->
                 advisorSpec.param("chat_memory_conversation_id", sessionId)
             }
             .call()
             .content() ?: "I'm sorry, I could not process that request."
+
+        return ChatResult(
+            text = content,
+            stays = chatContext.recommendedStays
+        )
     }
 
     /**

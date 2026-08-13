@@ -14,6 +14,8 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
+import com.project.lab.chatbotService.service.ChatResult
+
 @WebMvcTest(ChatController::class)
 class ChatControllerTest {
 
@@ -31,7 +33,7 @@ class ChatControllerTest {
     @Test
     fun `test chat endpoint returns response`() {
         val request = ChatController.ChatRequest("Hello", "session-123")
-        `when`(chatService.chat("Hello", "session-123")).thenReturn("Hi traveler!")
+        `when`(chatService.chat("Hello", "session-123")).thenReturn(ChatResult("Hi traveler!", emptyList()))
 
         mockMvc.perform(
             post("/internal/chat")

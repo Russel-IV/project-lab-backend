@@ -64,6 +64,10 @@ data class Stay(
     @JsonPropertyDescription("Physical location address details")
     val address: Address? = null,
 
+    @JsonProperty("publicId")
+    @JsonPropertyDescription("Opaque UUID public identifier for stay URLs")
+    val publicId: String? = null,
+
     @JsonProperty("startingFromPrice")
     @JsonPropertyDescription("Lowest nightly rate for the stay")
     val startingFromPrice: BigDecimal? = null,
@@ -74,7 +78,33 @@ data class Stay(
 
     @JsonProperty("views")
     @JsonPropertyDescription("List of available room view types (e.g. Ocean View)")
-    val views: List<View>? = null
+    val views: List<View>? = null,
+
+    @JsonProperty("pictures")
+    @JsonPropertyDescription("Photos associated with the stay")
+    val pictures: List<StayPicture>? = null
+)
+
+/**
+ * DTO representing a photo associated with a stay.
+ */
+@JsonClassDescription("Photo associated with a stay")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class StayPicture(
+    @JsonProperty("id")
+    val id: Int? = null,
+
+    @JsonProperty("url")
+    val url: String? = null,
+
+    @JsonProperty("thumbnailUrl")
+    val thumbnailUrl: String? = null,
+
+    @JsonProperty("url512")
+    val url512: String? = null,
+
+    @JsonProperty("isPrimary")
+    val isPrimary: Boolean? = false
 )
 
 /**

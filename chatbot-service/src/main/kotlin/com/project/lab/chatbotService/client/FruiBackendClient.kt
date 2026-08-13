@@ -59,6 +59,7 @@ class FruiBackendClient(
                 stays(filter: ${'$'}filter, page: 0, size: 15) {
                     items {
                         id
+                        publicId
                         name
                         about
                         propertyType
@@ -69,6 +70,12 @@ class FruiBackendClient(
                             streetAddress
                             city
                             countryCode
+                        }
+                        pictures {
+                            url
+                            thumbnailUrl
+                            url512
+                            isPrimary
                         }
                     }
                     totalCount

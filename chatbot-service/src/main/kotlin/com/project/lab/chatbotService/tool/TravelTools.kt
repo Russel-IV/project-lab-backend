@@ -1,6 +1,8 @@
 package com.project.lab.chatbotService.tool
 
 import com.project.lab.chatbotService.client.FruiBackendClient
+import com.project.lab.chatbotService.context.ChatContext
+import com.project.lab.chatbotService.controller.ChatController.StaySummary
 import com.project.lab.chatbotService.model.Stay
 import org.springframework.ai.tool.annotation.Tool
 import org.springframework.stereotype.Component
@@ -10,7 +12,10 @@ import java.math.BigDecimal
  * Declarative Spring AI tool component exposing functions to the LLM.
  */
 @Component
-class TravelTools(private val fruiBackendClient: FruiBackendClient) {
+class TravelTools(
+    private val fruiBackendClient: FruiBackendClient,
+    private val chatContext: ChatContext
+) {
 
     /**
      * Search stays by location, dates, price, and capacity matching searchForm criteria.
@@ -26,7 +31,7 @@ class TravelTools(private val fruiBackendClient: FruiBackendClient) {
         checkIn: String? = null,
         checkOut: String? = null
     ): List<Stay> {
-        return fruiBackendClient.searchStays(
+        val stays = fruiBackendClient.searchStays(
             city = city,
             countryCode = countryCode,
             propertyType = propertyType,
@@ -36,6 +41,26 @@ class TravelTools(private val fruiBackendClient: FruiBackendClient) {
             checkIn = checkIn,
             checkOut = checkOut
         )
+
+        val summaries = stays.mapNotNull { stay ->
+            val pubId = stay.publicId ?: return@mapNotNull null
+            val primaryPicture = stay.pictures?.find { it.isPrimary == true } ?: stay.pictures?.firstOrNull()
+            val imgUrl = primaryPicture?.thumbnailUrl ?: primaryPicture?.url512 ?: primaryPicture?.url
+            StaySummary(
+                id = stay.id ?: 0,
+                publicId = pubId,
+                name = stay.name ?: "Property Listing",
+                propertyType = stay.propertyType?.name ?: "HOTEL",
+                starRating = stay.starRating,
+                startingFromPrice = stay.startingFromPrice,
+                city = stay.address?.city,
+                countryCode = stay.address?.countryCode,
+                imageUrl = imgUrl
+            )
+        }
+
+        chatContext.setStays(summaries)
+        return stays
     }
 
     /**
