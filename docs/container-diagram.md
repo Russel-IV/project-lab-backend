@@ -27,6 +27,7 @@ graph TB
 
     Stripe{{"<b>Stripe API</b><br/><i>[External System]</i>"}}
     OpenAI{{"<b>OpenAI API</b><br/><i>[External System]</i><br/>gpt-4o, text-embedding-3-small"}}
+    SMTP{{"<b>Gmail SMTP relay</b><br/><i>[External System]</i><br/>smtp.gmail.com:587"}}
 
     Person -->|"HTTPS<br/>GraphQL POST /graphql<br/>REST /api/v1/**, /api/chat"| Gateway
 
@@ -42,9 +43,11 @@ graph TB
     Inventory -->|"Feign: host existence"| Identity
     Inventory -->|"Feign: availability/conflict check<br/>Resilience4j-wrapped"| Booking
     Booking -->|"Feign: room validation"| Inventory
+    Booking -->|"Feign: trigger booking<br/>confirmation email"| Identity
 
     Booking -->|"HTTPS: create PaymentIntent"| Stripe
     Chatbot -->|"HTTPS: chat completions<br/>+ embeddings"| OpenAI
+    Identity -->|"SMTP: welcome, password reset,<br/>account confirmation,<br/>booking confirmation"| SMTP
 
     Gateway --> Eureka
     Identity --> Eureka
@@ -87,7 +90,64 @@ graph TB
 - `eureka-server` and `zipkin` are infrastructure, not domain services — no application traffic to/from them, only registration heartbeats and span export respectively.
 - `zipkin` export is explicitly not in any service's `depends_on` — a slow/absent Zipkin must never block app startup or requests.
 - `inventory-service → booking-service` is the only Resilience4j circuit-breaker-wrapped call (docs/adr/0010); on failure it falls back to a permissive "show all rooms" result rather than erroring.
-- **Gateway vs. domain services use different call mechanisms.** Since the WebFlux migration (docs/adr/0025), `gateway`'s outbound calls (`*FeignClient` classes — the name is a holdover, not a hint at the implementation) go through a per-service, Eureka-resolved `WebClient` bean, not Feign. `identity-service`, `inventory-service`, `booking-service`, `review-service`, and `media-service` remain blocking Spring MVC and still use real `@FeignClient`s for the few calls between them (inventory↔booking, inventory→identity).
+- **Gateway vs. domain services use different call mechanisms.** Since the WebFlux migration (docs/adr/0025), `gateway`'s outbound calls (`*FeignClient` classes — the name is a holdover, not a hint at the implementation) go through a per-service, Eureka-resolved `WebClient` bean, not Feign. `identity-service`, `inventory-service`, `booking-service`, `review-service`, and `media-service` remain blocking Spring MVC and still use real `@FeignClient`s for the few calls between them (inventory↔booking, inventory→identity, booking→identity).
 - `chatbot-service` is a RAG assistant (Spring AI): it embeds and stores `FRUI-CONTEXT.md` guideline chunks in `chatbot-database` (pgvector) for static FAQ retrieval, and calls back into `gateway`'s public GraphQL API as a tool-call for live stay/availability data — the only container that calls `gateway` rather than being called by it. `SPRING_AI_OPENAI_API_KEY` gates both chat completions and embeddings.
 - `booking-service` integrates real Stripe (`StripeClient`, `PaymentIntentService`) for `PaymentIntent` creation on the booking checkout path — a separate concern from `identity-service`'s `PaymentMethod` storage, which stays fully mocked (`pm_mock_<uuid>`, no real Stripe token) since there's no client-side Stripe Elements integration yet.
+- `identity-service` owns all outbound email (`EmailService`, real `JavaMailSender` over Gmail SMTP) — welcome, password reset, and account confirmation emails are triggered internally by `AuthService`, while booking confirmation is triggered cross-service: `booking-service` calls identity-service's internal `POST /internal/emails/booking-confirmation` via Feign after a successful booking.
+- `gateway` enforces a per-caller rate limit (in-memory Bucket4j token bucket, keyed by authenticated user id or client IP) before a request reaches any resolver — not shown as a separate node since it's an internal filter, not a container of its own.
 - `project-lab-database` is a **leftover from the pre-microservices monolith** (docs/adr/0011): `gateway` has no datasource/JPA/Flyway dependency at all (checked `gateway/pom.xml` and `application.properties` — neither mentions Postgres), yet `docker-compose.yml` still builds, starts, and `depends_on`-gates the gateway container on it. It's dead infrastructure kept alive by compose wiring, not an active data store — worth removing in a future cleanup pass rather than something to design around.
+
+## Appendix: simplified view
+
+The same topology with service discovery/tracing infrastructure (`eureka-server`, `zipkin`) and their edges removed, and node/edge labels trimmed to one line — useful for a quick orientation pass rather than the full picture above.
+
+```mermaid
+graph TB
+    Person(("Traveler"))
+
+    subgraph SystemBoundary["project-lab-backend"]
+        Gateway["gateway<br/>GraphQL + REST API"]
+        Identity["identity-service<br/>Users, auth, email"]
+        Inventory["inventory-service<br/>Stays, rooms, search"]
+        Booking["booking-service<br/>Bookings, payments"]
+        Review["review-service<br/>Reviews"]
+        Media["media-service<br/>Photos/uploads"]
+        Chatbot["chatbot-service<br/>AI travel assistant"]
+    end
+
+    IDDB[(Identity DB)]
+    INVDB[(Inventory DB)]
+    BOOKDB[(Booking DB)]
+    REVDB[(Review DB)]
+    MEDDB[(Media DB)]
+    CHATDB[(Chatbot DB)]
+
+    Stripe{{Stripe}}
+    OpenAI{{OpenAI}}
+    SMTP{{Gmail SMTP}}
+
+    Person --> Gateway
+
+    Gateway --> Identity
+    Gateway --> Inventory
+    Gateway --> Booking
+    Gateway --> Review
+    Gateway --> Media
+    Gateway --> Chatbot
+    Chatbot --> Gateway
+
+    Inventory --> Identity
+    Inventory <--> Booking
+    Booking --> Identity
+
+    Booking --> Stripe
+    Chatbot --> OpenAI
+    Identity --> SMTP
+
+    Identity --> IDDB
+    Inventory --> INVDB
+    Booking --> BOOKDB
+    Review --> REVDB
+    Media --> MEDDB
+    Chatbot --> CHATDB
+```

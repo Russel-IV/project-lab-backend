@@ -1,26 +1,5 @@
-# Per-container `mem_limit` budget (docs/adr/0017) — this box has 7.4GB total,
-# smaller than docker-compose.prod.yml's 12GB, and unlike that file this one had
-# NO memory governance at all: with no cgroup limit, each JVM's default heap
-# sizing is computed against the FULL HOST memory rather than a container
-# budget, so 7 concurrent JVMs had no ceiling stopping their combined growth
-# from exceeding physical RAM + swap. That's what caused a real WSL2 VM OOM
-# (severe enough to kill systemd itself, not just a container) during otherwise
-# idle operation — see ADR-0017.
-#   6x Postgres containers  @ 200m = 1200m
-#   1x Zipkin                @ 300m =  300m
-#   1x Gateway JVM            @ 900m (heaviest: GraphQL + JPA + Feign + Resilience4j)
-#   6x domain-service/Eureka JVMs @ 600m each = 3600m
-#   ------------------------------------------------
-#   total                            = 6000m (~5.86GB of 7.4GB, ~1.5GB headroom
-#                                       for the WSL2 VM/Docker daemon/host OS)
-# `-XX:MaxRAMPercentage=70.0` only means something because `mem_limit` sets a
-# real cgroup limit for the JVM to detect (same reasoning as ADR-0014's prod
-# budget) — without it, a JVM with no cgroup limit still defaults to sizing its
-# heap off the full host, which is exactly the bug this fixes.
+
 services:
-    # Distributed tracing UI/store (docs/adr/0013) — every service exports spans here
-    # over Zipkin's v2 HTTP API. Not in any service's `depends_on`: trace export is
-    # fire-and-forget, so a slow/absent Zipkin must never block app startup or requests.
     zipkin:
         image: openzipkin/zipkin-slim:latest
         container_name: zipkin
@@ -38,15 +17,8 @@ services:
             - "8761:8761"
         environment:
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         healthcheck:
-            # No curl/wget in the bare eclipse-temurin JRE image — a plain TCP connect
-            # via bash's /dev/tcp is enough to gate dependent services' startup order,
-            # mirroring the Postgres pg_isready healthcheck below.
             test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8761'"]
             interval: 5s
             timeout: 5s
@@ -72,10 +44,6 @@ services:
             - POSTGRES_DB=${POSTGRES_DB}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             project-lab-database:
@@ -124,10 +92,6 @@ services:
             - REVIEW_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             review-database:
@@ -135,9 +99,6 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011) — a separate container/volume from
-    # project-lab-database, not a schema inside it. Plain postgres (no PostGIS):
-    # review has no geo data.
     review-database:
         image: postgres:16-alpine
         container_name: review-database
@@ -169,9 +130,6 @@ services:
         mem_limit: 768m
         ports:
             - "8085:8085"
-        # Same named volume project-lab-backend mounts — media-service writes files
-        # here, Gateway's existing WebConfig still serves /uploads/** from it
-        # unchanged (see media-service's LocalStorageService kdoc, docs/adr/0003).
         volumes:
             - uploads:/app/uploads
         environment:
@@ -187,10 +145,6 @@ services:
             - MEDIA_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             media-database:
@@ -198,7 +152,6 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): media has no geo data.
     media-database:
         image: postgres:16-alpine
         container_name: media-database
@@ -241,23 +194,13 @@ services:
             - GOOGLE_ACCOUNT_EMAIL=${GOOGLE_ACCOUNT_EMAIL}
             - GOOGLE_APP_PASSWORD=${GOOGLE_APP_PASSWORD}
             - APP_FRONTEND_URL=${APP_FRONTEND_URL:-http://localhost:5173}
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
-            # No JWT_SECRET here, matching gateway (docker-compose.yml's gateway
-            # entry doesn't set it either) — .env doesn't define JWT_SECRET in this
-            # lab environment, and Spring's ${JWT_SECRET:default} fallback only
-            # kicks in when the env var is genuinely absent, not empty. Setting
-            # JWT_SECRET= here would pass an empty string and break that fallback.
         depends_on:
             identity-database:
                 condition: service_healthy
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): identity has no geo data.
     identity-database:
         image: postgres:16-alpine
         container_name: identity-database
@@ -297,10 +240,6 @@ services:
             - INVENTORY_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             inventory-database:
@@ -308,8 +247,6 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011) — postgis/postgis, not plain postgres: Stay.location
-    # is a GEOGRAPHY(POINT, 4326) column (mirrors project-lab-database's image choice).
     inventory-database:
         image: postgis/postgis:16-3.5
         platform: linux/amd64
@@ -350,13 +287,7 @@ services:
             - BOOKING_DB_PASSWORD=${POSTGRES_PASSWORD}
             - EUREKA_URL=http://eureka-server:8761/eureka
             - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
-            # Test-mode secret key (sk_test_...) for PaymentIntentService/BookingService's
-            # real Stripe integration — never the frontend's pk_test_... publishable key.
             - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-            # docs/adr/0016: SerialGC and single-tier JIT are a better fit than the
-            # defaults (G1, full tiered compilation) below ~1GB heaps. docs/adr/0017:
-            # MaxRAMPercentage only means something because mem_limit above sets a
-            # real cgroup limit for the JVM to detect.
             - JAVA_TOOL_OPTIONS=-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:MaxRAMPercentage=70.0
         depends_on:
             booking-database:
@@ -364,7 +295,6 @@ services:
             eureka-server:
                 condition: service_healthy
 
-    # Own database (docs/adr/0011). Plain postgres (no PostGIS): booking has no geo data.
     booking-database:
         image: postgres:16-alpine
         container_name: booking-database
@@ -438,4 +368,3 @@ volumes:
     booking_pgdata:
     uploads:
     chatbot_pgdata:
-

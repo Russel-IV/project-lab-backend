@@ -4,39 +4,31 @@ Date: 2026-07-02
 
 ## Status
 
-Accepted, with a scoped exception for the Gateway's outbound calls — see
-[ADR-0025](0025-reactive-gateway-webflux-migration.md). Everything below still
-applies to every service other than the Gateway, and to the Gateway's own
-inbound side; only the Gateway's outbound client (Feign → reactive `WebClient`)
-changed.
+Accepted, with a scoped exception for the Gateway's outbound calls
+([ADR-0025](0025-reactive-gateway-webflux-migration.md) — Feign → reactive
+`WebClient`). Everything below still applies to every other service, and to the
+Gateway's own inbound side.
 
 ## Context
 
-Once split, services need to call each other synchronously: Gateway → every
-domain service (GraphQL resolution and REST proxying), and Inventory → Booking
-for availability checks ([ADR-0010](0010-booking-inventory-consistency.md)).
-Candidates were hand-rolled `RestTemplate`/`WebClient` calls versus a declarative
-client library.
+Services need to call each other synchronously: Gateway → every domain service, and
+Inventory → Booking for availability checks
+([ADR-0010](0010-booking-inventory-consistency.md)). Considered hand-rolled
+`RestTemplate`/`WebClient` calls versus a declarative client library.
 
 ## Decision
 
-Use **Spring Cloud OpenFeign** (`spring-cloud-starter-openfeign`) for all
-inter-service calls. Feign clients resolve target services via Eureka
-([ADR-0006](0006-service-discovery-eureka.md)) and Spring Cloud LoadBalancer.
-Wrap calls with **Resilience4j**
-(`spring-cloud-starter-circuitbreaker-resilience4j`) for timeouts, circuit
-breaking, and fallbacks — most critically on the Inventory → Booking call in the
-availability-search path.
+Use **Spring Cloud OpenFeign** for all inter-service calls, resolving targets via
+Eureka ([ADR-0006](0006-service-discovery-eureka.md)) and Spring Cloud
+LoadBalancer. Wrap calls with **Resilience4j** for timeouts, circuit breaking, and
+fallbacks — most critically on Inventory → Booking in the availability-search path.
 
 ## Consequences
 
-- Declarative clients (`interface` + annotations) instead of manual HTTP plumbing,
-  consistent with the "prefer stock Spring behavior over hand-rolled code"
-  direction of this migration.
-- Every cross-service call is now a network call that can fail independently of
-  the caller — Resilience4j configuration (timeout/fallback per client) is not
-  optional, it is required wherever a Feign call sits on a request path the
-  frontend depends on synchronously.
-- Circuit breaker fallbacks need an explicit, documented behavior per call site,
-  not just a default — see [ADR-0010](0010-booking-inventory-consistency.md) for
-  the one that matters most.
+- Declarative clients instead of manual HTTP plumbing.
+- Every cross-service call can now fail independently — Resilience4j
+  timeout/fallback config is required, not optional, on any call the frontend
+  depends on synchronously.
+- Circuit breaker fallbacks need an explicit, documented behavior per call site —
+  see [ADR-0010](0010-booking-inventory-consistency.md) for the one that matters
+  most.

@@ -1,46 +1,3 @@
-# Production deployment (docs/adr/0014) — Oracle Cloud Ampere A1 Always Free
-# instance, 2 OCPUs / 12GB RAM total. See docs/oracle-cloud-deployment.md for
-# provisioning and CI/CD wiring.
-#
-# This is a standalone file, not a docker-compose.yml override: the seven app
-# services below reference pre-built `image:` tags pushed to GHCR by
-# .github/workflows/deploy.yml, instead of the `build:` blocks docker-compose.yml
-# uses for local development — building on this 12GB/2-OCPU box, on top of running
-# 14 containers, would be slow and memory-hungry for no benefit (ADR-0014's whole
-# premise is that builds are offloaded to CI). Everything else (ports, health
-# checks, `depends_on`, database images/volumes, Zipkin) mirrors docker-compose.yml
-# exactly, so this file needs updating by hand whenever that one changes — same
-# "two hand-synced contracts" discipline this project already uses for Feign
-# clients vs. the controllers they call.
-#
-# Required on the host: a `.env` file (not committed) defining
-# ECR_REGISTRY=<aws-account-id>.dkr.ecr.<region>.amazonaws.com,
-# IMAGE_TAG (set by the deploy script to the deployed commit SHA), POSTGRES_USER,
-# POSTGRES_PASSWORD, POSTGRES_DB, JWT_SECRET, and CORS_ALLOWED_ORIGINS.
-#
-# Per-container `mem_limit` + `-XX:MaxRAMPercentage` budget (ADR-0014's 12GB total,
-# ~2.25GB left as headroom for the host OS/Docker daemon):
-#   6x Postgres containers  @ 256m  = 1536m
-#   1x Zipkin                @ 512m  =  512m
-#   1x Gateway JVM            @ 1536m (heaviest: GraphQL + JPA + Feign + Resilience4j)
-#   6x domain-service/Eureka JVMs @ 1024m each = 6144m
-#   ------------------------------------------------
-#   total                            = 9728m (~9.75GB of 12GB)
-# `-XX:MaxRAMPercentage=70.0` only means something because `mem_limit` sets a real
-# cgroup memory limit for the JVM to detect — without it, MaxRAMPercentage computes
-# against the host's full 12GB for every container, which defeats the whole point
-# on a box running 7 JVMs at once (unlike the old single-JVM EC2 box, where the
-# host's total memory *was* the right thing to compute a percentage of).
-#
-# `-XX:+UseSerialGC -XX:TieredStopAtLevel=1` (docs/adr/0016) on every JVM: G1
-# (the default collector) is tuned for multi-GB heaps and carries per-region/
-# remembered-set bookkeeping that's pure overhead below ~1GB — SerialGC's single
-# collection thread costs less CPU and memory on heaps this size, which matters
-# when 7 JVMs are contending over only 2 OCPUs. TieredStopAtLevel=1 skips the C2
-# JIT tier entirely, trading peak steady-state throughput (irrelevant at this
-# app's traffic scale) for faster context startup and less CPU spent compiling
-# during the startup burst every one of these services goes through.
-
 services:
     zipkin:
         image: openzipkin/zipkin-slim:latest
@@ -366,4 +323,3 @@ volumes:
     booking_pgdata:
     uploads:
     chatbot_pgdata:
-

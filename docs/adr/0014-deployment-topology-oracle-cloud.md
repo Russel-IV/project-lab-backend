@@ -8,68 +8,34 @@ Accepted
 
 ## Context
 
-Production currently runs on AWS, documented in `docs/aws-deployment.md`:
-
-- EC2 `t3.micro` — **1GB RAM**, 2 vCPUs — with a 2GB swapfile and
-  `-XX:MaxRAMPercentage=70.0` specifically configured to keep *one* Spring Boot
-  JVM from OOM-killing itself.
-- RDS `db.t3.micro` — 1GB RAM, free-tier eligible, separate from the app instance.
-
-This box was sized and tuned for exactly one constrained JVM. A microservices
-topology per [ADR-0001](0001-adopt-microservices-with-gateway.md) through
-[ADR-0013](0013-observability-and-tracing.md) requires, at minimum: Gateway,
-Identity, Inventory, Booking, Review, Media, and Eureka — **7 concurrent JVMs**,
-plus optionally Zipkin. This cannot run on a 1GB box regardless of code changes;
-attempting it would mean constant swap-thrashing, GC pauses, and OOM kills, not a
-usable deployment.
-
-AWS's free tier for anything larger than `t2/t3.micro` is time-limited (12
-months) or credit-based, not free indefinitely — it does not solve this problem
-within the "as close to zero cost as possible, indefinitely" constraint this
-project operates under.
+Production runs on AWS (`docs/aws-deployment.md`): EC2 `t3.micro` (1GB RAM,
+2 vCPU, 2GB swap, `-XX:MaxRAMPercentage=70.0`) + RDS `db.t3.micro` (1GB RAM) —
+sized for exactly one constrained JVM. The microservices topology (ADR-0001–0013)
+needs at least 7 concurrent JVMs (Gateway, 5 services, Eureka), plus optionally
+Zipkin — not viable on a 1GB box. AWS's free tier beyond `t2/t3.micro` is time- or
+credit-limited, not free indefinitely.
 
 ## Decision
 
-Migrate hosting from AWS EC2 + RDS to **Oracle Cloud Infrastructure's Always Free
-tier** — specifically the Ampere A1 compute shape. As of a June 2026 change to
-Oracle's free tier, this allocation is **2 OCPUs + 12GB RAM total** (reduced from
-the previous 4 OCPUs/24GB), free indefinitely, not a trial — usable as one
-instance or split across two. Oracle also includes, separately, up to 2 small
-AMD x86 micro instances (1/8 OCPU + 1GB RAM each) at no cost, which are too weak
-for another JVM but usable for something trivial if needed. 200GB of Always Free
-block storage is included, comfortably covering Postgres data and uploaded media.
+Migrate to **Oracle Cloud's Always Free tier** — Ampere A1, 2 OCPUs + 12GB RAM
+total (reduced from a previous 4 OCPU/24GB, as of June 2026), free indefinitely,
+plus 200GB Always Free block storage.
 
 Run all services, Eureka, and a self-hosted Postgres container (replacing RDS) via
-Docker Compose on the Ampere A1 instance — the same deployment model already in
-use locally (`docker-compose up --build`), just more containers on a larger box.
-Each service's JVM is memory-capped (`-XX:MaxRAMPercentage`, the same technique
-already used on the current EC2 box) so the fixed set of services fits within the
-12GB budget with headroom. CI/CD adapts the existing GitHub Actions pipeline
-(currently: test → build → push to ECR → SSH-deploy to EC2) to push images to a
-registry reachable from Oracle Cloud (e.g. GitHub Container Registry) and
-SSH-deploy to the new host in place of EC2.
+Docker Compose — the same model already used locally, just more containers. Each
+JVM is memory-capped (`-XX:MaxRAMPercentage`, same technique as the current EC2
+box) to fit the 12GB budget. CI/CD adapts the existing GitHub Actions pipeline to
+push to a registry reachable from Oracle Cloud and SSH-deploy there instead of EC2.
 
 ## Consequences
 
-- Resolves the RAM constraint that would otherwise block this entire migration —
-  without it, [ADR-0006](0006-service-discovery-eureka.md) (Eureka) and the
-  service count in [ADR-0002](0002-service-boundaries-and-decomposition.md) would
-  both need to be cut down to fit 1GB instead. 12GB is tighter than the 24GB
-  originally assumed, but still comfortably fits the 7-JVM topology (Gateway +
-  5 services + Eureka) at roughly 400-500MB per service plus one shared Postgres
-  container, provided each service enforces a memory cap rather than running
-  with JVM defaults.
-- `docs/aws-deployment.md` becomes outdated once this is executed; it should be
-  superseded by a new `docs/oracle-cloud-deployment.md` documenting the equivalent
-  setup (compute instance provisioning, security lists, Docker Compose deployment,
-  updated GitHub Actions secrets) — that document is follow-up work, not part of
-  this ADR.
-- The database is no longer a managed service (RDS) — backups, upgrades, and
-  patching become the team's responsibility instead of AWS's. Accepted trade-off
-  for zero cost at this project's scale; revisit if data durability requirements
-  grow beyond what a self-managed container can reasonably guarantee.
-- Loses the AWS-specific IAM-role-based ECR pull convenience; replaced with
-  whatever credential mechanism the chosen registry requires.
-- Everything in ADRs 0001–0013 is written assuming this hosting target exists; if
-  this decision is reversed, several of those ADRs (0002 service count, 0006
-  discovery) need to be revisited, not just this one.
+- Resolves the RAM constraint blocking this whole migration. 12GB is tighter than
+  the 24GB originally assumed but still fits ~400–500MB/service + one Postgres
+  container, provided each service caps its own memory.
+- `docs/aws-deployment.md` becomes outdated; a new `docs/oracle-cloud-deployment.md`
+  is follow-up work, not part of this ADR.
+- The database is self-managed now, not RDS — backups/upgrades become the team's
+  job. Accepted for zero cost; revisit if durability needs grow.
+- Loses AWS IAM-based ECR pull convenience.
+- ADRs 0001–0013 assume this hosting target; reversing it means revisiting several
+  of them (service count, discovery), not just this one.
