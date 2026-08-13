@@ -54,7 +54,7 @@ class RateLimitFilter(
         response.statusCode = HttpStatus.TOO_MANY_REQUESTS
         response.headers.set(
             HttpHeaders.RETRY_AFTER,
-            Math.ceilDiv(probe.nanosToWaitForRefill, 1_000_000_000L).toString(),
+            ((probe.nanosToWaitForRefill + 999_999_999L) / 1_000_000_000L).toString(),
         )
         response.headers.contentType = MediaType.APPLICATION_JSON
         val buffer = response.bufferFactory().wrap(RATE_LIMIT_EXCEEDED_BODY.toByteArray(StandardCharsets.UTF_8))

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import java.math.BigDecimal
 
 @Component
 class ChatFeignClient(
@@ -22,6 +23,18 @@ class ChatFeignClient(
         webClient.post().uri("/internal/chat/ingest").retrieve().awaitBody()
 }
 
+data class StaySummary(
+    val id: Int,
+    val publicId: String,
+    val name: String,
+    val propertyType: String,
+    val starRating: BigDecimal? = null,
+    val startingFromPrice: BigDecimal? = null,
+    val city: String? = null,
+    val countryCode: String? = null,
+    val imageUrl: String? = null,
+)
+
 data class ChatRequest(
     val message: String,
     val sessionId: String,
@@ -29,4 +42,5 @@ data class ChatRequest(
 
 data class ChatResponse(
     val response: String,
+    val stays: List<StaySummary>? = null,
 )
