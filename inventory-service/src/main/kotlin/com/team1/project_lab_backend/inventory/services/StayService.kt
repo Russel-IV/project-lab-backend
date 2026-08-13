@@ -48,6 +48,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import java.text.Normalizer
 import java.time.LocalDate
 import java.util.UUID
 
@@ -376,7 +377,11 @@ class StayService(
             if (filter.city != null || filter.countryCode != null || filter.regionId != null) {
                 val address = root.join<Stay, Address>("address", JoinType.INNER)
                 filter.city?.let {
-                    predicates += cb.like(cb.lower(address.get("city")), "%${it.lowercase()}%")
+                    val cleanCity = foldToAscii(it.lowercase())
+                    predicates += cb.like(
+                        cb.function("unaccent", String::class.java, cb.lower(address.get("city"))),
+                        "%$cleanCity%"
+                    )
                 }
                 filter.countryCode?.let {
                     predicates += cb.equal(cb.lower(address.get<String>("countryCode")), it.lowercase())
@@ -550,5 +555,9 @@ class StayService(
 
     companion object {
         private const val MAX_PRICE_STATS_BINS = 1000
+        private val DIACRITICS_REGEX = Regex("\\p{InCombiningDiacriticalMarks}+")
+
+        private fun foldToAscii(value: String): String =
+            Normalizer.normalize(value, Normalizer.Form.NFD).replace(DIACRITICS_REGEX, "")
     }
 }

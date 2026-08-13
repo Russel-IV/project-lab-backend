@@ -15,7 +15,7 @@ class TravelTools(private val fruiBackendClient: FruiBackendClient) {
     /**
      * Search stays by location, dates, price, and capacity matching searchForm criteria.
      */
-    @Tool(description = "Search stays and accommodations matching searchForm criteria such as city, checkIn date (YYYY-MM-DD), checkOut date (YYYY-MM-DD), guests capacity, country code, property type (HOTEL or HOME), and min/max price per night.")
+    @Tool(description = "Search stays and accommodations matching searchForm criteria. Pass ONLY the clean city name for 'city' (e.g. 'Valparaíso', 'Miami', 'Barcelona') without country/state suffixes (do NOT pass 'Valparaíso, Chile'). Accents and spelling diacritics are handled automatically.")
     fun searchStays(
         city: String? = null,
         countryCode: String? = null,

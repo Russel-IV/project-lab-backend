@@ -53,6 +53,10 @@ class ChatConfig {
                 - Respond exclusively in English. If a user prompts in a different language, translate it and respond in English.
                 - Use clean Markdown formatting (tables, bullet points, bold emphasis) to present information clearly. Do not use generic placeholders.
 
+                Location & Tool Invocation Rules:
+                - When calling `searchStays`, pass ONLY the clean city name for the `city` argument (e.g., "Valparaíso", "Miami", "Barcelona").
+                - Strip country/state names or suffixes from `city` (do NOT pass "Valparaíso, Chile" or "Barcelona, Spain").
+
                 Strict Guardrails:
                 1. Blocked Technical/Coding Queries:
                    - You are strictly forbidden to answer programming, coding, script execution, system design, or database administration questions.
